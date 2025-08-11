@@ -1,0 +1,77 @@
+"use client";
+
+import {
+  ArrowDownCircle,
+  ArrowUpCircle,
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { cn } from '@/lib/utils';
+import type { Transaction } from '@/types';
+
+interface TransactionsTableProps {
+  data: Transaction[];
+}
+
+export function TransactionsTable({ data }: TransactionsTableProps) {
+  const sortedData = [...data].sort((a, b) => b.date - a.date);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Transaction History</CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="max-h-[600px] overflow-y-auto">
+          <Table>
+            <TableHeader className="sticky top-0 bg-card z-10">
+              <TableRow>
+                <TableHead>Material</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead className="text-right">Qty</TableHead>
+                <TableHead>Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sortedData.map(tx => (
+                <TableRow key={tx.id}>
+                  <TableCell className="font-medium">{tx.materialName}</TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        'border-2',
+                        tx.type === 'entrada'
+                          ? 'text-emerald-500 border-emerald-500/50'
+                          : 'text-amber-500 border-amber-500/50'
+                      )}
+                    >
+                      <div className="flex items-center gap-1">
+                        {tx.type === 'entrada' ? (
+                          <ArrowUpCircle className="h-3 w-3" />
+                        ) : (
+                          <ArrowDownCircle className="h-3 w-3" />
+                        )}
+                        <span>{tx.type === 'entrada' ? 'Entry' : 'Exit'}</span>
+                      </div>
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right font-mono">{tx.quantity}</TableCell>
+                  <TableCell>{new Date(tx.date).toLocaleDateString()}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
