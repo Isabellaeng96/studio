@@ -15,8 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 import type { Material, Transaction } from "@/types";
 
 const predictiveSchema = z.object({
-  materialId: z.string().min(1, 'Please select a material.'),
-  forecastHorizon: z.string().min(1, 'Please select a forecast horizon.'),
+  materialId: z.string().min(1, 'Por favor, selecione um material.'),
+  forecastHorizon: z.string().min(1, 'Por favor, selecione um horizonte de previsão.'),
 });
 
 type PredictiveFormValues = z.infer<typeof predictiveSchema>;
@@ -54,11 +54,11 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
 
       setPrediction(result);
     } catch (error) {
-      console.error("Prediction failed:", error);
+      console.error("Falha na predição:", error);
       toast({
         variant: "destructive",
-        title: "Prediction Failed",
-        description: "Could not generate a forecast. Please try again.",
+        title: "Falha na Predição",
+        description: "Não foi possível gerar uma previsão. Por favor, tente novamente.",
       });
     } finally {
       setIsLoading(false);
@@ -69,9 +69,9 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
     <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
       <Card className="md:col-span-1">
         <CardHeader>
-          <CardTitle>Forecast Consumption</CardTitle>
+          <CardTitle>Previsão de Consumo</CardTitle>
           <CardDescription>
-            Use AI to predict material usage based on historical data.
+            Use IA para prever o uso de material com base em dados históricos.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -86,7 +86,7 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a material" />
+                          <SelectValue placeholder="Selecione um material" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -106,18 +106,18 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
                 name="forecastHorizon"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Forecast Horizon</FormLabel>
+                    <FormLabel>Horizonte de Previsão</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a period" />
+                          <SelectValue placeholder="Selecione um período" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="next week">Next Week</SelectItem>
-                        <SelectItem value="next month">Next Month</SelectItem>
-                        <SelectItem value="next quarter">Next Quarter</SelectItem>
-                        <SelectItem value="next 6 months">Next 6 Months</SelectItem>
+                        <SelectItem value="próxima semana">Próxima Semana</SelectItem>
+                        <SelectItem value="próximo mês">Próximo Mês</SelectItem>
+                        <SelectItem value="próximo trimestre">Próximo Trimestre</SelectItem>
+                        <SelectItem value="próximos 6 meses">Próximos 6 Meses</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -126,7 +126,7 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
               />
               <Button type="submit" disabled={isLoading} className="w-full">
                 {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <BrainCircuit className="mr-2 h-4 w-4" />}
-                Generate Forecast
+                Gerar Previsão
               </Button>
             </form>
           </Form>
@@ -137,50 +137,50 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
           <Card className="flex h-full min-h-[400px] items-center justify-center">
             <div className="text-center text-muted-foreground">
               <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
-              <p className="mt-4 text-lg">Generating prediction...</p>
-              <p>The AI is analyzing historical data.</p>
+              <p className="mt-4 text-lg">Gerando previsão...</p>
+              <p>A IA está analisando os dados históricos.</p>
             </div>
           </Card>
         )}
         {!isLoading && prediction && (
           <Card className="h-full min-h-[400px] bg-gradient-to-br from-primary/5 to-background">
             <CardHeader>
-              <CardTitle>Forecast Result</CardTitle>
+              <CardTitle>Resultado da Previsão</CardTitle>
               <CardDescription>
-                AI-powered consumption forecast for{" "}
+                Previsão de consumo alimentada por IA para{" "}
                 <span className="font-bold text-primary">
                   {materials.find(m => m.id === form.getValues("materialId"))?.name}
                 </span>{" "}
-                over the{" "}
+                durante o(a){" "}
                 <span className="font-bold text-primary">{form.getValues("forecastHorizon")}</span>.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription>Forecasted Consumption</CardDescription>
+                  <CardDescription>Consumo Previsto</CardDescription>
                   <CardTitle className="text-4xl text-primary">
                     {prediction.forecastedConsumption}
                   </CardTitle>
                 </CardHeader>
                 <CardFooter>
-                  <p className="text-xs text-muted-foreground">units predicted usage</p>
+                  <p className="text-xs text-muted-foreground">unidades de uso previsto</p>
                 </CardFooter>
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription>Confidence Level</CardDescription>
+                  <CardDescription>Nível de Confiança</CardDescription>
                   <CardTitle className="text-4xl text-primary">
                     {(prediction.confidenceLevel * 100).toFixed(0)}%
                   </CardTitle>
                 </CardHeader>
                  <CardFooter>
-                  <p className="text-xs text-muted-foreground">model confidence score</p>
+                  <p className="text-xs text-muted-foreground">pontuação de confiança do modelo</p>
                 </CardFooter>
               </Card>
             </CardContent>
              <CardFooter className="flex-col items-start gap-2">
-                <h3 className="font-semibold">Explanation</h3>
+                <h3 className="font-semibold">Explicação</h3>
                 <p className="text-sm text-muted-foreground">{prediction.explanation}</p>
              </CardFooter>
           </Card>
@@ -189,8 +189,8 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
           <Card className="flex h-full min-h-[400px] items-center justify-center border-dashed">
             <div className="text-center text-muted-foreground">
               <BrainCircuit className="mx-auto h-12 w-12" />
-              <p className="mt-4 text-lg font-medium">Awaiting Forecast</p>
-              <p>Select a material and horizon to generate a prediction.</p>
+              <p className="mt-4 text-lg font-medium">Aguardando Previsão</p>
+              <p>Selecione um material e um horizonte para gerar uma previsão.</p>
             </div>
           </Card>
         )}

@@ -57,8 +57,8 @@ export function ChartsView({ materials, transactions }: ChartsViewProps) {
     <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle>Current Stock Levels</CardTitle>
-          <CardDescription>Highlights materials below minimum stock.</CardDescription>
+          <CardTitle>Níveis de Estoque Atuais</CardTitle>
+          <CardDescription>Destaca materiais abaixo do estoque mínimo.</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer config={{}} className="h-80 w-full">
@@ -68,8 +68,8 @@ export function ChartsView({ materials, transactions }: ChartsViewProps) {
                 <XAxis dataKey="name" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
                 <YAxis />
                 <Tooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="currentStock" name="Current Stock" fill="var(--color-chart-1)" radius={4} />
-                <Bar dataKey="minStock" name="Minimum Stock" fill="var(--color-chart-2)" radius={4} />
+                <Bar dataKey="currentStock" name="Estoque Atual" fill="var(--color-chart-1)" radius={4} />
+                <Bar dataKey="minStock" name="Estoque Mínimo" fill="var(--color-chart-2)" radius={4} />
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
@@ -77,8 +77,8 @@ export function ChartsView({ materials, transactions }: ChartsViewProps) {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Entries vs. Exits (Last 30 Days)</CardTitle>
-          <CardDescription>Tracks the flow of materials over time.</CardDescription>
+          <CardTitle>Entradas vs. Saídas (Últimos 30 dias)</CardTitle>
+          <CardDescription>Acompanha o fluxo de materiais ao longo do tempo.</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer config={{}} className="h-80 w-full">
@@ -88,8 +88,8 @@ export function ChartsView({ materials, transactions }: ChartsViewProps) {
                 <XAxis dataKey="date" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
                 <YAxis />
                 <Tooltip content={<ChartTooltipContent />} />
-                <Line type="monotone" dataKey="entrada" name="Entries" stroke="var(--color-chart-1)" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="saida" name="Exits" stroke="var(--color-chart-2)" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="entrada" name="Entradas" stroke="var(--color-chart-1)" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="saida" name="Saídas" stroke="var(--color-chart-2)" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </ChartContainer>
@@ -97,8 +97,8 @@ export function ChartsView({ materials, transactions }: ChartsViewProps) {
       </Card>
        <Card className="lg:col-span-2">
         <CardHeader>
-          <CardTitle>Stock Turnover Ratio</CardTitle>
-          <CardDescription>Measures how often stock is sold and replaced over a period.</CardDescription>
+          <CardTitle>Giro de Estoque</CardTitle>
+          <CardDescription>Mede a frequência com que o estoque é vendido e reposto durante um período.</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer config={{}} className="h-80 w-full">
@@ -108,7 +108,7 @@ export function ChartsView({ materials, transactions }: ChartsViewProps) {
                 <XAxis type="number" />
                 <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} width={120} />
                 <Tooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="turnover" name="Turnover Ratio" fill="var(--color-chart-3)" radius={4} />
+                <Bar dataKey="turnover" name="Giro de Estoque" fill="var(--color-chart-3)" radius={4} />
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>

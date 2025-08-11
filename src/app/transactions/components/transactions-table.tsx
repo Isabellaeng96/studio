@@ -27,7 +27,7 @@ export function TransactionsTable({ data }: TransactionsTableProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Transaction History</CardTitle>
+        <CardTitle>Histórico de Transações</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <div className="max-h-[600px] overflow-y-auto">
@@ -35,9 +35,9 @@ export function TransactionsTable({ data }: TransactionsTableProps) {
             <TableHeader className="sticky top-0 bg-card z-10">
               <TableRow>
                 <TableHead>Material</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead className="text-right">Qty</TableHead>
-                <TableHead>Date</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead className="text-right">Qtd</TableHead>
+                <TableHead>Data</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -60,7 +60,7 @@ export function TransactionsTable({ data }: TransactionsTableProps) {
                         ) : (
                           <ArrowDownCircle className="h-3 w-3" />
                         )}
-                        <span>{tx.type === 'entrada' ? 'Entry' : 'Exit'}</span>
+                        <span>{tx.type === 'entrada' ? 'Entrada' : 'Saída'}</span>
                       </div>
                     </Badge>
                   </TableCell>

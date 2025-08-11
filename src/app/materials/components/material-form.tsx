@@ -28,10 +28,10 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 const materialSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters.'),
-  category: z.string().min(2, 'Category is required.'),
-  unit: z.string().min(1, 'Unit is required.'),
-  minStock: z.coerce.number().min(0, 'Minimum stock cannot be negative.'),
+  name: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres.'),
+  category: z.string().min(2, 'A categoria é obrigatória.'),
+  unit: z.string().min(1, 'A unidade é obrigatória.'),
+  minStock: z.coerce.number().min(0, 'O estoque mínimo não pode ser negativo.'),
   supplier: z.string().optional(),
 });
 
@@ -60,8 +60,8 @@ export function MaterialForm({ children, material }: MaterialFormProps) {
   const onSubmit = (data: MaterialFormValues) => {
     // In a real app, you'd call a server action or API here.
     toast({
-      title: `Material ${material ? 'Updated' : 'Created'}`,
-      description: `The material "${data.name}" has been successfully saved.`,
+      title: `Material ${material ? 'Atualizado' : 'Criado'}`,
+      description: `O material "${data.name}" foi salvo com sucesso.`,
     });
     setOpen(false);
     form.reset();
@@ -72,11 +72,11 @@ export function MaterialForm({ children, material }: MaterialFormProps) {
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{material ? 'Edit Material' : 'Add New Material'}</DialogTitle>
+          <DialogTitle>{material ? 'Editar Material' : 'Adicionar Novo Material'}</DialogTitle>
           <DialogDescription>
             {material
-              ? 'Update the details of the existing material.'
-              : 'Fill in the details for the new material.'}
+              ? 'Atualize os detalhes do material existente.'
+              : 'Preencha os detalhes para o novo material.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -86,9 +86,9 @@ export function MaterialForm({ children, material }: MaterialFormProps) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Material Name</FormLabel>
+                  <FormLabel>Nome do Material</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Cimento CP-II" {...field} />
+                    <Input placeholder="ex: Cimento CP-II" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -100,9 +100,9 @@ export function MaterialForm({ children, material }: MaterialFormProps) {
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category</FormLabel>
+                    <FormLabel>Categoria</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Estrutura" {...field} />
+                      <Input placeholder="ex: Estrutura" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -113,9 +113,9 @@ export function MaterialForm({ children, material }: MaterialFormProps) {
                 name="unit"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Unit</FormLabel>
+                    <FormLabel>Unidade</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., saco 25kg" {...field} />
+                      <Input placeholder="ex: saco 25kg" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -127,9 +127,9 @@ export function MaterialForm({ children, material }: MaterialFormProps) {
               name="minStock"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Minimum Stock</FormLabel>
+                  <FormLabel>Estoque Mínimo</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="e.g., 10" {...field} />
+                    <Input type="number" placeholder="ex: 10" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -140,17 +140,17 @@ export function MaterialForm({ children, material }: MaterialFormProps) {
               name="supplier"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Default Supplier (Optional)</FormLabel>
+                  <FormLabel>Fornecedor Padrão (Opcional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Votorantim" {...field} />
+                    <Input placeholder="ex: Votorantim" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button type="submit">Save Material</Button>
+              <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
+              <Button type="submit">Salvar Material</Button>
             </DialogFooter>
           </form>
         </Form>

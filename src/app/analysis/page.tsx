@@ -7,16 +7,16 @@ export default function AnalysisPage() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Analysis & Forecasting</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Análise e Previsão</h1>
         <p className="text-muted-foreground">
-          Visualize inventory data and predict future needs.
+          Visualize dados de estoque e preveja necessidades futuras.
         </p>
       </div>
 
       <Tabs defaultValue="charts">
         <TabsList>
-          <TabsTrigger value="charts">Data Visualization</TabsTrigger>
-          <TabsTrigger value="predictive">Predictive Analysis</TabsTrigger>
+          <TabsTrigger value="charts">Visualização de Dados</TabsTrigger>
+          <TabsTrigger value="predictive">Análise Preditiva</TabsTrigger>
         </TabsList>
         <TabsContent value="charts" className="mt-6">
           <ChartsView materials={materials} transactions={transactions} />

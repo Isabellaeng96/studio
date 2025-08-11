@@ -33,12 +33,12 @@ export function MaterialsTable({ data }: MaterialsTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Unit</TableHead>
-              <TableHead className="text-right">Current Stock</TableHead>
-              <TableHead className="text-right">Min. Stock</TableHead>
-              <TableHead className="w-[50px] text-right">Actions</TableHead>
+              <TableHead>Nome</TableHead>
+              <TableHead>Categoria</TableHead>
+              <TableHead>Unidade</TableHead>
+              <TableHead className="text-right">Estoque Atual</TableHead>
+              <TableHead className="text-right">Estoque Mín.</TableHead>
+              <TableHead className="w-[50px] text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -71,11 +71,11 @@ export function MaterialsTable({ data }: MaterialsTableProps) {
                         {/* The edit button is inside the form trigger */}
                         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                             <Pencil className="mr-2 h-4 w-4" />
-                            Edit
+                            Editar
                         </DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10">
                           <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
+                          Excluir
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

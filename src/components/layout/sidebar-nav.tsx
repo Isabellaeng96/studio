@@ -4,10 +4,7 @@ import {
   BarChart3,
   Home,
   Package,
-  PlusCircle,
   Replace,
-  Sparkles,
-  Warehouse,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -15,10 +12,10 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: Home },
-  { href: '/materials', label: 'Materials', icon: Package },
-  { href: '/transactions', label: 'Transactions', icon: Replace },
-  { href: '/analysis', label: 'Analysis', icon: BarChart3 },
+  { href: '/', label: 'Painel', icon: Home },
+  { href: '/materials', label: 'Materiais', icon: Package },
+  { href: '/transactions', label: 'Transações', icon: Replace },
+  { href: '/analysis', label: 'Análise', icon: BarChart3 },
 ];
 
 export function AppSidebarNav({ isMobile = false }: { isMobile?: boolean }) {

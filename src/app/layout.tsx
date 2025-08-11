@@ -8,8 +8,8 @@ import { Header } from '@/components/layout/header';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'WellFlow Inventory',
-  description: 'Inventory control for deep tubular well maintenance materials.',
+  title: 'WellFlow Estoque',
+  description: 'Controle de estoque para materiais de manutenção de poços tubulares profundos.',
   icons: {
     icon: '/favicon.svg',
   },
@@ -21,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="pt-BR" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
         <div className="flex min-h-screen w-full bg-background">
           <AppSidebar />

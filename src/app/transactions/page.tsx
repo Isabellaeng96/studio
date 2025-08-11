@@ -7,9 +7,9 @@ export default function TransactionsPage() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Transações</h1>
         <p className="text-muted-foreground">
-          Record new entries and exits, and view historical data.
+          Registre novas entradas e saídas e visualize o histórico.
         </p>
       </div>
 
@@ -17,8 +17,8 @@ export default function TransactionsPage() {
         <div className="lg:col-span-1">
           <Tabs defaultValue="saida">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="entrada">Entry</TabsTrigger>
-              <TabsTrigger value="saida">Exit</TabsTrigger>
+              <TabsTrigger value="entrada">Entrada</TabsTrigger>
+              <TabsTrigger value="saida">Saída</TabsTrigger>
             </TabsList>
             <TabsContent value="entrada">
               <TransactionForm type="entrada" materials={materials} />

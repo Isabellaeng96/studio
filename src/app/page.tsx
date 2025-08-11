@@ -45,16 +45,16 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Painel</h1>
           <p className="text-muted-foreground">
-            An overview of your inventory and recent activities.
+            Uma visão geral do seu inventário e atividades recentes.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button asChild>
             <Link href="/transactions">
               <PlusCircle className="mr-2 h-4 w-4" />
-              New Transaction
+              Nova Transação
             </Link>
           </Button>
         </div>
@@ -64,7 +64,7 @@ export default function DashboardPage() {
         <Card className="bg-destructive/10 border-destructive">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-destructive">
-              Low Stock Alerts
+              Alertas de Estoque Baixo
             </CardTitle>
             <AlertTriangle className="h-4 w-4 text-destructive" />
           </CardHeader>
@@ -73,26 +73,26 @@ export default function DashboardPage() {
               {lowStockMaterials.length}
             </div>
             <p className="text-xs text-destructive/80">
-              items need reordering soon.
+              itens precisam de reposição em breve.
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Materials</CardTitle>
+            <CardTitle className="text-sm font-medium">Total de Materiais</CardTitle>
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-muted-foreground"><path d="m20.94 18-2.1-4.33a3.52 3.52 0 0 0-6.19.44l-2.1-4.33a3.52 3.52 0 0 0-6.19.44L2.25 18"/><path d="m18.5 4.5 2.5 5"/><path d="M6 9.5 3.5 4.5"/><path d="M12.5 4.5 15 9.5"/></svg>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{materials.length}</div>
             <p className="text-xs text-muted-foreground">
-              unique items in catalog.
+              itens únicos no catálogo.
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Recent Activity
+              Atividade Recente
             </CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -101,7 +101,7 @@ export default function DashboardPage() {
               {recentTransactions.length}
             </div>
             <p className="text-xs text-muted-foreground">
-              transactions in the last 7 days.
+              transações nos últimos 7 dias.
             </p>
           </CardContent>
         </Card>
@@ -110,9 +110,9 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
+            <CardTitle>Transações Recentes</CardTitle>
             <CardDescription>
-              A log of the latest inventory movements.
+              Um registro dos últimos movimentos de estoque.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -120,10 +120,10 @@ export default function DashboardPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Material</TableHead>
-                  <TableHead className="text-center">Type</TableHead>
-                  <TableHead className="text-right">Quantity</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Responsible</TableHead>
+                  <TableHead className="text-center">Tipo</TableHead>
+                  <TableHead className="text-right">Quantidade</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Responsável</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -146,7 +146,7 @@ export default function DashboardPage() {
                           ) : (
                             <ArrowDownCircle className="h-3 w-3" />
                           )}
-                          <span>{tx.type === 'entrada' ? 'Entry' : 'Exit'}</span>
+                          <span>{tx.type === 'entrada' ? 'Entrada' : 'Saída'}</span>
                         </div>
                       </Badge>
                     </TableCell>
@@ -162,9 +162,9 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Low Stock Items</CardTitle>
+            <CardTitle>Itens com Estoque Baixo</CardTitle>
             <CardDescription>
-              These materials are below their minimum stock level.
+              Estes materiais estão abaixo do nível mínimo de estoque.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -175,18 +175,18 @@ export default function DashboardPage() {
                     <div>
                       <p className="font-medium">{material.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        Current: {material.currentStock} | Min: {material.minStock}
+                        Atual: {material.currentStock} | Mín: {material.minStock}
                       </p>
                     </div>
                     <Button variant="secondary" size="sm" asChild>
-                      <Link href="/transactions">Restock</Link>
+                      <Link href="/transactions">Repor</Link>
                     </Button>
                   </li>
                 ))}
               </ul>
             ) : (
               <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8">
-                <p>All materials are above minimum stock levels.</p>
+                <p>Todos os materiais estão acima dos níveis mínimos de estoque.</p>
               </div>
             )}
           </CardContent>

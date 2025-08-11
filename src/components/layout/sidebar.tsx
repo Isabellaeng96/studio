@@ -11,7 +11,7 @@ export function AppSidebar() {
         <div className="flex h-14 items-center border-b px-6">
           <Link href="/" className="flex items-center gap-2 font-semibold text-primary">
             <Wrench className="h-6 w-6" />
-            <span className="">WellFlow Inventory</span>
+            <span className="">WellFlow Estoque</span>
           </Link>
         </div>
         <div className="flex-1 overflow-y-auto py-4">
