@@ -1,8 +1,23 @@
+
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import type { Material, Transaction, TransactionSave, MaterialSave } from '@/types';
 import { materials as initialMaterials, transactions as initialTransactions } from '@/lib/mock-data';
+
+// Helper function to get item from localStorage safely
+function getFromStorage<T>(key: string, defaultValue: T): T {
+  if (typeof window === 'undefined') {
+    return defaultValue;
+  }
+  try {
+    const item = window.localStorage.getItem(key);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch (error) {
+    console.error(`Error reading from localStorage key “${key}”:`, error);
+    return defaultValue;
+  }
+}
 
 interface AppContextType {
   materials: Material[];
@@ -20,12 +35,40 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [materials, setMaterials] = useState<Material[]>(initialMaterials);
-  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
+  const [materials, setMaterials] = useState<Material[]>(() => getFromStorage('materials', initialMaterials));
+  const [transactions, setTransactions] = useState<Transaction[]>(() => getFromStorage('transactions', initialTransactions));
   const [categories, setCategories] = useState<string[]>(() => {
-    const uniqueCategories = new Set(initialMaterials.map(m => m.category));
-    return Array.from(uniqueCategories);
+     const storedCategories = getFromStorage<string[]>('categories', []);
+     if (storedCategories.length > 0) {
+       return storedCategories;
+     }
+     const uniqueCategories = new Set(initialMaterials.map(m => m.category));
+     return Array.from(uniqueCategories);
   });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('materials', JSON.stringify(materials));
+    } catch (error) {
+      console.error('Failed to save materials to localStorage', error);
+    }
+  }, [materials]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('transactions', JSON.stringify(transactions));
+    } catch (error) {
+      console.error('Failed to save transactions to localStorage', error);
+    }
+  }, [transactions]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('categories', JSON.stringify(categories));
+    } catch (error) {
+      console.error('Failed to save categories to localStorage', error);
+    }
+  }, [categories]);
 
   const addMaterial = (material: MaterialSave) => {
     const newMaterial: Material = {
