@@ -1,9 +1,9 @@
 
 "use client";
 
-import { useMemo, Suspense } from 'react';
+import { useMemo, Suspense, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { PlusCircle, Tag, Upload } from 'lucide-react';
+import { PlusCircle, Tag, Upload, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MaterialsTable } from './components/materials-table';
 import { MaterialForm } from './components/material-form';
@@ -13,6 +13,7 @@ import { MaterialImporter } from './components/material-importer';
 import { MaterialExporter } from './components/material-exporter';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 function MaterialsPageContent() {
   const { materials, categories, addMaterial, updateMaterial, deleteMaterial, deleteMultipleMaterials, addCategory, addMultipleMaterials } = useAppContext();
@@ -22,9 +23,16 @@ function MaterialsPageContent() {
 
   const stockFilter = searchParams.get('filter');
   const categoryFilter = searchParams.get('category');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const filteredMaterials = useMemo(() => {
     let filtered = [...materials];
+
+    if (searchQuery) {
+        filtered = filtered.filter(m =>
+            m.name.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }
 
     if (categoryFilter) {
       filtered = filtered.filter(m => m.category === categoryFilter);
@@ -40,7 +48,7 @@ function MaterialsPageContent() {
     }
 
     return filtered.sort((a, b) => a.name.localeCompare(b.name));
-  }, [materials, stockFilter, categoryFilter]);
+  }, [materials, stockFilter, categoryFilter, searchQuery]);
 
   const handleCategoryChange = (category: string) => {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
@@ -86,9 +94,22 @@ function MaterialsPageContent() {
         </div>
       </div>
 
-       <div className="flex items-center gap-4">
+       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-2">
-            <Label htmlFor="category-filter">Filtrar Categoria</Label>
+            <Label htmlFor="search-filter" className="sr-only">Pesquisar</Label>
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                    id="search-filter"
+                    placeholder="Pesquisar material..."
+                    className="w-64 pl-9"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+            </div>
+        </div>
+        <div className="flex items-center gap-2">
+            <Label htmlFor="category-filter" className="sr-only">Filtrar Categoria</Label>
             <Select onValueChange={handleCategoryChange} value={categoryFilter || 'all'}>
                 <SelectTrigger id="category-filter" className="w-[200px]">
                     <SelectValue placeholder="Selecione uma categoria" />
