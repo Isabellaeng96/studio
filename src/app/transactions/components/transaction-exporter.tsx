@@ -54,7 +54,7 @@ export function TransactionExporter({ transactions, materials }: TransactionExpo
       const doc = new jsPDF();
       
       // Adicionar Logo
-      doc.addImage(logoBase64, 'PNG', 14, 12, 60, 15);
+      doc.addImage(logoBase64, 'SVG', 14, 12, 60, 15);
 
       // Cabeçalho
       doc.setFontSize(18);

@@ -96,7 +96,7 @@ export function MaterialExporter({ materials }: MaterialExporterProps) {
     const doc = new jsPDF();
     
     // Adicionar Logo
-    doc.addImage(logoBase64, 'PNG', 14, 12, 60, 15);
+    doc.addImage(logoBase64, 'SVG', 14, 12, 60, 15);
 
     doc.setFontSize(18);
     doc.text('Relatório de Materiais', 14, 40);
