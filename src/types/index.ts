@@ -25,6 +25,7 @@ export type Transaction = {
   workFront?: string;
   responsible: string;
   costCenter?: string;
+  stockLocation?: string;
 };
 
 export type TransactionSave = Omit<Transaction, 'id' | 'type' | 'date' | 'materialName'> & {

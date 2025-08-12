@@ -44,9 +44,9 @@ const transactionSchema = z.object({
   supplier: z.string().optional(),
   invoice: z.string().optional(),
   osNumber: z.string().optional(),
-  workStage: z.string().optional(),
   workFront: z.string().optional(),
   costCenter: z.string().optional(),
+  stockLocation: z.string().optional(),
 });
 
 export type TransactionFormValues = z.infer<typeof transactionSchema>;
@@ -73,9 +73,9 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
       supplier: '',
       invoice: '',
       osNumber: '',
-      workStage: '',
       workFront: '',
       costCenter: '',
+      stockLocation: '',
        ...initialValues
     },
   });
@@ -103,9 +103,9 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
         supplier: '',
         invoice: '',
         osNumber: '',
-        workStage: '',
         workFront: '',
         costCenter: '',
+        stockLocation: '',
         ...initialValues,
       });
     }
@@ -124,9 +124,9 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
       supplier: '',
       invoice: '',
       osNumber: '',
-      workStage: '',
       workFront: '',
       costCenter: '',
+      stockLocation: '',
     });
   };
 
@@ -254,6 +254,20 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="stockLocation"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Local do Estoque (Opcional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="ex: Prateleira A-10" {...field} value={field.value ?? ''} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

@@ -12,7 +12,7 @@ function getFromStorage<T>(key: string, defaultValue: T): T {
   }
   try {
     const item = window.localStorage.getItem(key);
-    // Se o item for 'undefined' (string), null, ou vazio, retorna o valor padrão
+    // If the item is 'undefined' (string), null, or empty, return the default value
     if (item === null || item === 'undefined' || item === '') {
       return defaultValue;
     }
@@ -72,32 +72,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Load from storage only once
-    if (!isLoaded) {
-        const storedMaterials = getFromStorage<Material[]>('materials', []);
-        if (storedMaterials.length > 0) {
-             const formattedMaterials = storedMaterials.map(m => 
-                (m.id && m.id.toString().startsWith('PRD')) ? m : { ...m, id: generateId('PRD') }
-             );
-            setMaterials(formattedMaterials);
-            setTransactions(getFromStorage<Transaction[]>('transactions', []));
-            setCategories(getFromStorage<string[]>('categories', []));
-            setCostCenters(getFromStorage<CostCenter[]>('costCenters', []));
-        } else {
-            // LocalStorage is empty, load mock data and save it
-            setMaterials(initialMaterials);
-            setTransactions(initialTransactions);
-            const uniqueCategories = new Set(initialMaterials.map(m => m.category).filter(c => c && c.trim() !== ''));
-            const initialCats = Array.from(uniqueCategories);
-            setCategories(initialCats);
-            const initialCostCenters = [
-                { id: 'cc-1', name: 'Projeto A', description: 'Desenvolvimento do novo loteamento' },
-                { id: 'cc-2', name: 'Manutenção Geral', description: 'Custos de manutenção de rotina' },
-            ];
-            setCostCenters(initialCostCenters);
-        }
-        setIsLoaded(true);
+    const storedMaterials = getFromStorage<Material[]>('materials', []);
+    if (storedMaterials.length > 0) {
+        setMaterials(storedMaterials);
+        setTransactions(getFromStorage<Transaction[]>('transactions', []));
+        setCategories(getFromStorage<string[]>('categories', []));
+        setCostCenters(getFromStorage<CostCenter[]>('costCenters', []));
+    } else {
+        // LocalStorage is empty, load mock data
+        setMaterials(initialMaterials);
+        setTransactions(initialTransactions);
+        const uniqueCategories = new Set(initialMaterials.map(m => m.category).filter(c => c && c.trim() !== ''));
+        const initialCats = Array.from(uniqueCategories);
+        setCategories(initialCats);
+        const initialCostCenters = [
+            { id: 'cc-1', name: 'Projeto A', description: 'Desenvolvimento do novo loteamento' },
+            { id: 'cc-2', name: 'Manutenção Geral', description: 'Custos de manutenção de rotina' },
+        ];
+        setCostCenters(initialCostCenters);
     }
-}, [isLoaded]);
+    setIsLoaded(true);
+  }, []);
 
 
   useEffect(() => {

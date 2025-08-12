@@ -121,7 +121,7 @@ export function TransactionsTable({ data, materials }: TransactionsTableProps) {
                            {tx.type === 'entrada' && tx.supplier && <div><span className="font-semibold">Fornecedor:</span> {tx.supplier}</div>}
                            {tx.invoice && <div><span className="font-semibold">Nota Fiscal:</span> {tx.invoice}</div>}
                            {tx.type === 'saida' && tx.osNumber && <div><span className="font-semibold">Nº da OS:</span> {tx.osNumber}</div>}
-                           {tx.type === 'saida' && tx.workStage && <div><span className="font-semibold">Etapa da Obra:</span> {tx.workStage}</div>}
+                           {tx.stockLocation && <div><span className="font-semibold">Local do Estoque:</span> {tx.stockLocation}</div>}
                            {tx.type === 'saida' && tx.workFront && <div><span className="font-semibold">Frente de Trabalho:</span> {tx.workFront}</div>}
                         </div>
                     </div>
