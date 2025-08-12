@@ -12,12 +12,17 @@ function getFromStorage<T>(key: string, defaultValue: T): T {
   }
   try {
     const item = window.localStorage.getItem(key);
-    return item ? JSON.parse(item) : defaultValue;
+    // Se o item for 'undefined' (string), null, ou vazio, retorna o valor padrão
+    if (item === null || item === 'undefined' || item === '') {
+      return defaultValue;
+    }
+    return JSON.parse(item);
   } catch (error) {
     console.error(`Error reading from localStorage key “${key}”:`, error);
     return defaultValue;
   }
 }
+
 
 // Helper function to set item in localStorage safely
 function setInStorage<T>(key: string, value: T): void {
@@ -68,28 +73,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Load from storage only once
     if (typeof window !== 'undefined' && !isLoaded) {
-      const storedMaterials = getFromStorage<Material[]>('materials', initialMaterials);
-      // Ensure all materials have a correct ID format
-      const formattedMaterials = storedMaterials.map(m => 
-        (m.id && m.id.toString().startsWith('PRD')) ? m : { ...m, id: generateId('PRD') }
-      );
-      setMaterials(formattedMaterials);
-
-      setTransactions(getFromStorage('transactions', initialTransactions));
+      const storedMaterials = getFromStorage<Material[]>('materials', []);
       
-      const storedCategories = getFromStorage<string[]>('categories', []);
-      if (storedCategories.length > 0) {
-        setCategories(storedCategories);
+      if (storedMaterials.length > 0) {
+          const formattedMaterials = storedMaterials.map(m => 
+            (m.id && m.id.toString().startsWith('PRD')) ? m : { ...m, id: generateId('PRD') }
+          );
+          setMaterials(formattedMaterials);
+          setTransactions(getFromStorage('transactions', []));
+          setCategories(getFromStorage('categories', []));
+          setCostCenters(getFromStorage('costCenters', []));
       } else {
-        const uniqueCategories = new Set(initialMaterials.map(m => m.category).filter(c => c && c.trim() !== ''));
-        setCategories(Array.from(uniqueCategories));
+          // LocalStorage is empty, load mock data
+          setMaterials(initialMaterials);
+          setTransactions(initialTransactions);
+          const uniqueCategories = new Set(initialMaterials.map(m => m.category).filter(c => c && c.trim() !== ''));
+          setCategories(Array.from(uniqueCategories));
+          setCostCenters([
+              { id: 'cc-1', name: 'Projeto A', description: 'Desenvolvimento do novo loteamento' },
+              { id: 'cc-2', name: 'Manutenção Geral', description: 'Custos de manutenção de rotina' },
+          ]);
       }
-
-      setCostCenters(getFromStorage('costCenters', [
-        { id: 'cc-1', name: 'Projeto A', description: 'Desenvolvimento do novo loteamento' },
-        { id: 'cc-2', name: 'Manutenção Geral', description: 'Custos de manutenção de rotina' },
-      ]));
-
       setIsLoaded(true);
     }
   }, [isLoaded]);
