@@ -18,17 +18,18 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  webpack: (config, { isServer }) => {
-    // Adicionado para suportar `node-gyp` dependências como `pdf-parse`
+  webpack: (config, { isServer, nextRuntime }) => {
     if (!isServer) {
         config.resolve.fallback = {
             ...config.resolve.fallback,
             "fs": false
         };
     }
-    config.externals.push('node-gyp');
-    config.externals.push('pdf-parse');
-    
+    // Adicionado para suportar `node-gyp` dependências como `pdf-parse`
+    if (nextRuntime === 'nodejs') {
+      config.externals.push('node-gyp');
+      config.externals.push('pdf-parse');
+    }
     return config;
   },
 };
