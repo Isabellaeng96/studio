@@ -6,6 +6,7 @@ import {
   Package,
   Replace,
   Landmark,
+  Settings,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -18,6 +19,7 @@ const navItems = [
   { href: '/transactions', label: 'Transações', icon: Replace },
   { href: '/cost-centers', label: 'Centros de Custo', icon: Landmark },
   { href: '/analysis', label: 'Análise', icon: BarChart3 },
+  { href: '/settings', label: 'Configurações', icon: Settings },
 ];
 
 export function AppSidebarNav({ isMobile = false }: { isMobile?: boolean }) {

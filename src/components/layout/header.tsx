@@ -18,10 +18,12 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { AppSidebarNav } from './sidebar-nav';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export function Header() {
   const { toast } = useToast();
   const { logout, user } = useAuth();
+  const router = useRouter();
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
@@ -64,7 +66,7 @@ export function Header() {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => toast({ title: "Em breve!", description: "A página de configurações será implementada." })}>
+          <DropdownMenuItem onClick={() => router.push('/settings')}>
             Configurações
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => toast({ title: "Em breve!", description: "O suporte ao usuário será implementado." })}>
