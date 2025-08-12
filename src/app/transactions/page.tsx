@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { transactions, materials } from '@/lib/mock-data';
 import { TransactionForm } from './components/transaction-form';
 import { TransactionsTable } from './components/transactions-table';
+import { useAppContext } from '@/context/AppContext';
 
 export default function TransactionsPage() {
+  const { materials, transactions, addTransaction } = useAppContext();
   const [activeTab, setActiveTab] = useState('saida');
 
   return (
@@ -26,15 +27,15 @@ export default function TransactionsPage() {
               <TabsTrigger value="saida">Saída</TabsTrigger>
             </TabsList>
             <TabsContent value="entrada">
-              <TransactionForm type="entrada" materials={materials} />
+              <TransactionForm type="entrada" materials={materials} onSave={addTransaction} />
             </TabsContent>
             <TabsContent value="saida">
-              <TransactionForm type="saida" materials={materials} />
+              <TransactionForm type="saida" materials={materials} onSave={addTransaction} />
             </TabsContent>
           </Tabs>
         </div>
         <div className="lg:col-span-2">
-          <TransactionsTable data={transactions} />
+          <TransactionsTable data={transactions} materials={materials} />
         </div>
       </div>
     </div>

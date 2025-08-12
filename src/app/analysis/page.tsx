@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { materials, transactions } from "@/lib/mock-data";
 import { ChartsView } from "./components/charts";
 import { PredictiveAnalysis } from "./components/predictive-analysis";
+import { useAppContext } from '@/context/AppContext';
 
 export default function AnalysisPage() {
+  const { materials, transactions } = useAppContext();
   const [activeTab, setActiveTab] = useState('charts');
 
   return (

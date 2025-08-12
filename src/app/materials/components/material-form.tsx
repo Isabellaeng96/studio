@@ -23,7 +23,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import type { Material } from '@/types';
+import type { Material, MaterialSave } from '@/types';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -41,7 +41,7 @@ type MaterialFormValues = z.infer<typeof materialSchema>;
 interface MaterialFormProps {
   children: React.ReactNode;
   material?: Material;
-  onSave: (data: Omit<Material, 'id' | 'currentStock'> & { id?: string }) => void;
+  onSave: (data: MaterialSave & { id?: string }) => void;
   categories: string[];
 }
 
@@ -122,7 +122,7 @@ export function MaterialForm({ children, material, onSave, categories }: Materia
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Categoria</FormLabel>
-                     <Select onValueChange={field.onChange} defaultValue={field.value}>
+                     <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione" />

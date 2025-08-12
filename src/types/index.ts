@@ -8,6 +8,8 @@ export type Material = {
   supplier?: string;
 };
 
+export type MaterialSave = Omit<Material, 'id' | 'currentStock'>;
+
 export type Transaction = {
   id: string;
   type: 'entrada' | 'saida';
@@ -21,6 +23,11 @@ export type Transaction = {
   workFront?: string;
   responsible: string;
 };
+
+export type TransactionSave = Omit<Transaction, 'id' | 'type' | 'date' | 'materialName'> & {
+  date: Date;
+};
+
 
 export type StockTurnover = {
   materialId: string;

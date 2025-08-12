@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import type { Material } from '@/types';
+import type { Material, TransactionSave } from '@/types';
 import { format } from 'date-fns';
 
 const transactionSchema = z.object({
@@ -50,9 +50,10 @@ type TransactionFormValues = z.infer<typeof transactionSchema>;
 interface TransactionFormProps {
   type: 'entrada' | 'saida';
   materials: Material[];
+  onSave: (transaction: TransactionSave, type: 'entrada' | 'saida') => void;
 }
 
-export function TransactionForm({ type, materials }: TransactionFormProps) {
+export function TransactionForm({ type, materials, onSave }: TransactionFormProps) {
   const { toast } = useToast();
 
   const form = useForm<TransactionFormValues>({
@@ -70,12 +71,20 @@ export function TransactionForm({ type, materials }: TransactionFormProps) {
   });
 
   const onSubmit = (data: TransactionFormValues) => {
-    // In a real app, you'd call a server action or API here.
+    onSave(data, type);
     toast({
       title: 'Transação Registrada',
       description: `Uma nova transação de ${type} de ${data.quantity} unidades foi salva.`,
     });
-    form.reset();
+    form.reset({
+      ...form.getValues(),
+      materialId: '',
+      quantity: 0,
+      supplier: '',
+      invoice: '',
+      workStage: '',
+      workFront: '',
+    });
   };
 
   return (
@@ -92,7 +101,7 @@ export function TransactionForm({ type, materials }: TransactionFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Material</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione um material" />
@@ -133,7 +142,7 @@ export function TransactionForm({ type, materials }: TransactionFormProps) {
                     <FormItem>
                       <FormLabel>Fornecedor</FormLabel>
                       <FormControl>
-                        <Input placeholder="Nome do fornecedor" {...field} />
+                        <Input placeholder="Nome do fornecedor" {...field} value={field.value ?? ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -146,7 +155,7 @@ export function TransactionForm({ type, materials }: TransactionFormProps) {
                     <FormItem>
                       <FormLabel>Nota Fiscal (Opcional)</FormLabel>
                       <FormControl>
-                        <Input placeholder="NF-12345" {...field} />
+                        <Input placeholder="NF-12345" {...field} value={field.value ?? ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -162,7 +171,7 @@ export function TransactionForm({ type, materials }: TransactionFormProps) {
                     <FormItem>
                       <FormLabel>Etapa da Obra</FormLabel>
                       <FormControl>
-                        <Input placeholder="ex: Fundação" {...field} />
+                        <Input placeholder="ex: Fundação" {...field} value={field.value ?? ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -175,7 +184,7 @@ export function TransactionForm({ type, materials }: TransactionFormProps) {
                     <FormItem>
                       <FormLabel>Frente de Trabalho (Opcional)</FormLabel>
                       <FormControl>
-                        <Input placeholder="ex: Poço P-03" {...field} />
+                        <Input placeholder="ex: Poço P-03" {...field} value={field.value ?? ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

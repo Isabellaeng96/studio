@@ -15,14 +15,15 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
-import type { Transaction } from '@/types';
+import type { Material, Transaction } from '@/types';
 
 interface TransactionsTableProps {
   data: Transaction[];
+  materials: Material[];
 }
 
-export function TransactionsTable({ data }: TransactionsTableProps) {
-  const sortedData = [...data].sort((a, b) => b.date - a.date);
+export function TransactionsTable({ data, materials }: TransactionsTableProps) {
+  const sortedData = [...data].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <Card>
@@ -43,7 +44,7 @@ export function TransactionsTable({ data }: TransactionsTableProps) {
             <TableBody>
               {sortedData.map(tx => (
                 <TableRow key={tx.id}>
-                  <TableCell className="font-medium">{tx.materialName}</TableCell>
+                  <TableCell className="font-medium">{materials.find(m => m.id === tx.materialId)?.name || tx.materialId}</TableCell>
                   <TableCell>
                     <Badge
                       variant="outline"

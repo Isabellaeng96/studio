@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Activity,
   AlertTriangle,
@@ -23,23 +25,28 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { materials, transactions } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import type { Material, Transaction } from '@/types';
-
-function getMaterialsBelowMinStock(materials: Material[]): Material[] {
-  return materials.filter(material => material.currentStock < material.minStock);
-}
+import { useAppContext } from '@/context/AppContext';
+import { useMemo } from 'react';
 
 function getRecentTransactions(transactions: Transaction[], limit = 5): Transaction[] {
-  return transactions
-    .sort((a, b) => b.date - a.date)
+  return [...transactions]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, limit);
 }
 
 export default function DashboardPage() {
-  const lowStockMaterials = getMaterialsBelowMinStock(materials);
-  const recentTransactions = getRecentTransactions(transactions);
+  const { materials, transactions } = useAppContext();
+
+  const lowStockMaterials = useMemo(() => {
+    return materials.filter(material => material.currentStock < material.minStock)
+  }, [materials]);
+
+  const recentTransactions = useMemo(() => {
+    return getRecentTransactions(transactions)
+  }, [transactions]);
+
 
   return (
     <div className="flex flex-col gap-8">
@@ -129,7 +136,7 @@ export default function DashboardPage() {
               <TableBody>
                 {recentTransactions.map(tx => (
                   <TableRow key={tx.id}>
-                    <TableCell className="font-medium">{tx.materialName}</TableCell>
+                    <TableCell className="font-medium">{materials.find(m => m.id === tx.materialId)?.name || tx.materialId}</TableCell>
                     <TableCell className="text-center">
                       <Badge
                         variant="outline"
