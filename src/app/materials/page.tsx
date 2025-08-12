@@ -1,6 +1,8 @@
 
 "use client";
 
+import { useMemo, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { PlusCircle, Tag, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MaterialsTable } from './components/materials-table';
@@ -10,8 +12,20 @@ import { useAppContext } from '@/context/AppContext';
 import { MaterialImporter } from './components/material-importer';
 import { MaterialExporter } from './components/material-exporter';
 
-export default function MaterialsPage() {
+function MaterialsPageContent() {
   const { materials, categories, addMaterial, updateMaterial, deleteMaterial, deleteMultipleMaterials, addCategory, addMultipleMaterials } = useAppContext();
+  const searchParams = useSearchParams();
+  const filter = searchParams.get('filter');
+
+  const sortedMaterials = useMemo(() => {
+    const sorted = [...materials].sort((a, b) => a.name.localeCompare(b.name));
+    if (filter === 'low_stock') {
+      const lowStockItems = sorted.filter(m => m.currentStock < m.minStock);
+      const normalStockItems = sorted.filter(m => m.currentStock >= m.minStock);
+      return [...lowStockItems, ...normalStockItems];
+    }
+    return sorted;
+  }, [materials, filter]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -23,7 +37,7 @@ export default function MaterialsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-           <MaterialExporter materials={materials} />
+           <MaterialExporter materials={sortedMaterials} />
            <CategoryForm onSave={addCategory}>
              <Button variant="outline">
               <Tag className="mr-2 h-4 w-4" />
@@ -45,7 +59,7 @@ export default function MaterialsPage() {
         </div>
       </div>
       <MaterialsTable 
-        data={materials} 
+        data={sortedMaterials} 
         onSave={updateMaterial} 
         onDelete={deleteMaterial}
         onDeleteMultiple={deleteMultipleMaterials}
@@ -55,3 +69,10 @@ export default function MaterialsPage() {
   );
 }
 
+export default function MaterialsPage() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <MaterialsPageContent />
+    </Suspense>
+  )
+}
