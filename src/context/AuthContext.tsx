@@ -2,7 +2,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onAuthStateChanged, User, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updatePassword } from 'firebase/auth';
+import { onAuthStateChanged, User, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updatePassword, updateProfile } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 
@@ -10,7 +10,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, pass: string) => Promise<any>;
-  signup: (email: string, pass: string) => Promise<any>;
+  signup: (email: string, pass: string, name: string) => Promise<any>;
   logout: () => Promise<void>;
   updateUserPassword: (password: string) => Promise<void>;
 }
@@ -38,8 +38,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return signInWithEmailAndPassword(auth, email, pass);
   };
   
-  const signup = (email: string, pass: string) => {
-    return createUserWithEmailAndPassword(auth, email, pass);
+  const signup = async (email: string, pass: string, name: string) => {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+    if (userCredential.user) {
+        await updateProfile(userCredential.user, {
+            displayName: name
+        });
+    }
+    return userCredential;
   };
 
   const logout = async () => {

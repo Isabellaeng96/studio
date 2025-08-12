@@ -1,3 +1,4 @@
+
 // src/app/login/page.tsx
 "use client";
 
@@ -15,6 +16,7 @@ export default function LoginPage() {
   const [isLoginView, setIsLoginView] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login, signup } = useAuth();
   const router = useRouter();
@@ -27,7 +29,7 @@ export default function LoginPage() {
       if (isLoginView) {
         await login(email, password);
       } else {
-        await signup(email, password);
+        await signup(email, password, name);
         toast({
           title: "Conta Criada!",
           description: "Sua conta foi criada com sucesso. Faça o login para continuar.",
@@ -59,6 +61,19 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {!isLoginView && (
+               <div className="space-y-2">
+                <Label htmlFor="name">Nome</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="Seu Nome Completo"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
