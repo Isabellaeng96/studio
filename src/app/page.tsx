@@ -54,7 +54,7 @@ export default function DashboardPage() {
   }, [materials]);
 
   const recentTransactions = useMemo(() => {
-    return getRecentTransactions(transactions)
+    return getRecentTransactions(transactions, 5)
   }, [transactions]);
   
 
@@ -120,10 +120,10 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {recentTransactions.length}
+                {transactions.length}
               </div>
               <p className="text-xs text-muted-foreground">
-                últimas transações registradas.
+                transações registradas no total.
               </p>
             </CardContent>
           </Card>
@@ -136,7 +136,7 @@ export default function DashboardPage() {
              <div>
               <CardTitle>Transações Recentes</CardTitle>
               <CardDescription>
-                Um registro dos últimos movimentos de estoque.
+                Um registro dos últimos 5 movimentos de estoque.
               </CardDescription>
             </div>
              <Button size="sm" variant="outline" asChild>
