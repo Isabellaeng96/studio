@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import type { Material, Transaction } from '@/types';
+import { useEffect, useState } from 'react';
 
 interface TransactionsTableProps {
   data: Transaction[];
@@ -23,6 +24,12 @@ interface TransactionsTableProps {
 }
 
 export function TransactionsTable({ data, materials }: TransactionsTableProps) {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
   const sortedData = [...data].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
@@ -66,7 +73,7 @@ export function TransactionsTable({ data, materials }: TransactionsTableProps) {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right font-mono">{tx.quantity}</TableCell>
-                  <TableCell>{new Date(tx.date).toLocaleDateString()}</TableCell>
+                  <TableCell>{isClient ? new Date(tx.date).toLocaleDateString() : ''}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

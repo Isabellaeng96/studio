@@ -28,7 +28,7 @@ import {
 import { cn } from '@/lib/utils';
 import type { Material, Transaction } from '@/types';
 import { useAppContext } from '@/context/AppContext';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 function getRecentTransactions(transactions: Transaction[], limit = 5): Transaction[] {
   return [...transactions]
@@ -38,6 +38,11 @@ function getRecentTransactions(transactions: Transaction[], limit = 5): Transact
 
 export default function DashboardPage() {
   const { materials, transactions } = useAppContext();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const lowStockMaterials = useMemo(() => {
     return materials.filter(material => material.currentStock < material.minStock)
@@ -158,7 +163,7 @@ export default function DashboardPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right font-mono">{tx.quantity}</TableCell>
-                    <TableCell>{new Date(tx.date).toLocaleDateString()}</TableCell>
+                    <TableCell>{isClient ? new Date(tx.date).toLocaleDateString() : ''}</TableCell>
                     <TableCell>{tx.responsible}</TableCell>
                   </TableRow>
                 ))}
