@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState, Suspense } from 'react';
@@ -39,8 +40,8 @@ function TransactionsPageContent() {
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-1 flex flex-col gap-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <div className="lg:col-span-2">
+           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="entrada">Entrada</TabsTrigger>
               <TabsTrigger value="saida">Saída</TabsTrigger>
@@ -67,12 +68,16 @@ function TransactionsPageContent() {
               />
             </TabsContent>
           </Tabs>
-           <PdfImporter onDataExtracted={handlePdfDataExtracted} />
         </div>
-        <div className="lg:col-span-2">
-          <TransactionsTable data={transactions} materials={materials} />
+        <div className="lg:col-span-1">
+          <PdfImporter onDataExtracted={handlePdfDataExtracted} />
         </div>
       </div>
+      
+      <div>
+        <TransactionsTable data={transactions} materials={materials} />
+      </div>
+
     </div>
   );
 }
