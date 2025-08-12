@@ -16,27 +16,33 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { AppSidebarNav } from './sidebar-nav';
-import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 
 export function Header() {
-  const { toast } = useToast();
   const { logout, user, role } = useAuth();
   const router = useRouter();
 
   const getInitials = (name?: string | null, email?: string | null) => {
     if (name) {
-      const names = name.split(' ');
-      const firstInitial = names[0][0];
-      const lastInitial = names.length > 1 ? names[names.length - 1][0] : '';
-      return `${firstInitial}${lastInitial}`.toUpperCase();
+      const names = name.split(' ').filter(Boolean);
+      if (names.length > 1) {
+        return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+      }
+      if (names.length === 1) {
+        return names[0][0].toUpperCase();
+      }
     }
     if (email) {
       return email.charAt(0).toUpperCase();
     }
     return 'U';
   };
+  
+  const handleSupportClick = () => {
+    window.location.href = "mailto:suporte@geostoque.com?subject=Suporte Geostoque";
+  }
+
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
@@ -71,7 +77,7 @@ export function Header() {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" className="rounded-full">
             <Avatar>
-              <AvatarImage src={user?.photoURL ?? undefined} alt="Avatar do Usuário" data-ai-hint="user avatar" />
+              <AvatarImage src={user?.photoURL ?? undefined} alt="Avatar do Usuário" />
               <AvatarFallback>{getInitials(user?.displayName, user?.email)}</AvatarFallback>
             </Avatar>
           </Button>
@@ -94,7 +100,7 @@ export function Header() {
           <DropdownMenuItem onClick={() => router.push('/settings')}>
             Configurações
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => toast({ title: "Em breve!", description: "O suporte ao usuário será implementado." })}>
+          <DropdownMenuItem onClick={handleSupportClick}>
             Suporte
           </DropdownMenuItem>
           <DropdownMenuSeparator />
