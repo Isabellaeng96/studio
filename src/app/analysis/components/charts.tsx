@@ -20,7 +20,7 @@ export function ChartsView({ materials, transactions }: ChartsViewProps) {
   }));
 
   const transactionTrendData = useMemo(() => {
-    const last30Days = Array.from({ length: 30 }, (_, i) => {
+    const data = Array.from({ length: 30 }, (_, i) => {
       const date = subDays(new Date(), 29 - i);
       return {
         date: format(date, "MMM dd"),
@@ -31,14 +31,14 @@ export function ChartsView({ materials, transactions }: ChartsViewProps) {
 
     transactions.forEach(tx => {
       const dateStr = format(new Date(tx.date), "MMM dd");
-      const entry = transactionTrendData.find(d => d.date === dateStr);
+      const entry = data.find(d => d.date === dateStr);
       if (entry) {
         if (tx.type === "entrada") entry.entrada += tx.quantity;
         else entry.saida += tx.quantity;
       }
     });
 
-    return transactionTrendData;
+    return data;
   }, [transactions]);
   
   const stockTurnoverData = materials.map(material => {
