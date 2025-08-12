@@ -19,6 +19,13 @@ function getFromStorage<T>(key: string, defaultValue: T): T {
   }
 }
 
+// Helper function to generate a unique product ID
+function generateProductId(): string {
+  const randomNumber = Math.floor(10000000 + Math.random() * 90000000);
+  return `PRD${randomNumber}`;
+}
+
+
 interface AppContextType {
   materials: Material[];
   transactions: Transaction[];
@@ -73,7 +80,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addMaterial = (material: MaterialSave) => {
     const newMaterial: Material = {
       ...material,
-      id: `mat-${Date.now()}`,
+      id: generateProductId(),
       currentStock: 0,
     };
     setMaterials(prev => [newMaterial, ...prev]);
@@ -83,9 +90,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
   
   const addMultipleMaterials = (newMaterials: MaterialSave[]) => {
-    const materialsToAdd: Material[] = newMaterials.map((material, index) => ({
+    const materialsToAdd: Material[] = newMaterials.map((material) => ({
       ...material,
-      id: `mat-${Date.now()}-${index}`,
+      id: generateProductId(),
       currentStock: 0,
     }));
     
