@@ -13,6 +13,7 @@ interface AuthContextType {
   signup: (email: string, pass: string, name: string) => Promise<any>;
   logout: () => Promise<void>;
   updateUserPassword: (password: string) => Promise<void>;
+  updateUserProfile: (name: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -59,6 +60,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return updatePassword(auth.currentUser, password);
   }
+  
+  const updateUserProfile = async (name: string) => {
+    if (!auth.currentUser) {
+      throw new Error("Nenhum usuário logado para atualizar o perfil.");
+    }
+    await updateProfile(auth.currentUser, { displayName: name });
+    // Manually update the user object in state to reflect the change immediately
+    setUser(auth.currentUser ? { ...auth.currentUser } : null);
+  };
+
 
   const value = {
     user,
@@ -67,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signup,
     logout,
     updateUserPassword,
+    updateUserProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
