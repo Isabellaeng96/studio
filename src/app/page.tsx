@@ -186,7 +186,7 @@ export default function DashboardPage() {
                       </p>
                     </div>
                     <Button variant="secondary" size="sm" asChild>
-                      <Link href="/transactions">Repor</Link>
+                      <Link href={`/transactions?tab=entrada&materialId=${material.id}`}>Repor</Link>
                     </Button>
                   </li>
                 ))}

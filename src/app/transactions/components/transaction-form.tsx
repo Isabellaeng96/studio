@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { CalendarIcon } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -51,9 +52,10 @@ interface TransactionFormProps {
   type: 'entrada' | 'saida';
   materials: Material[];
   onSave: (transaction: TransactionSave, type: 'entrada' | 'saida') => void;
+  defaultMaterialId?: string | null;
 }
 
-export function TransactionForm({ type, materials, onSave }: TransactionFormProps) {
+export function TransactionForm({ type, materials, onSave, defaultMaterialId }: TransactionFormProps) {
   const { toast } = useToast();
 
   const form = useForm<TransactionFormValues>({
@@ -62,13 +64,19 @@ export function TransactionForm({ type, materials, onSave }: TransactionFormProp
       date: new Date(),
       responsible: '',
       quantity: 0,
-      materialId: '',
+      materialId: defaultMaterialId ?? '',
       supplier: '',
       invoice: '',
       workStage: '',
       workFront: '',
     },
   });
+
+  useEffect(() => {
+    if (defaultMaterialId) {
+      form.setValue('materialId', defaultMaterialId);
+    }
+  }, [defaultMaterialId, form]);
 
   const onSubmit = (data: TransactionFormValues) => {
     onSave(data, type);
@@ -101,7 +109,7 @@ export function TransactionForm({ type, materials, onSave }: TransactionFormProp
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Material</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione um material" />

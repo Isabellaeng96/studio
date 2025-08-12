@@ -1,14 +1,26 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TransactionForm } from './components/transaction-form';
 import { TransactionsTable } from './components/transactions-table';
 import { useAppContext } from '@/context/AppContext';
 
-export default function TransactionsPage() {
+function TransactionsPageContent() {
   const { materials, transactions, addTransaction } = useAppContext();
-  const [activeTab, setActiveTab] = useState('saida');
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get('tab') === 'entrada' ? 'entrada' : 'saida';
+  const materialId = searchParams.get('materialId');
+
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl === 'entrada' || tabFromUrl === 'saida') {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -27,10 +39,10 @@ export default function TransactionsPage() {
               <TabsTrigger value="saida">Saída</TabsTrigger>
             </TabsList>
             <TabsContent value="entrada">
-              <TransactionForm type="entrada" materials={materials} onSave={addTransaction} />
+              <TransactionForm type="entrada" materials={materials} onSave={addTransaction} defaultMaterialId={materialId} />
             </TabsContent>
             <TabsContent value="saida">
-              <TransactionForm type="saida" materials={materials} onSave={addTransaction} />
+              <TransactionForm type="saida" materials={materials} onSave={addTransaction} defaultMaterialId={materialId} />
             </TabsContent>
           </Tabs>
         </div>
@@ -40,4 +52,13 @@ export default function TransactionsPage() {
       </div>
     </div>
   );
+}
+
+
+export default function TransactionsPage() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <TransactionsPageContent />
+    </Suspense>
+  )
 }
