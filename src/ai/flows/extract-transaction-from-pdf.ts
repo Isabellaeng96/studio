@@ -1,17 +1,18 @@
 'use server';
 /**
- * @fileOverview Extrai informações de transação de um texto de PDF.
+ * @fileOverview Extrai informações de transação de um documento PDF.
  *
- * - extractTransactionFromPdf - Analisa o texto de um PDF para extrair detalhes da transação.
+ * - extractTransactionFromPdf - Analisa um arquivo PDF para extrair detalhes da transação.
  * - TransactionExtractionInput - O tipo de entrada para a função extractTransactionFromPdf.
  * - TransactionExtractionOutput - O tipo de retorno para a função extractTransactionFromPdf.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import pdf from 'pdf-parse';
 
 const TransactionExtractionInputSchema = z.object({
-  pdfTextContent: z.string().describe('O conteúdo de texto completo extraído de um documento PDF, como uma nota fiscal.'),
+  pdfDataUri: z.string().describe("O arquivo PDF como um data URI, que deve incluir um MIME type e usar codificação Base64. Formato esperado: 'data:<mimetype>;base64,<encoded_data>'."),
 });
 export type TransactionExtractionInput = z.infer<typeof TransactionExtractionInputSchema>;
 
@@ -30,7 +31,7 @@ export async function extractTransactionFromPdf(input: TransactionExtractionInpu
 
 const prompt = ai.definePrompt({
   name: 'extractTransactionPrompt',
-  input: { schema: TransactionExtractionInputSchema },
+  input: { schema: z.object({ pdfTextContent: z.string() }) },
   output: { schema: TransactionExtractionOutputSchema },
   prompt: `Você é um assistente de entrada de dados especializado em analisar texto de notas fiscais e faturas.
 Analise o seguinte texto extraído de um PDF e identifique os seguintes campos: nome do material, quantidade, fornecedor e número da nota fiscal.
@@ -51,7 +52,12 @@ const extractTransactionFlow = ai.defineFlow(
     outputSchema: TransactionExtractionOutputSchema,
   },
   async input => {
-    const { output } = await prompt(input);
+    const base64Data = input.pdfDataUri.split(',')[1];
+    const pdfBuffer = Buffer.from(base64Data, 'base64');
+    
+    const data = await pdf(pdfBuffer);
+    
+    const { output } = await prompt({ pdfTextContent: data.text });
     return output!;
   }
 );

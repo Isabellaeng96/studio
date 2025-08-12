@@ -14,9 +14,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, FileUp, Wand2 } from 'lucide-react';
 import type { TransactionSave } from '@/types';
 import { extractTransactionFromPdf } from '@/ai/flows/extract-transaction-from-pdf';
-// @ts-ignore
-import pdfjs from 'pdf-parse';
-
 
 interface PdfImporterProps {
   onDataExtracted: (data: Partial<TransactionSave>) => void;
@@ -41,6 +38,15 @@ export function PdfImporter({ onDataExtracted }: PdfImporterProps) {
     }
   };
 
+  const fileToDataUri = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
   const handleExtract = async () => {
     if (!file) {
       setError('Nenhum arquivo selecionado.');
@@ -51,12 +57,10 @@ export function PdfImporter({ onDataExtracted }: PdfImporterProps) {
     setError('');
 
     try {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = (await import('pdf-parse')).default;
-      const data = await pdf(arrayBuffer);
+      const dataUri = await fileToDataUri(file);
       
       const result = await extractTransactionFromPdf({
-        pdfTextContent: data.text,
+        pdfDataUri: dataUri,
       });
 
       onDataExtracted(result);
@@ -77,7 +81,6 @@ export function PdfImporter({ onDataExtracted }: PdfImporterProps) {
     } finally {
       setIsLoading(false);
       setFile(null);
-      // Reset the input value
       const input = document.getElementById('pdf-upload') as HTMLInputElement;
       if (input) input.value = '';
     }
