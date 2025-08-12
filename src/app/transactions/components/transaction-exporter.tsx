@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -73,7 +74,7 @@ export function TransactionExporter({ transactions, materials }: TransactionExpo
           tx.costCenter || '-',
         ]),
         styles: { fontSize: 8 },
-        headStyles: { fillColor: 'hsl(var(--primary))' },
+        headStyles: { fillColor: '#3b82f6' },
       });
 
       doc.save(`relatorio_transacoes_${format(new Date(), 'yyyyMMdd')}.pdf`);
