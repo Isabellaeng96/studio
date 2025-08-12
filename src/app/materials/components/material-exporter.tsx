@@ -103,7 +103,7 @@ export function MaterialExporter({ materials }: MaterialExporterProps) {
       head: [Object.keys(dataToExport[0])],
       body: dataToExport.map(Object.values),
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [0, 128, 128] }, // Teal color
+      headStyles: { fillColor: [46, 91, 227] },
     });
 
     doc.save(`${filename}.pdf`);

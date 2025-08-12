@@ -73,7 +73,7 @@ export function TransactionExporter({ transactions, materials }: TransactionExpo
           tx.costCenter || '-',
         ]),
         styles: { fontSize: 8 },
-        headStyles: { fillColor: [0, 128, 128] }, // Teal color
+        headStyles: { fillColor: [46, 91, 227] },
       });
 
       doc.save(`relatorio_transacoes_${format(new Date(), 'yyyyMMdd')}.pdf`);
