@@ -26,10 +26,11 @@ import { Input } from '@/components/ui/input';
 import type { Material } from '@/types';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const materialSchema = z.object({
   name: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres.'),
-  category: z.string().min(2, 'A categoria é obrigatória.'),
+  category: z.string().min(1, 'A categoria é obrigatória.'),
   unit: z.string().min(1, 'A unidade é obrigatória.'),
   minStock: z.coerce.number().min(0, 'O estoque mínimo não pode ser negativo.'),
   supplier: z.string().optional(),
@@ -41,9 +42,10 @@ interface MaterialFormProps {
   children: React.ReactNode;
   material?: Material;
   onSave: (data: Omit<Material, 'id' | 'currentStock'> & { id?: string }) => void;
+  categories: string[];
 }
 
-export function MaterialForm({ children, material, onSave }: MaterialFormProps) {
+export function MaterialForm({ children, material, onSave, categories }: MaterialFormProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
 
@@ -70,7 +72,7 @@ export function MaterialForm({ children, material, onSave }: MaterialFormProps) 
         supplier: '',
       });
     }
-  }, [material, form]);
+  }, [material, form, open]);
 
 
   const onSubmit = (data: MaterialFormValues) => {
@@ -114,15 +116,26 @@ export function MaterialForm({ children, material, onSave }: MaterialFormProps) 
               )}
             />
             <div className="grid grid-cols-2 gap-4">
-              <FormField
+               <FormField
                 control={form.control}
                 name="category"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Categoria</FormLabel>
-                    <FormControl>
-                      <Input placeholder="ex: Estrutura" {...field} />
-                    </FormControl>
+                     <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {categories.map(category => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

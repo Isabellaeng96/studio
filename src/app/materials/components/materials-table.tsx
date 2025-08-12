@@ -37,9 +37,10 @@ interface MaterialsTableProps {
   data: Material[];
   onSave: (material: Omit<Material, 'id' | 'currentStock'> & { id?: string }) => void;
   onDelete: (materialId: string) => void;
+  categories: string[];
 }
 
-export function MaterialsTable({ data, onSave, onDelete }: MaterialsTableProps) {
+export function MaterialsTable({ data, onSave, onDelete, categories }: MaterialsTableProps) {
   return (
     <Card>
       <CardContent className="p-0">
@@ -80,7 +81,7 @@ export function MaterialsTable({ data, onSave, onDelete }: MaterialsTableProps) 
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
-                        <MaterialForm material={material} onSave={onSave}>
+                        <MaterialForm material={material} onSave={onSave} categories={categories}>
                           <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                               <Pencil className="mr-2 h-4 w-4" />
                               Editar

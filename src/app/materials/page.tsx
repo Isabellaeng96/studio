@@ -1,15 +1,20 @@
 "use client";
 
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { materials as initialMaterials } from '@/lib/mock-data';
 import { MaterialsTable } from './components/materials-table';
 import { MaterialForm } from './components/material-form';
 import { useState } from 'react';
 import { Material } from '@/types';
+import { CategoryForm } from './components/category-form';
 
 export default function MaterialsPage() {
   const [materials, setMaterials] = useState<Material[]>(initialMaterials);
+  const [categories, setCategories] = useState<string[]>(() => {
+    const uniqueCategories = new Set(initialMaterials.map(m => m.category));
+    return Array.from(uniqueCategories);
+  });
 
   const handleSaveMaterial = (material: Omit<Material, 'id' | 'currentStock'> & { id?: string }) => {
     setMaterials(prev => {
@@ -32,6 +37,12 @@ export default function MaterialsPage() {
     setMaterials(prev => prev.filter(m => m.id !== materialId));
   };
 
+  const handleAddCategory = (category: string) => {
+    setCategories(prev => {
+      const newCategories = new Set([...prev, category]);
+      return Array.from(newCategories);
+    });
+  };
 
   return (
     <div className="flex flex-col gap-8">
@@ -43,7 +54,13 @@ export default function MaterialsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <MaterialForm onSave={handleSaveMaterial}>
+           <CategoryForm onSave={handleAddCategory}>
+             <Button variant="outline">
+              <Tag className="mr-2 h-4 w-4" />
+              Adicionar Categoria
+            </Button>
+           </CategoryForm>
+          <MaterialForm onSave={handleSaveMaterial} categories={categories}>
             <Button>
               <PlusCircle className="mr-2 h-4 w-4" />
               Adicionar Material
@@ -51,7 +68,7 @@ export default function MaterialsPage() {
           </MaterialForm>
         </div>
       </div>
-      <MaterialsTable data={materials} onSave={handleSaveMaterial} onDelete={handleDeleteMaterial} />
+      <MaterialsTable data={materials} onSave={handleSaveMaterial} onDelete={handleDeleteMaterial} categories={categories} />
     </div>
   );
 }
