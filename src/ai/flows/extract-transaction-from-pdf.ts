@@ -9,7 +9,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import pdf from 'pdf-parse';
+// import pdf from 'pdf-parse'; // Will be dynamically imported
 
 const TransactionExtractionInputSchema = z.object({
   pdfDataUri: z.string().describe("O arquivo PDF como um data URI, que deve incluir um MIME type e usar codificação Base64. Formato esperado: 'data:<mimetype>;base64,<encoded_data>'."),
@@ -52,6 +52,7 @@ const extractTransactionFlow = ai.defineFlow(
     outputSchema: TransactionExtractionOutputSchema,
   },
   async input => {
+    const pdf = (await import('pdf-parse')).default;
     const base64Data = input.pdfDataUri.split(',')[1];
     const pdfBuffer = Buffer.from(base64Data, 'base64');
     
