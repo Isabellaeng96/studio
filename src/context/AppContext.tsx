@@ -12,6 +12,7 @@ interface AppContextType {
   addMultipleMaterials: (materials: MaterialSave[]) => void;
   updateMaterial: (material: MaterialSave & { id: string }) => void;
   deleteMaterial: (materialId: string) => void;
+  deleteMultipleMaterials: (materialIds: string[]) => void;
   addCategory: (category: string) => void;
   addTransaction: (transaction: TransactionSave, type: 'entrada' | 'saida') => void;
 }
@@ -63,6 +64,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setMaterials(prev => prev.filter(m => m.id !== materialId));
   };
 
+  const deleteMultipleMaterials = (materialIds: string[]) => {
+    setMaterials(prev => prev.filter(m => !materialIds.includes(m.id)));
+  };
+
   const addCategory = (category: string) => {
     setCategories(prev => {
       const newCategories = new Set([...prev, category]);
@@ -104,6 +109,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addMultipleMaterials,
     updateMaterial,
     deleteMaterial,
+    deleteMultipleMaterials,
     addCategory,
     addTransaction,
   };

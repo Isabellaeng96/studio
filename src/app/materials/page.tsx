@@ -9,7 +9,7 @@ import { useAppContext } from '@/context/AppContext';
 import { MaterialImporter } from './components/material-importer';
 
 export default function MaterialsPage() {
-  const { materials, categories, addMaterial, updateMaterial, deleteMaterial, addCategory, addMultipleMaterials } = useAppContext();
+  const { materials, categories, addMaterial, updateMaterial, deleteMaterial, deleteMultipleMaterials, addCategory, addMultipleMaterials } = useAppContext();
 
   return (
     <div className="flex flex-col gap-8">
@@ -41,7 +41,13 @@ export default function MaterialsPage() {
           </MaterialForm>
         </div>
       </div>
-      <MaterialsTable data={materials} onSave={updateMaterial} onDelete={deleteMaterial} categories={categories} />
+      <MaterialsTable 
+        data={materials} 
+        onSave={updateMaterial} 
+        onDelete={deleteMaterial}
+        onDeleteMultiple={deleteMultipleMaterials}
+        categories={categories} 
+      />
     </div>
   );
 }
