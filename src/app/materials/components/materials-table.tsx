@@ -21,12 +21,25 @@ import {
 import { cn } from '@/lib/utils';
 import type { Material } from '@/types';
 import { MaterialForm } from './material-form';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface MaterialsTableProps {
   data: Material[];
+  onSave: (material: Omit<Material, 'id' | 'currentStock'> & { id?: string }) => void;
+  onDelete: (materialId: string) => void;
 }
 
-export function MaterialsTable({ data }: MaterialsTableProps) {
+export function MaterialsTable({ data, onSave, onDelete }: MaterialsTableProps) {
   return (
     <Card>
       <CardContent className="p-0">
@@ -60,7 +73,6 @@ export function MaterialsTable({ data }: MaterialsTableProps) {
                 </TableCell>
                 <TableCell className="text-right font-mono">{material.minStock}</TableCell>
                 <TableCell className="text-right">
-                  <MaterialForm material={material}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">
@@ -68,18 +80,38 @@ export function MaterialsTable({ data }: MaterialsTableProps) {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
-                        {/* The edit button is inside the form trigger */}
-                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Excluir
-                        </DropdownMenuItem>
+                        <MaterialForm material={material} onSave={onSave}>
+                          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Editar
+                          </DropdownMenuItem>
+                        </MaterialForm>
+                        <AlertDialog>
+                           <AlertDialogTrigger asChild>
+                            <DropdownMenuItem 
+                              className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                              onSelect={(e) => e.preventDefault()}
+                              >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Excluir
+                            </DropdownMenuItem>
+                           </AlertDialogTrigger>
+                           <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Essa ação não pode ser desfeita. Isso irá excluir permanentemente o material.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => onDelete(material.id)}>Continuar</AlertDialogAction>
+                              </AlertDialogFooter>
+                           </AlertDialogContent>
+                        </AlertDialog>
+
                       </DropdownMenuContent>
                     </DropdownMenu>
-                  </MaterialForm>
                 </TableCell>
               </TableRow>
             ))}

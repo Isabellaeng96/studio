@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import type { Material } from '@/types';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 const materialSchema = z.object({
@@ -40,25 +40,41 @@ type MaterialFormValues = z.infer<typeof materialSchema>;
 interface MaterialFormProps {
   children: React.ReactNode;
   material?: Material;
+  onSave: (data: Omit<Material, 'id' | 'currentStock'> & { id?: string }) => void;
 }
 
-export function MaterialForm({ children, material }: MaterialFormProps) {
+export function MaterialForm({ children, material, onSave }: MaterialFormProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<MaterialFormValues>({
     resolver: zodResolver(materialSchema),
     defaultValues: {
-      name: material?.name ?? '',
-      category: material?.category ?? '',
-      unit: material?.unit ?? '',
-      minStock: material?.minStock ?? 0,
-      supplier: material?.supplier ?? '',
+      name: '',
+      category: '',
+      unit: '',
+      minStock: 0,
+      supplier: '',
     },
   });
 
+  useEffect(() => {
+    if (material) {
+      form.reset(material);
+    } else {
+      form.reset({
+        name: '',
+        category: '',
+        unit: '',
+        minStock: 0,
+        supplier: '',
+      });
+    }
+  }, [material, form]);
+
+
   const onSubmit = (data: MaterialFormValues) => {
-    // In a real app, you'd call a server action or API here.
+    onSave({ ...data, id: material?.id });
     toast({
       title: `Material ${material ? 'Atualizado' : 'Criado'}`,
       description: `O material "${data.name}" foi salvo com sucesso.`,
@@ -68,7 +84,10 @@ export function MaterialForm({ children, material }: MaterialFormProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      setOpen(isOpen);
+      if (!isOpen) form.reset();
+    }}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
