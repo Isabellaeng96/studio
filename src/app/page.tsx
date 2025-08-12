@@ -5,7 +5,9 @@ import {
   AlertTriangle,
   ArrowDownCircle,
   ArrowUpCircle,
+  Package,
   PlusCircle,
+  Archive
 } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
@@ -51,6 +53,10 @@ export default function DashboardPage() {
   const recentTransactions = useMemo(() => {
     return getRecentTransactions(transactions)
   }, [transactions]);
+  
+  const totalCurrentStock = useMemo(() => {
+    return materials.reduce((total, material) => total + material.currentStock, 0);
+  }, [materials]);
 
 
   return (
@@ -72,7 +78,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-destructive/10 border-destructive">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-destructive">
@@ -92,12 +98,24 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Materiais</CardTitle>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-muted-foreground"><path d="m20.94 18-2.1-4.33a3.52 3.52 0 0 0-6.19.44l-2.1-4.33a3.52 3.52 0 0 0-6.19.44L2.25 18"/><path d="m18.5 4.5 2.5 5"/><path d="M6 9.5 3.5 4.5"/><path d="M12.5 4.5 15 9.5"/></svg>
+             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{materials.length}</div>
             <p className="text-xs text-muted-foreground">
               itens únicos no catálogo.
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Estoque Geral</CardTitle>
+            <Archive className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalCurrentStock}</div>
+            <p className="text-xs text-muted-foreground">
+              unidades totais em estoque.
             </p>
           </CardContent>
         </Card>
@@ -113,7 +131,7 @@ export default function DashboardPage() {
               {recentTransactions.length}
             </div>
             <p className="text-xs text-muted-foreground">
-              transações nos últimos 7 dias.
+              transações nos últimos 5 dias.
             </p>
           </CardContent>
         </Card>
