@@ -4,9 +4,10 @@
 import {
   ArrowDownCircle,
   ArrowUpCircle,
+  FileText,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -26,6 +27,7 @@ import {
 import { cn } from '@/lib/utils';
 import type { Material, Transaction } from '@/types';
 import { useEffect, useState } from 'react';
+import { TransactionExporter } from './transaction-exporter';
 
 interface TransactionsTableProps {
   data: Transaction[];
@@ -44,7 +46,13 @@ export function TransactionsTable({ data, materials }: TransactionsTableProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Histórico de Transações</CardTitle>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <CardTitle>Histórico de Transações</CardTitle>
+            <CardDescription>Visualize e exporte o histórico de movimentações.</CardDescription>
+          </div>
+          <TransactionExporter transactions={sortedData} materials={materials} />
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         <div className="max-h-[600px] overflow-y-auto">
