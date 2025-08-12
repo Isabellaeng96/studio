@@ -115,76 +115,84 @@ export function MaterialsTable({ data, onSave, onDelete, onDeleteMultiple, categ
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map(material => (
-              <TableRow key={material.id} data-state={selectedRows.includes(material.id) ? "selected" : ""}>
-                 <TableCell>
-                    <Checkbox
-                        checked={selectedRows.includes(material.id)}
-                        onCheckedChange={() => handleSelectRow(material.id)}
-                        aria-label="Selecionar linha"
-                    />
-                 </TableCell>
-                <TableCell className="font-medium">{material.name}</TableCell>
-                <TableCell>
-                  <span className="font-mono text-xs">{material.id}</span>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="secondary">{material.category}</Badge>
-                </TableCell>
-                <TableCell>{material.unit}</TableCell>
-                <TableCell
-                  className={cn(
-                    'text-right font-mono',
-                    material.currentStock < material.minStock &&
-                      'text-destructive font-bold'
-                  )}
-                >
-                  {material.currentStock}
-                </TableCell>
-                <TableCell className="text-right font-mono">{material.minStock}</TableCell>
-                <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <MaterialForm material={material} onSave={onSave} categories={categories}>
-                          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                              <Pencil className="mr-2 h-4 w-4" />
-                              Editar
-                          </DropdownMenuItem>
-                        </MaterialForm>
-                        <AlertDialog>
-                           <AlertDialogTrigger asChild>
-                            <DropdownMenuItem 
-                              className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                              onSelect={(e) => e.preventDefault()}
-                              >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Excluir
+            {data.length > 0 ? (
+              data.map(material => (
+                <TableRow key={material.id} data-state={selectedRows.includes(material.id) ? "selected" : ""}>
+                   <TableCell>
+                      <Checkbox
+                          checked={selectedRows.includes(material.id)}
+                          onCheckedChange={() => handleSelectRow(material.id)}
+                          aria-label="Selecionar linha"
+                      />
+                   </TableCell>
+                  <TableCell className="font-medium">{material.name}</TableCell>
+                  <TableCell>
+                    <span className="font-mono text-xs">{material.id}</span>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">{material.category}</Badge>
+                  </TableCell>
+                  <TableCell>{material.unit}</TableCell>
+                  <TableCell
+                    className={cn(
+                      'text-right font-mono',
+                      material.currentStock < material.minStock &&
+                        'text-destructive font-bold'
+                    )}
+                  >
+                    {material.currentStock}
+                  </TableCell>
+                  <TableCell className="text-right font-mono">{material.minStock}</TableCell>
+                  <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <MaterialForm material={material} onSave={onSave} categories={categories}>
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Editar
                             </DropdownMenuItem>
-                           </AlertDialogTrigger>
-                           <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Essa ação não pode ser desfeita. Isso irá excluir permanentemente o material.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => onDelete(material.id)}>Continuar</AlertDialogAction>
-                              </AlertDialogFooter>
-                           </AlertDialogContent>
-                        </AlertDialog>
+                          </MaterialForm>
+                          <AlertDialog>
+                             <AlertDialogTrigger asChild>
+                              <DropdownMenuItem 
+                                className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                                onSelect={(e) => e.preventDefault()}
+                                >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Excluir
+                              </DropdownMenuItem>
+                             </AlertDialogTrigger>
+                             <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Essa ação não pode ser desfeita. Isso irá excluir permanentemente o material.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => onDelete(material.id)}>Continuar</AlertDialogAction>
+                                </AlertDialogFooter>
+                             </AlertDialogContent>
+                          </AlertDialog>
 
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+                <TableRow>
+                  <TableCell colSpan={8} className="h-24 text-center">
+                    Material não cadastrado.
+                  </TableCell>
+                </TableRow>
+            )}
           </TableBody>
         </Table>
       </CardContent>
