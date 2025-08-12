@@ -15,7 +15,7 @@ import { Loader2, FileUp, Wand2 } from 'lucide-react';
 import type { TransactionSave } from '@/types';
 import { extractTransactionFromPdf } from '@/ai/flows/extract-transaction-from-pdf';
 // @ts-ignore
-import pdf from 'pdf-parse/lib/pdf-parse';
+import pdf from 'pdf-parse';
 
 
 interface PdfImporterProps {
