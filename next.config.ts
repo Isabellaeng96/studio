@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -18,10 +19,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  experimental: {
-    // Adicionado para suportar `pdf-parse` no lado do servidor com Turbopack/Webpack
-  },
-  serverComponentsExternalPackages: ['pdf-parse'],
+  serverExternalPackages: ['pdf-parse'],
 };
 
 export default nextConfig;
