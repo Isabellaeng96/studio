@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { Material, Transaction } from '@/types';
+import { logoBase64 } from '@/components/logo';
 
 interface TransactionExporterProps {
   transactions: Transaction[];
@@ -52,16 +53,19 @@ export function TransactionExporter({ transactions, materials }: TransactionExpo
 
       const doc = new jsPDF();
       
+      // Adicionar Logo
+      doc.addImage(logoBase64, 'SVG', 14, 12, 60, 15);
+
       // Cabeçalho
       doc.setFontSize(18);
-      doc.text('Geostoque - Relatório de Transações', 14, 22);
+      doc.text('Relatório de Transações', 14, 40);
       doc.setFontSize(11);
       const period = `Período: ${date?.from ? format(date.from, 'dd/MM/yyyy') : 'N/A'} a ${date?.to ? format(date.to, 'dd/MM/yyyy') : 'N/A'}`;
-      doc.text(period, 14, 30);
+      doc.text(period, 14, 48);
 
       // Tabela
       autoTable(doc, {
-        startY: 35,
+        startY: 55,
         head: [['Data', 'Material', 'Tipo', 'Qtd', 'Responsável', 'Doc/OS', 'Centro de Custo']],
         body: filteredTransactions.map(tx => [
           format(new Date(tx.date), 'dd/MM/yy HH:mm'),
@@ -73,7 +77,7 @@ export function TransactionExporter({ transactions, materials }: TransactionExpo
           tx.costCenter || '-',
         ]),
         styles: { fontSize: 8 },
-        headStyles: { fillColor: [46, 91, 227] },
+        headStyles: { fillColor: 'hsl(var(--primary))' },
       });
 
       doc.save(`relatorio_transacoes_${format(new Date(), 'yyyyMMdd')}.pdf`);

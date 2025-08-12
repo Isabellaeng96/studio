@@ -9,8 +9,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Wrench } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Logo } from '@/components/logo';
 
 export default function LoginPage() {
   const [isLoginView, setIsLoginView] = useState(true);
@@ -53,9 +53,8 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <Wrench className="mx-auto h-12 w-12 text-primary" />
-          <CardTitle className="mt-4">Geostoque</CardTitle>
-          <CardDescription>
+          <Logo className="mx-auto" />
+          <CardDescription className="pt-2">
              {isLoginView ? 'Acesse seu painel de gerenciamento de estoque' : 'Crie sua conta para começar a gerenciar'}
           </CardDescription>
         </CardHeader>

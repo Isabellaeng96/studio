@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import type { Material } from '@/types';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { logoBase64 } from '@/components/logo';
 
 interface MaterialExporterProps {
   materials: Material[];
@@ -93,17 +94,21 @@ export function MaterialExporter({ materials }: MaterialExporterProps) {
   
   const exportToPDF = (filename: string) => {
     const doc = new jsPDF();
+    
+    // Adicionar Logo
+    doc.addImage(logoBase64, 'SVG', 14, 12, 60, 15);
+
     doc.setFontSize(18);
-    doc.text('Relatório de Materiais', 14, 22);
+    doc.text('Relatório de Materiais', 14, 40);
     doc.setFontSize(11);
-    doc.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 14, 30);
+    doc.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 14, 48);
 
     autoTable(doc, {
-      startY: 35,
+      startY: 55,
       head: [Object.keys(dataToExport[0])],
       body: dataToExport.map(Object.values),
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [46, 91, 227] },
+      headStyles: { fillColor: 'hsl(var(--primary))' },
     });
 
     doc.save(`${filename}.pdf`);

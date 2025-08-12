@@ -1,7 +1,7 @@
 // src/components/layout/header.tsx
 "use client";
 
-import { Menu, Wrench } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import Link from 'next/link';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -18,6 +18,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { AppSidebarNav } from './sidebar-nav';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { Logo } from '../logo';
 
 export function Header() {
   const { logout, user, role } = useAuth();
@@ -58,8 +59,7 @@ export function Header() {
             <div className="flex h-full flex-col">
               <div className="flex items-center border-b p-4">
                 <Link href="/" className="flex items-center gap-2 font-semibold">
-                  <Wrench className="h-6 w-6 text-primary" />
-                  <span className="">Geostoque</span>
+                  <Logo />
                 </Link>
               </div>
               <div className="flex-1 overflow-y-auto">
