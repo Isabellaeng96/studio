@@ -45,6 +45,7 @@ export function TransactionsTable({ data, materials }: TransactionsTableProps) {
                 <TableHead>Material</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead className="text-right">Qtd</TableHead>
+                <TableHead>Nota Fiscal</TableHead>
                 <TableHead>Data</TableHead>
               </TableRow>
             </TableHeader>
@@ -73,6 +74,7 @@ export function TransactionsTable({ data, materials }: TransactionsTableProps) {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right font-mono">{tx.quantity}</TableCell>
+                  <TableCell className="font-mono text-xs">{tx.invoice || '-'}</TableCell>
                   <TableCell>{isClient ? new Date(tx.date).toLocaleDateString() : ''}</TableCell>
                 </TableRow>
               ))}
