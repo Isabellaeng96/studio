@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -12,27 +12,38 @@ import { Wrench } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
+  const [isLoginView, setIsLoginView] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, signup } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await login(email, password);
+      if (isLoginView) {
+        await login(email, password);
+      } else {
+        await signup(email, password);
+        toast({
+          title: "Conta Criada!",
+          description: "Sua conta foi criada com sucesso. Faça o login para continuar.",
+        });
+        setIsLoginView(true); // Switch to login view after successful signup
+      }
       router.push('/');
     } catch (error: any) {
       console.error(error);
       toast({
         variant: "destructive",
-        title: "Falha no Login",
-        description: "Verifique seu e-mail e senha e tente novamente.",
+        title: isLoginView ? "Falha no Login" : "Falha no Cadastro",
+        description: isLoginView ? "Verifique seu e-mail e senha e tente novamente." : error.message,
       });
-      setIsLoading(false);
+    } finally {
+        setIsLoading(false);
     }
   };
 
@@ -42,10 +53,12 @@ export default function LoginPage() {
         <CardHeader className="text-center">
           <Wrench className="mx-auto h-12 w-12 text-primary" />
           <CardTitle className="mt-4">Geostoque</CardTitle>
-          <CardDescription>Acesse seu painel de gerenciamento de estoque</CardDescription>
+          <CardDescription>
+             {isLoginView ? 'Acesse seu painel de gerenciamento de estoque' : 'Crie sua conta para começar a gerenciar'}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -68,10 +81,15 @@ export default function LoginPage() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Entrando...' : 'Entrar'}
+              {isLoading ? (isLoginView ? 'Entrando...' : 'Criando...') : (isLoginView ? 'Entrar' : 'Criar Conta')}
             </Button>
           </form>
         </CardContent>
+        <CardFooter className="justify-center">
+           <Button variant="link" onClick={() => setIsLoginView(!isLoginView)}>
+             {isLoginView ? 'Não tem uma conta? Cadastre-se' : 'Já tem uma conta? Faça login'}
+           </Button>
+        </CardFooter>
       </Card>
     </div>
   );
