@@ -242,7 +242,6 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Nenhum</SelectItem>
                       {costCenters.map(cc => (
                         <SelectItem key={cc.id} value={cc.name}>
                           {cc.name}
