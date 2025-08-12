@@ -1,9 +1,14 @@
+"use client";
+
+import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { materials, transactions } from "@/lib/mock-data";
 import { ChartsView } from "./components/charts";
 import { PredictiveAnalysis } from "./components/predictive-analysis";
 
 export default function AnalysisPage() {
+  const [activeTab, setActiveTab] = useState('charts');
+
   return (
     <div className="flex flex-col gap-8">
       <div>
@@ -13,7 +18,7 @@ export default function AnalysisPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="charts">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="charts">Visualização de Dados</TabsTrigger>
           <TabsTrigger value="predictive">Análise Preditiva</TabsTrigger>

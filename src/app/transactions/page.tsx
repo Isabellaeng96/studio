@@ -1,9 +1,14 @@
+"use client";
+
+import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { transactions, materials } from '@/lib/mock-data';
 import { TransactionForm } from './components/transaction-form';
 import { TransactionsTable } from './components/transactions-table';
 
 export default function TransactionsPage() {
+  const [activeTab, setActiveTab] = useState('saida');
+
   return (
     <div className="flex flex-col gap-8">
       <div>
@@ -15,7 +20,7 @@ export default function TransactionsPage() {
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="lg:col-span-1">
-          <Tabs defaultValue="saida">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="entrada">Entrada</TabsTrigger>
               <TabsTrigger value="saida">Saída</TabsTrigger>
