@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -87,6 +88,8 @@ export function MaterialForm({ children, material, onSave, categories }: Materia
     setOpen(false);
     form.reset();
   };
+  
+  const validCategories = categories.filter(c => c && c.trim() !== '');
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
@@ -132,7 +135,7 @@ export function MaterialForm({ children, material, onSave, categories }: Materia
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {categories.map(category => (
+                        {validCategories.map(category => (
                           <SelectItem key={category} value={category}>
                             {category}
                           </SelectItem>
