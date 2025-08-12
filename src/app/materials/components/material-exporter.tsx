@@ -30,13 +30,12 @@ export function MaterialExporter({ materials }: MaterialExporterProps) {
       }
 
       const dataToExport = materials.map(m => ({
-        'ID': m.id,
         'Nome': m.name,
+        'Código': m.id,
         'Categoria': m.category,
         'Unidade': m.unit,
-        'Estoque Mínimo': m.minStock,
         'Estoque Atual': m.currentStock,
-        'Fornecedor Padrão': m.supplier || '-',
+        'Estoque Mínimo': m.minStock,
       }));
 
       const csv = Papa.unparse(dataToExport);
