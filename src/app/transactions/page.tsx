@@ -3,9 +3,10 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TransactionForm } from './components/transaction-form';
+import { TransactionForm, type TransactionFormValues } from './components/transaction-form';
 import { TransactionsTable } from './components/transactions-table';
 import { useAppContext } from '@/context/AppContext';
+import { PdfImporter } from './components/pdf-importer';
 
 function TransactionsPageContent() {
   const { materials, transactions, addTransaction } = useAppContext();
@@ -14,6 +15,7 @@ function TransactionsPageContent() {
   const materialId = searchParams.get('materialId');
 
   const [activeTab, setActiveTab] = useState(initialTab);
+  const [formValues, setFormValues] = useState<Partial<TransactionFormValues>>({});
 
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
@@ -21,6 +23,11 @@ function TransactionsPageContent() {
       setActiveTab(tabFromUrl);
     }
   }, [searchParams]);
+
+  const handlePdfDataExtracted = (data: Partial<TransactionFormValues>) => {
+    setFormValues(data);
+    setActiveTab('entrada'); // Switch to input tab when data is extracted
+  };
 
   return (
     <div className="flex flex-col gap-8">
@@ -32,19 +39,32 @@ function TransactionsPageContent() {
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 flex flex-col gap-6">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="entrada">Entrada</TabsTrigger>
               <TabsTrigger value="saida">Saída</TabsTrigger>
             </TabsList>
             <TabsContent value="entrada">
-              <TransactionForm type="entrada" materials={materials} onSave={addTransaction} defaultMaterialId={materialId} />
+              <TransactionForm 
+                type="entrada" 
+                materials={materials} 
+                onSave={addTransaction} 
+                defaultMaterialId={materialId}
+                key={JSON.stringify(formValues)} // Re-render form when values change
+                initialValues={formValues} 
+              />
             </TabsContent>
             <TabsContent value="saida">
-              <TransactionForm type="saida" materials={materials} onSave={addTransaction} defaultMaterialId={materialId} />
+              <TransactionForm 
+                type="saida" 
+                materials={materials} 
+                onSave={addTransaction} 
+                defaultMaterialId={materialId} 
+              />
             </TabsContent>
           </Tabs>
+           <PdfImporter onDataExtracted={handlePdfDataExtracted} />
         </div>
         <div className="lg:col-span-2">
           <TransactionsTable data={transactions} materials={materials} />

@@ -46,16 +46,17 @@ const transactionSchema = z.object({
   workFront: z.string().optional(),
 });
 
-type TransactionFormValues = z.infer<typeof transactionSchema>;
+export type TransactionFormValues = z.infer<typeof transactionSchema>;
 
 interface TransactionFormProps {
   type: 'entrada' | 'saida';
   materials: Material[];
   onSave: (transaction: TransactionSave, type: 'entrada' | 'saida') => void;
   defaultMaterialId?: string | null;
+  initialValues?: Partial<TransactionFormValues>;
 }
 
-export function TransactionForm({ type, materials, onSave, defaultMaterialId }: TransactionFormProps) {
+export function TransactionForm({ type, materials, onSave, defaultMaterialId, initialValues }: TransactionFormProps) {
   const { toast } = useToast();
 
   const form = useForm<TransactionFormValues>({
@@ -69,6 +70,7 @@ export function TransactionForm({ type, materials, onSave, defaultMaterialId }: 
       invoice: '',
       workStage: '',
       workFront: '',
+       ...initialValues
     },
   });
 
@@ -77,6 +79,29 @@ export function TransactionForm({ type, materials, onSave, defaultMaterialId }: 
       form.setValue('materialId', defaultMaterialId);
     }
   }, [defaultMaterialId, form]);
+
+  useEffect(() => {
+    if (initialValues) {
+      // Try to find a matching material
+      if (initialValues.materialName) {
+        const foundMaterial = materials.find(m => m.name.toLowerCase().includes(initialValues.materialName.toLowerCase()));
+        if (foundMaterial) {
+          initialValues.materialId = foundMaterial.id;
+        }
+      }
+      form.reset({
+        date: new Date(),
+        responsible: '',
+        quantity: 0,
+        materialId: defaultMaterialId ?? '',
+        supplier: '',
+        invoice: '',
+        workStage: '',
+        workFront: '',
+        ...initialValues,
+      });
+    }
+  }, [initialValues, form, materials, defaultMaterialId]);
 
   const onSubmit = (data: TransactionFormValues) => {
     onSave(data, type);
