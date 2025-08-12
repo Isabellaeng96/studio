@@ -22,7 +22,7 @@ import { useRouter } from 'next/navigation';
 
 export function Header() {
   const { toast } = useToast();
-  const { logout, user } = useAuth();
+  const { logout, user, role } = useAuth();
   const router = useRouter();
 
   return (
@@ -64,7 +64,19 @@ export function Header() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+          <DropdownMenuLabel>
+            <div className="flex flex-col space-y-1">
+              <p className="text-sm font-medium leading-none">{user?.displayName || 'Usuário'}</p>
+              <p className="text-xs leading-none text-muted-foreground">
+                {user?.email}
+              </p>
+              {role && (
+                 <p className="text-xs leading-none text-muted-foreground pt-1">
+                    Função: <span className="font-semibold">{role}</span>
+                 </p>
+              )}
+            </div>
+          </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => router.push('/settings')}>
             Configurações

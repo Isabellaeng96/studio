@@ -13,6 +13,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 
 const profileSchema = z.object({
@@ -23,7 +24,7 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 
 
 export function UserProfileCard() {
-  const { user, updateUserProfile } = useAuth();
+  const { user, updateUserProfile, role } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -77,7 +78,10 @@ export function UserProfileCard() {
                     {user?.email?.charAt(0).toUpperCase() || 'U'}
                 </AvatarFallback>
                 </Avatar>
-                <p className="text-sm text-muted-foreground">{user?.email}</p>
+                <div className="text-center">
+                    <p className="text-sm text-muted-foreground">{user?.email}</p>
+                    {role && <Badge variant="outline" className="mt-2">{role}</Badge>}
+                </div>
             </div>
              <FormField
               control={form.control}
