@@ -58,14 +58,14 @@ export function TransactionExporter({ transactions, materials, user }: Transacti
       
       // Cabeçalho
       doc.setFontSize(18);
-      doc.text('Relatório de Transações', 14, 20);
+      doc.text('Relatório de Transações', 14, 22);
       doc.setFontSize(11);
       const period = `Período: ${date?.from ? format(date.from, 'dd/MM/yyyy') : 'N/A'} a ${date?.to ? format(date.to, 'dd/MM/yyyy') : 'N/A'}`;
-      doc.text(period, 14, 28);
+      doc.text(period, 14, 30);
 
       // Tabela
       autoTable(doc, {
-        startY: 35,
+        startY: 40,
         head: [['Data', 'Material', 'Tipo', 'Qtd', 'Responsável', 'Doc/OS', 'Centro de Custo']],
         body: filteredTransactions.map(tx => [
           format(new Date(tx.date), 'dd/MM/yy HH:mm'),

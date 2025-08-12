@@ -99,12 +99,10 @@ export function MaterialExporter({ materials, user }: MaterialExporterProps) {
     const generationDate = new Date();
     
     doc.setFontSize(18);
-    doc.text('Relatório de Materiais', 14, 20);
-    doc.setFontSize(11);
-    doc.text(`Gerado em: ${format(generationDate, 'dd/MM/yyyy HH:mm')}`, 14, 28);
-
+    doc.text('Relatório de Materiais', 14, 22);
+    
     autoTable(doc, {
-      startY: 35,
+      startY: 30,
       head: [Object.keys(dataToExport[0])],
       body: dataToExport.map(Object.values),
       styles: { fontSize: 8 },
