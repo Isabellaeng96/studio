@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import type { Material, Transaction } from '@/types';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { TransactionExporter } from './transaction-exporter';
 
 interface TransactionsTableProps {
@@ -41,17 +41,21 @@ export function TransactionsTable({ data, materials }: TransactionsTableProps) {
     setIsClient(true);
   }, []);
   
-  const sortedData = [...data].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const recentTransactions = useMemo(() => {
+    return [...data]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 15);
+  }, [data]);
 
   return (
     <Card>
       <CardHeader>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <CardTitle>Histórico de Transações</CardTitle>
-            <CardDescription>Visualize e exporte o histórico de movimentações.</CardDescription>
+            <CardTitle>Histórico de Transações Recentes</CardTitle>
+            <CardDescription>Visualize e exporte o histórico das últimas 15 movimentações.</CardDescription>
           </div>
-          <TransactionExporter transactions={sortedData} materials={materials} />
+          <TransactionExporter transactions={data} materials={materials} />
         </div>
       </CardHeader>
       <CardContent className="p-0">
@@ -68,7 +72,7 @@ export function TransactionsTable({ data, materials }: TransactionsTableProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedData.map(tx => (
+              {recentTransactions.map(tx => (
                 <Dialog key={tx.id}>
                   <DialogTrigger asChild>
                     <TableRow className="cursor-pointer">
