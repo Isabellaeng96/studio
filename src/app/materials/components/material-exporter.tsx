@@ -120,8 +120,8 @@ export function MaterialExporter({ materials, user }: MaterialExporterProps) {
         const dateText = `Data: ${format(generationDate, 'dd/MM/yyyy HH:mm:ss')}`;
         
         doc.text(userText, data.settings.margin.left, pageHeight - 10);
-        doc.text(dateText, data.settings.margin.left + 70, pageHeight - 10)
         doc.text(str, pageWidth / 2, pageHeight - 10, { align: 'center' });
+        doc.text(dateText, pageWidth - data.settings.margin.right, pageHeight - 10, { align: 'right' });
       }
     });
 
