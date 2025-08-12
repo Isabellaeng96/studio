@@ -58,10 +58,10 @@ export function Header() {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>Configurações</DropdownMenuItem>
-          <DropdownMenuItem>Suporte</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => console.log('Configurações clicado')}>Configurações</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => console.log('Suporte clicado')}>Suporte</DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>Sair</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => console.log('Sair clicado')}>Sair</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </header>
