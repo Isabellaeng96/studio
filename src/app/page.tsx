@@ -222,7 +222,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Níveis de Estoque</CardTitle>
+              <CardTitle>Estoque Geral</CardTitle>
               <CardDescription>
                 Visão geral do inventário atual.
               </CardDescription>
