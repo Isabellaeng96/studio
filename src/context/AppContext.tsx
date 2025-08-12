@@ -55,13 +55,14 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [materials, setMaterials] = useState<Material[]>(initialMaterials);
-  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
-  const [categories, setCategories] = useState<string[]>(() => Array.from(new Set(initialMaterials.map(m => m.category))));
+  const [materials, setMaterials] = useState<Material[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    if (!isLoaded) {
+    // Load from storage only once
+    if (typeof window !== 'undefined' && !isLoaded) {
       setMaterials(getFromStorage('materials', initialMaterials));
       setTransactions(getFromStorage('transactions', initialTransactions));
       
