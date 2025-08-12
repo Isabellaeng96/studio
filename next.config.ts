@@ -18,19 +18,9 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  webpack: (config, { isServer, nextRuntime }) => {
-    if (!isServer) {
-        config.resolve.fallback = {
-            ...config.resolve.fallback,
-            "fs": false
-        };
-    }
-    // Adicionado para suportar `node-gyp` dependências como `pdf-parse`
-    if (nextRuntime === 'nodejs') {
-      config.externals.push('node-gyp');
-      config.externals.push('pdf-parse');
-    }
-    return config;
+  experimental: {
+    // Adicionado para suportar `pdf-parse` no lado do servidor com Turbopack/Webpack
+    serverComponentsExternalPackages: ['pdf-parse'],
   },
 };
 
