@@ -43,3 +43,9 @@ export type XyzClassification = {
   classification: 'X' | 'Y' | 'Z';
   description: string;
 };
+
+export type CostCenter = {
+  id: string;
+  name: string;
+  description?: string;
+};

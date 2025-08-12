@@ -5,6 +5,7 @@ import {
   Home,
   Package,
   Replace,
+  Landmark,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -15,6 +16,7 @@ const navItems = [
   { href: '/', label: 'Painel', icon: Home },
   { href: '/materials', label: 'Materiais', icon: Package },
   { href: '/transactions', label: 'Transações', icon: Replace },
+  { href: '/cost-centers', label: 'Centros de Custo', icon: Landmark },
   { href: '/analysis', label: 'Análise', icon: BarChart3 },
 ];
 

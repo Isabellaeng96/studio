@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import type { Material, TransactionSave } from '@/types';
+import type { Material, TransactionSave, CostCenter } from '@/types';
 import { format } from 'date-fns';
 
 const transactionSchema = z.object({
@@ -52,12 +52,13 @@ export type TransactionFormValues = z.infer<typeof transactionSchema>;
 interface TransactionFormProps {
   type: 'entrada' | 'saida';
   materials: Material[];
+  costCenters: CostCenter[];
   onSave: (transaction: TransactionSave, type: 'entrada' | 'saida') => void;
   defaultMaterialId?: string | null;
   initialValues?: Partial<TransactionFormValues>;
 }
 
-export function TransactionForm({ type, materials, onSave, defaultMaterialId, initialValues }: TransactionFormProps) {
+export function TransactionForm({ type, materials, costCenters, onSave, defaultMaterialId, initialValues }: TransactionFormProps) {
   const { toast } = useToast();
 
   const form = useForm<TransactionFormValues>({
@@ -86,7 +87,7 @@ export function TransactionForm({ type, materials, onSave, defaultMaterialId, in
     if (initialValues) {
       // Try to find a matching material
       if (initialValues.materialName) {
-        const foundMaterial = materials.find(m => m.name.toLowerCase().includes(initialValues.materialName.toLowerCase()));
+        const foundMaterial = materials.find(m => m.name.toLowerCase().includes(initialValues.materialName!.toLowerCase()));
         if (foundMaterial) {
           initialValues.materialId = foundMaterial.id;
         }
@@ -234,9 +235,21 @@ export function TransactionForm({ type, materials, onSave, defaultMaterialId, in
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Centro de Custo (Opcional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="ex: Projeto A" {...field} value={field.value ?? ''} />
-                  </FormControl>
+                   <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um centro de custo" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">Nenhum</SelectItem>
+                      {costCenters.map(cc => (
+                        <SelectItem key={cc.id} value={cc.name}>
+                          {cc.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

@@ -9,7 +9,7 @@ import { useAppContext } from '@/context/AppContext';
 import { PdfImporter } from './components/pdf-importer';
 
 function TransactionsPageContent() {
-  const { materials, transactions, addTransaction } = useAppContext();
+  const { materials, transactions, addTransaction, costCenters } = useAppContext();
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab') === 'entrada' ? 'entrada' : 'saida';
   const materialId = searchParams.get('materialId');
@@ -49,9 +49,10 @@ function TransactionsPageContent() {
               <TransactionForm 
                 type="entrada" 
                 materials={materials} 
+                costCenters={costCenters}
                 onSave={addTransaction} 
                 defaultMaterialId={materialId}
-                key={JSON.stringify(formValues)} // Re-render form when values change
+                key={`entrada-${JSON.stringify(formValues)}`} // Re-render form when values change
                 initialValues={formValues} 
               />
             </TabsContent>
@@ -59,8 +60,10 @@ function TransactionsPageContent() {
               <TransactionForm 
                 type="saida" 
                 materials={materials} 
+                costCenters={costCenters}
                 onSave={addTransaction} 
                 defaultMaterialId={materialId} 
+                key={`saida-${materialId}`}
               />
             </TabsContent>
           </Tabs>

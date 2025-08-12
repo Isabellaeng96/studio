@@ -2,7 +2,7 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import type { Material, Transaction, TransactionSave, MaterialSave } from '@/types';
+import type { Material, Transaction, TransactionSave, MaterialSave, CostCenter } from '@/types';
 import { materials as initialMaterials, transactions as initialTransactions } from '@/lib/mock-data';
 
 // Helper function to get item from localStorage safely
@@ -33,9 +33,9 @@ function setInStorage<T>(key: string, value: T): void {
 
 
 // Helper function to generate a unique product ID
-function generateProductId(): string {
-  const randomNumber = Math.floor(10000000 + Math.random() * 90000000);
-  return `PRD${randomNumber}`;
+function generateId(prefix: string): string {
+  const randomNumber = Math.floor(100000 + Math.random() * 900000);
+  return `${prefix}${Date.now()}${randomNumber}`;
 }
 
 
@@ -43,6 +43,7 @@ interface AppContextType {
   materials: Material[];
   transactions: Transaction[];
   categories: string[];
+  costCenters: CostCenter[];
   addMaterial: (material: MaterialSave) => void;
   addMultipleMaterials: (materials: MaterialSave[]) => void;
   updateMaterial: (material: MaterialSave & { id: string }) => void;
@@ -50,6 +51,9 @@ interface AppContextType {
   deleteMultipleMaterials: (materialIds: string[]) => void;
   addCategory: (category: string) => void;
   addTransaction: (transaction: TransactionSave, type: 'entrada' | 'saida') => void;
+  addCostCenter: (costCenter: Omit<CostCenter, 'id'>) => void;
+  updateCostCenter: (costCenter: CostCenter) => void;
+  deleteCostCenter: (costCenterId: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -58,6 +62,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+  const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -66,7 +71,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedMaterials = getFromStorage<Material[]>('materials', initialMaterials);
       // Ensure all materials have a correct ID format
       const formattedMaterials = storedMaterials.map(m => 
-        (m.id && m.id.toString().startsWith('PRD')) ? m : { ...m, id: generateProductId() }
+        (m.id && m.id.toString().startsWith('PRD')) ? m : { ...m, id: generateId('PRD') }
       );
       setMaterials(formattedMaterials);
 
@@ -79,6 +84,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const uniqueCategories = new Set(initialMaterials.map(m => m.category).filter(c => c && c.trim() !== ''));
         setCategories(Array.from(uniqueCategories));
       }
+
+      setCostCenters(getFromStorage('costCenters', [
+        { id: 'cc-1', name: 'Projeto A', description: 'Desenvolvimento do novo loteamento' },
+        { id: 'cc-2', name: 'Manutenção Geral', description: 'Custos de manutenção de rotina' },
+      ]));
+
       setIsLoaded(true);
     }
   }, [isLoaded]);
@@ -102,10 +113,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [categories, isLoaded]);
 
+  useEffect(() => {
+    if (isLoaded) {
+      setInStorage('costCenters', costCenters);
+    }
+  }, [costCenters, isLoaded]);
+
   const addMaterial = (material: MaterialSave) => {
     const newMaterial: Material = {
       ...material,
-      id: generateProductId(),
+      id: generateId('PRD'),
       currentStock: 0,
     };
     setMaterials(prev => [newMaterial, ...prev]);
@@ -117,7 +134,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addMultipleMaterials = (newMaterials: MaterialSave[]) => {
     const materialsToAdd: Material[] = newMaterials.map((material) => ({
       ...material,
-      id: generateProductId(),
+      id: generateId('PRD'),
       currentStock: 0,
     }));
     
@@ -157,7 +174,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     
     const newTransaction: Transaction = {
       ...transaction,
-      id: `trn-${Date.now()}`,
+      id: generateId('TRN'),
       type: type,
       date: transaction.date.getTime(),
       materialName: material.name,
@@ -177,10 +194,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }));
   };
 
+  const addCostCenter = (costCenter: Omit<CostCenter, 'id'>) => {
+    const newCostCenter: CostCenter = {
+      ...costCenter,
+      id: generateId('CC'),
+    };
+    setCostCenters(prev => [newCostCenter, ...prev]);
+  };
+
+  const updateCostCenter = (costCenter: CostCenter) => {
+    setCostCenters(prev => prev.map(cc => cc.id === costCenter.id ? costCenter : cc));
+  };
+
+  const deleteCostCenter = (costCenterId: string) => {
+    setCostCenters(prev => prev.filter(cc => cc.id !== costCenterId));
+  };
+
   const value = {
     materials,
     transactions,
     categories,
+    costCenters,
     addMaterial,
     addMultipleMaterials,
     updateMaterial,
@@ -188,6 +222,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     deleteMultipleMaterials,
     addCategory,
     addTransaction,
+    addCostCenter,
+    updateCostCenter,
+    deleteCostCenter,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
