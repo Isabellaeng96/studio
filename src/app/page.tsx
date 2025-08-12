@@ -130,8 +130,8 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+      <div className="flex flex-col gap-8">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between">
              <div>
               <CardTitle>Transações Recentes</CardTitle>
