@@ -66,7 +66,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedMaterials = getFromStorage<Material[]>('materials', initialMaterials);
       // Ensure all materials have a correct ID format
       const formattedMaterials = storedMaterials.map(m => 
-        m.id.startsWith('PRD') ? m : { ...m, id: generateProductId() }
+        (m.id && m.id.toString().startsWith('PRD')) ? m : { ...m, id: generateProductId() }
       );
       setMaterials(formattedMaterials);
 

@@ -44,6 +44,7 @@ const transactionSchema = z.object({
   invoice: z.string().optional(),
   workStage: z.string().optional(),
   workFront: z.string().optional(),
+  costCenter: z.string().optional(),
 });
 
 export type TransactionFormValues = z.infer<typeof transactionSchema>;
@@ -70,6 +71,7 @@ export function TransactionForm({ type, materials, onSave, defaultMaterialId, in
       invoice: '',
       workStage: '',
       workFront: '',
+      costCenter: '',
        ...initialValues
     },
   });
@@ -98,6 +100,7 @@ export function TransactionForm({ type, materials, onSave, defaultMaterialId, in
         invoice: '',
         workStage: '',
         workFront: '',
+        costCenter: '',
         ...initialValues,
       });
     }
@@ -117,6 +120,7 @@ export function TransactionForm({ type, materials, onSave, defaultMaterialId, in
       invoice: '',
       workStage: '',
       workFront: '',
+      costCenter: '',
     });
   };
 
@@ -219,6 +223,19 @@ export function TransactionForm({ type, materials, onSave, defaultMaterialId, in
                   <FormLabel>Nota Fiscal (Opcional)</FormLabel>
                   <FormControl>
                     <Input placeholder="NF-12345" {...field} value={field.value ?? ''} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="costCenter"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Centro de Custo (Opcional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="ex: Projeto A" {...field} value={field.value ?? ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
