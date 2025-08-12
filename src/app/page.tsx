@@ -110,22 +110,24 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </Link>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Atividade Recente
-            </CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {recentTransactions.length}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              últimas transações registradas.
-            </p>
-          </CardContent>
-        </Card>
+        <Link href="/transactions">
+          <Card className="hover:bg-accent transition-colors cursor-pointer">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Atividade Recente
+              </CardTitle>
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {recentTransactions.length}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                últimas transações registradas.
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
