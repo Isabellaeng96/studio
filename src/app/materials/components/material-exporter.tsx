@@ -8,6 +8,8 @@ import { Download, Loader2, ChevronDown, FileSpreadsheet, FileText, FileType } f
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import Papa from 'papaparse';
+import type { User } from 'firebase/auth';
+
 
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -16,11 +18,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 
 interface MaterialExporterProps {
   materials: Material[];
+  user: User | null;
 }
 
 type ExportFormat = 'xlsx' | 'csv' | 'pdf';
 
-export function MaterialExporter({ materials }: MaterialExporterProps) {
+export function MaterialExporter({ materials, user }: MaterialExporterProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   
@@ -93,11 +96,12 @@ export function MaterialExporter({ materials }: MaterialExporterProps) {
   
   const exportToPDF = (filename: string) => {
     const doc = new jsPDF();
+    const generationDate = new Date();
     
     doc.setFontSize(18);
     doc.text('Relatório de Materiais', 14, 20);
     doc.setFontSize(11);
-    doc.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 14, 28);
+    doc.text(`Gerado em: ${format(generationDate, 'dd/MM/yyyy HH:mm')}`, 14, 28);
 
     autoTable(doc, {
       startY: 35,
@@ -105,6 +109,22 @@ export function MaterialExporter({ materials }: MaterialExporterProps) {
       body: dataToExport.map(Object.values),
       styles: { fontSize: 8 },
       headStyles: { fillColor: '#3b82f6' },
+      didDrawPage: (data) => {
+        // Footer
+        const str = `Página ${data.pageNumber}`;
+        doc.setFontSize(8);
+        
+        const pageSize = doc.internal.pageSize;
+        const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
+        const pageWidth = pageSize.width ? pageSize.width : pageSize.getWidth();
+        
+        const userText = `Gerado por: ${user?.displayName || 'N/A'}`;
+        const dateText = `Data: ${format(generationDate, 'dd/MM/yyyy HH:mm:ss')}`;
+        
+        doc.text(userText, data.settings.margin.left, pageHeight - 10);
+        doc.text(dateText, data.settings.margin.left + 70, pageHeight - 10)
+        doc.text(str, pageWidth / 2, pageHeight - 10, { align: 'center' });
+      }
     });
 
     doc.save(`${filename}.pdf`);

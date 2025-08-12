@@ -7,6 +7,7 @@ import { addDays, format, isAfter, isBefore } from 'date-fns';
 import { Calendar as CalendarIcon, FileText, Loader2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import type { User } from 'firebase/auth';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -18,9 +19,10 @@ import type { Material, Transaction } from '@/types';
 interface TransactionExporterProps {
   transactions: Transaction[];
   materials: Material[];
+  user: User | null;
 }
 
-export function TransactionExporter({ transactions, materials }: TransactionExporterProps) {
+export function TransactionExporter({ transactions, materials, user }: TransactionExporterProps) {
   const [date, setDate] = useState<DateRange | undefined>({
     from: addDays(new Date(), -30),
     to: new Date(),
@@ -50,8 +52,9 @@ export function TransactionExporter({ transactions, materials }: TransactionExpo
         });
         return;
       }
-
+      
       const doc = new jsPDF();
+      const generationDate = new Date();
       
       // Cabeçalho
       doc.setFontSize(18);
@@ -75,6 +78,22 @@ export function TransactionExporter({ transactions, materials }: TransactionExpo
         ]),
         styles: { fontSize: 8 },
         headStyles: { fillColor: '#3b82f6' },
+        didDrawPage: (data) => {
+            // Footer
+            const str = `Página ${data.pageNumber}`;
+            doc.setFontSize(8);
+            
+            const pageSize = doc.internal.pageSize;
+            const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
+            const pageWidth = pageSize.width ? pageSize.width : pageSize.getWidth();
+            
+            const userText = `Gerado por: ${user?.displayName || 'N/A'}`;
+            const dateText = `Data: ${format(generationDate, 'dd/MM/yyyy HH:mm:ss')}`;
+            
+            doc.text(userText, data.settings.margin.left, pageHeight - 10);
+            doc.text(dateText, data.settings.margin.left + 70, pageHeight - 10)
+            doc.text(str, pageWidth / 2, pageHeight - 10, { align: 'center' });
+        }
       });
 
       doc.save(`relatorio_transacoes_${format(new Date(), 'yyyyMMdd')}.pdf`);

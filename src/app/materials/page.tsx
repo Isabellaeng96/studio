@@ -14,12 +14,15 @@ import { MaterialExporter } from './components/material-exporter';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/context/AuthContext';
 
 function MaterialsPageContent() {
   const { materials, categories, addMaterial, updateMaterial, deleteMaterial, deleteMultipleMaterials, addCategory, addMultipleMaterials } = useAppContext();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const { user } = useAuth();
+
 
   const stockFilter = searchParams.get('filter');
   const categoryFilter = searchParams.get('category');
@@ -74,7 +77,7 @@ function MaterialsPageContent() {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-           <MaterialExporter materials={filteredMaterials} />
+           <MaterialExporter materials={filteredMaterials} user={user} />
            <CategoryForm onSave={addCategory}>
              <Button variant="outline">
               <Tag className="mr-2 h-4 w-4" />

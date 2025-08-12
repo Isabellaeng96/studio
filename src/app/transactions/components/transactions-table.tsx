@@ -28,6 +28,8 @@ import { cn } from '@/lib/utils';
 import type { Material, Transaction } from '@/types';
 import { useEffect, useState, useMemo } from 'react';
 import { TransactionExporter } from './transaction-exporter';
+import { useAuth } from '@/context/AuthContext';
+
 
 interface TransactionsTableProps {
   data: Transaction[];
@@ -36,6 +38,7 @@ interface TransactionsTableProps {
 
 export function TransactionsTable({ data, materials }: TransactionsTableProps) {
   const [isClient, setIsClient] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     setIsClient(true);
@@ -55,7 +58,7 @@ export function TransactionsTable({ data, materials }: TransactionsTableProps) {
             <CardTitle>Histórico de Transações Recentes</CardTitle>
             <CardDescription>Visualize e exporte o histórico das últimas 15 movimentações.</CardDescription>
           </div>
-          <TransactionExporter transactions={data} materials={materials} />
+          <TransactionExporter transactions={data} materials={materials} user={user} />
         </div>
       </CardHeader>
       <CardContent className="p-0">
