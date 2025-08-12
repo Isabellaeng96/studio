@@ -1,3 +1,4 @@
+// src/components/layout/header.tsx
 "use client";
 
 import { Menu, Wrench } from 'lucide-react';
@@ -16,9 +17,11 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { AppSidebarNav } from './sidebar-nav';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
 
 export function Header() {
   const { toast } = useToast();
+  const { logout, user } = useAuth();
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
@@ -54,7 +57,7 @@ export function Header() {
           <Button variant="ghost" size="icon" className="rounded-full">
             <Avatar>
               <AvatarImage src="https://placehold.co/100x100" alt="Avatar do Usuário" data-ai-hint="user avatar" />
-              <AvatarFallback>U</AvatarFallback>
+              <AvatarFallback>{user?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
@@ -68,7 +71,7 @@ export function Header() {
             Suporte
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => console.log('Sair clicado')}>
+          <DropdownMenuItem onClick={logout}>
             Sair
           </DropdownMenuItem>
         </DropdownMenuContent>
