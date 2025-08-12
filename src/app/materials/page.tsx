@@ -29,8 +29,10 @@ function MaterialsPageContent() {
     let filtered = [...materials];
 
     if (searchQuery) {
+        const lowercasedQuery = searchQuery.toLowerCase();
         filtered = filtered.filter(m =>
-            m.name.toLowerCase().includes(searchQuery.toLowerCase())
+            m.name.toLowerCase().includes(lowercasedQuery) ||
+            m.id.toLowerCase().includes(lowercasedQuery)
         );
     }
 
