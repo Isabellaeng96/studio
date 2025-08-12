@@ -124,11 +124,18 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Transações Recentes</CardTitle>
-            <CardDescription>
-              Um registro dos últimos movimentos de estoque.
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+             <div>
+              <CardTitle>Transações Recentes</CardTitle>
+              <CardDescription>
+                Um registro dos últimos movimentos de estoque.
+              </CardDescription>
+            </div>
+             <Button size="sm" variant="outline" asChild>
+              <Link href="/transactions">
+                Ver Todas <ChevronRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
