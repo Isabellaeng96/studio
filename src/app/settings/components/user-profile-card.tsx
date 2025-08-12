@@ -73,7 +73,7 @@ export function UserProfileCard() {
           <CardContent className="space-y-6">
             <div className="flex flex-col items-center gap-4">
                 <Avatar className="h-24 w-24">
-                <AvatarImage src="https://placehold.co/100x100" alt="Avatar do Usuário" data-ai-hint="user avatar" />
+                <AvatarImage src={user?.photoURL ?? undefined} alt="Avatar do Usuário" data-ai-hint="user avatar" />
                 <AvatarFallback className="text-3xl">
                     {user?.email?.charAt(0).toUpperCase() || 'U'}
                 </AvatarFallback>
