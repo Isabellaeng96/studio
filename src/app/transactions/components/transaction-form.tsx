@@ -167,34 +167,19 @@ export function TransactionForm({ type, materials, onSave, defaultMaterialId, in
             />
             
             {type === 'entrada' ? (
-              <>
-                <FormField
-                  control={form.control}
-                  name="supplier"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Fornecedor</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nome do fornecedor" {...field} value={field.value ?? ''} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="invoice"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nota Fiscal (Opcional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="NF-12345" {...field} value={field.value ?? ''} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </>
+              <FormField
+                control={form.control}
+                name="supplier"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fornecedor</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nome do fornecedor" {...field} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             ) : (
               <>
                 <FormField
@@ -225,6 +210,20 @@ export function TransactionForm({ type, materials, onSave, defaultMaterialId, in
                 />
               </>
             )}
+
+            <FormField
+              control={form.control}
+              name="invoice"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nota Fiscal (Opcional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="NF-12345" {...field} value={field.value ?? ''} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
