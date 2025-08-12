@@ -15,7 +15,7 @@ import { Loader2, FileUp, Wand2 } from 'lucide-react';
 import type { TransactionSave } from '@/types';
 import { extractTransactionFromPdf } from '@/ai/flows/extract-transaction-from-pdf';
 // @ts-ignore
-import pdf from 'pdf-parse';
+import pdfjs from 'pdf-parse';
 
 
 interface PdfImporterProps {
@@ -52,6 +52,7 @@ export function PdfImporter({ onDataExtracted }: PdfImporterProps) {
 
     try {
       const arrayBuffer = await file.arrayBuffer();
+      const pdf = (await import('pdf-parse')).default;
       const data = await pdf(arrayBuffer);
       
       const result = await extractTransactionFromPdf({
