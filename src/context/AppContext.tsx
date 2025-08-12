@@ -63,7 +63,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Load from storage only once
     if (typeof window !== 'undefined' && !isLoaded) {
-      setMaterials(getFromStorage('materials', initialMaterials));
+      const storedMaterials = getFromStorage<Material[]>('materials', initialMaterials);
+      // Ensure all materials have a correct ID format
+      const formattedMaterials = storedMaterials.map(m => 
+        m.id.startsWith('PRD') ? m : { ...m, id: generateProductId() }
+      );
+      setMaterials(formattedMaterials);
+
       setTransactions(getFromStorage('transactions', initialTransactions));
       
       const storedCategories = getFromStorage<string[]>('categories', []);
