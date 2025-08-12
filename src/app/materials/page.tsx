@@ -7,6 +7,7 @@ import { MaterialForm } from './components/material-form';
 import { CategoryForm } from './components/category-form';
 import { useAppContext } from '@/context/AppContext';
 import { MaterialImporter } from './components/material-importer';
+import { MaterialExporter } from './components/material-exporter';
 
 export default function MaterialsPage() {
   const { materials, categories, addMaterial, updateMaterial, deleteMaterial, deleteMultipleMaterials, addCategory, addMultipleMaterials } = useAppContext();
@@ -20,7 +21,8 @@ export default function MaterialsPage() {
             Catálogo de todos os materiais de manutenção.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+           <MaterialExporter materials={materials} />
            <CategoryForm onSave={addCategory}>
              <Button variant="outline">
               <Tag className="mr-2 h-4 w-4" />
