@@ -20,8 +20,8 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     // Adicionado para suportar `pdf-parse` no lado do servidor com Turbopack/Webpack
-    serverComponentsExternalPackages: ['pdf-parse'],
   },
+  serverComponentsExternalPackages: ['pdf-parse'],
 };
 
 export default nextConfig;
