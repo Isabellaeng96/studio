@@ -40,7 +40,7 @@ export function Header() {
   };
   
   const handleSupportClick = () => {
-    window.location.href = "mailto:tec08@geoblue.com?subject=Suporte Geostoque";
+    window.location.href = "mailto:tec08@geoblue.com.br?subject=Suporte Geostoque";
   }
 
 
