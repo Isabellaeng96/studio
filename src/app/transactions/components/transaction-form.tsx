@@ -207,19 +207,6 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
                 />
                 <FormField
                   control={form.control}
-                  name="workStage"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Etapa da Obra</FormLabel>
-                      <FormControl>
-                        <Input placeholder="ex: Fundação" {...field} value={field.value ?? ''} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
                   name="workFront"
                   render={({ field }) => (
                     <FormItem>
