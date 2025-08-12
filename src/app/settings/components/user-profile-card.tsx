@@ -62,6 +62,19 @@ export function UserProfileCard() {
     }
   }
 
+  const getInitials = (name?: string | null, email?: string | null) => {
+    if (name) {
+      const names = name.split(' ');
+      const firstInitial = names[0][0];
+      const lastInitial = names.length > 1 ? names[names.length - 1][0] : '';
+      return `${firstInitial}${lastInitial}`.toUpperCase();
+    }
+    if (email) {
+      return email.charAt(0).toUpperCase();
+    }
+    return 'U';
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -75,7 +88,7 @@ export function UserProfileCard() {
                 <Avatar className="h-24 w-24">
                 <AvatarImage src={user?.photoURL ?? undefined} alt="Avatar do Usuário" data-ai-hint="user avatar" />
                 <AvatarFallback className="text-3xl">
-                    {user?.email?.charAt(0).toUpperCase() || 'U'}
+                   {getInitials(user?.displayName, user?.email)}
                 </AvatarFallback>
                 </Avatar>
                 <div className="text-center">

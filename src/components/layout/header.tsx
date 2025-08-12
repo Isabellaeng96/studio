@@ -25,6 +25,19 @@ export function Header() {
   const { logout, user, role } = useAuth();
   const router = useRouter();
 
+  const getInitials = (name?: string | null, email?: string | null) => {
+    if (name) {
+      const names = name.split(' ');
+      const firstInitial = names[0][0];
+      const lastInitial = names.length > 1 ? names[names.length - 1][0] : '';
+      return `${firstInitial}${lastInitial}`.toUpperCase();
+    }
+    if (email) {
+      return email.charAt(0).toUpperCase();
+    }
+    return 'U';
+  };
+
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
       <div className="lg:hidden">
@@ -59,7 +72,7 @@ export function Header() {
           <Button variant="ghost" size="icon" className="rounded-full">
             <Avatar>
               <AvatarImage src={user?.photoURL ?? undefined} alt="Avatar do Usuário" data-ai-hint="user avatar" />
-              <AvatarFallback>{user?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+              <AvatarFallback>{getInitials(user?.displayName, user?.email)}</AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
