@@ -32,7 +32,7 @@ export function Header() {
               <div className="flex items-center border-b p-4">
                 <Link href="/" className="flex items-center gap-2 font-semibold">
                   <Wrench className="h-6 w-6 text-primary" />
-                  <span className="">WellFlow</span>
+                  <span className="">Geostoque</span>
                 </Link>
               </div>
               <div className="flex-1 overflow-y-auto">

@@ -8,8 +8,8 @@ import { Header } from '@/components/layout/header';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'WellFlow Estoque',
-  description: 'Controle de estoque para materiais de manutenção de poços tubulares profundos.',
+  title: 'Geostoque',
+  description: 'Gestão de estoque para materiais geológicos e de construção.',
   icons: {
     icon: '/favicon.svg',
   },
