@@ -62,7 +62,10 @@ export function MaterialForm({ children, material, onSave, categories }: Materia
 
   useEffect(() => {
     if (material) {
-      form.reset(material);
+      form.reset({
+        ...material,
+        supplier: material.supplier || '',
+      });
     } else {
       form.reset({
         name: '',
@@ -174,7 +177,7 @@ export function MaterialForm({ children, material, onSave, categories }: Materia
                 <FormItem>
                   <FormLabel>Fornecedor Padrão (Opcional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="ex: Votorantim" {...field} />
+                    <Input placeholder="ex: Votorantim" {...field} value={field.value ?? ''}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

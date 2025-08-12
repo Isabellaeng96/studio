@@ -9,6 +9,7 @@ interface AppContextType {
   transactions: Transaction[];
   categories: string[];
   addMaterial: (material: MaterialSave) => void;
+  addMultipleMaterials: (materials: MaterialSave[]) => void;
   updateMaterial: (material: MaterialSave & { id: string }) => void;
   deleteMaterial: (materialId: string) => void;
   addCategory: (category: string) => void;
@@ -32,10 +33,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
       currentStock: 0,
     };
     setMaterials(prev => [newMaterial, ...prev]);
+    if (!categories.includes(newMaterial.category)) {
+      addCategory(newMaterial.category);
+    }
+  };
+  
+  const addMultipleMaterials = (newMaterials: MaterialSave[]) => {
+    const materialsToAdd: Material[] = newMaterials.map((material, index) => ({
+      ...material,
+      id: `mat-${Date.now()}-${index}`,
+      currentStock: 0,
+    }));
+    
+    setMaterials(prev => [...materialsToAdd, ...prev]);
+    
+    const newCategories = new Set(categories);
+    materialsToAdd.forEach(m => newCategories.add(m.category));
+    setCategories(Array.from(newCategories));
   };
 
   const updateMaterial = (material: MaterialSave & { id: string }) => {
     setMaterials(prev => prev.map(m => m.id === material.id ? { ...m, ...material } : m));
+    if (!categories.includes(material.category)) {
+      addCategory(material.category);
+    }
   };
   
   const deleteMaterial = (materialId: string) => {
@@ -80,6 +101,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     transactions,
     categories,
     addMaterial,
+    addMultipleMaterials,
     updateMaterial,
     deleteMaterial,
     addCategory,

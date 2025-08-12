@@ -1,14 +1,15 @@
 "use client";
 
-import { PlusCircle, Tag } from 'lucide-react';
+import { PlusCircle, Tag, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MaterialsTable } from './components/materials-table';
 import { MaterialForm } from './components/material-form';
 import { CategoryForm } from './components/category-form';
 import { useAppContext } from '@/context/AppContext';
+import { MaterialImporter } from './components/material-importer';
 
 export default function MaterialsPage() {
-  const { materials, categories, addMaterial, updateMaterial, deleteMaterial, addCategory } = useAppContext();
+  const { materials, categories, addMaterial, updateMaterial, deleteMaterial, addCategory, addMultipleMaterials } = useAppContext();
 
   return (
     <div className="flex flex-col gap-8">
@@ -26,6 +27,12 @@ export default function MaterialsPage() {
               Adicionar Categoria
             </Button>
            </CategoryForm>
+            <MaterialImporter onImport={addMultipleMaterials}>
+              <Button variant="outline">
+                <Upload className="mr-2 h-4 w-4" />
+                Importar
+              </Button>
+            </MaterialImporter>
           <MaterialForm onSave={addMaterial} categories={categories}>
             <Button>
               <PlusCircle className="mr-2 h-4 w-4" />
