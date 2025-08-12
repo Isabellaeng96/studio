@@ -70,7 +70,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (storedCategories.length > 0) {
         setCategories(storedCategories);
       } else {
-        const uniqueCategories = new Set(initialMaterials.map(m => m.category));
+        const uniqueCategories = new Set(initialMaterials.map(m => m.category).filter(c => c && c.trim() !== ''));
         setCategories(Array.from(uniqueCategories));
       }
       setIsLoaded(true);
@@ -139,6 +139,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const addCategory = (category: string) => {
     setCategories(prev => {
+      if (prev.includes(category)) return prev;
       const newCategories = new Set([...prev, category]);
       return Array.from(newCategories);
     });
