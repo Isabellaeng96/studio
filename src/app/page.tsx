@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -144,7 +145,7 @@ export default function DashboardPage() {
                   <TableHead>Material</TableHead>
                   <TableHead className="text-center">Tipo</TableHead>
                   <TableHead className="text-right">Quantidade</TableHead>
-                  <TableHead>Nota Fiscal</TableHead>
+                  <TableHead>Documento</TableHead>
                   <TableHead>Data</TableHead>
                   <TableHead>Responsável</TableHead>
                 </TableRow>
@@ -174,7 +175,7 @@ export default function DashboardPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right font-mono">{tx.quantity}</TableCell>
-                    <TableCell className="font-mono text-xs">{tx.invoice || '-'}</TableCell>
+                    <TableCell className="font-mono text-xs">{tx.invoice || tx.osNumber || '-'}</TableCell>
                     <TableCell>{isClient ? new Date(tx.date).toLocaleDateString() : ''}</TableCell>
                     <TableCell>{tx.responsible}</TableCell>
                   </TableRow>

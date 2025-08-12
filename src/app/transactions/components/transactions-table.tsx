@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -45,7 +46,7 @@ export function TransactionsTable({ data, materials }: TransactionsTableProps) {
                 <TableHead>Material</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead className="text-right">Qtd</TableHead>
-                <TableHead>Nota Fiscal</TableHead>
+                <TableHead>Documento</TableHead>
                 <TableHead>Centro de Custo</TableHead>
                 <TableHead>Data</TableHead>
               </TableRow>
@@ -75,7 +76,7 @@ export function TransactionsTable({ data, materials }: TransactionsTableProps) {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right font-mono">{tx.quantity}</TableCell>
-                  <TableCell className="font-mono text-xs">{tx.invoice || '-'}</TableCell>
+                  <TableCell className="font-mono text-xs">{tx.invoice || tx.osNumber || '-'}</TableCell>
                    <TableCell>{tx.costCenter || '-'}</TableCell>
                   <TableCell>{isClient ? new Date(tx.date).toLocaleDateString() : ''}</TableCell>
                 </TableRow>

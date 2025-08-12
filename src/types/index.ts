@@ -1,3 +1,4 @@
+
 export type Material = {
   id: string;
   name: string;
@@ -19,6 +20,7 @@ export type Transaction = {
   quantity: number;
   supplier?: string;
   invoice?: string;
+  osNumber?: string;
   workStage?: string;
   workFront?: string;
   responsible: string;

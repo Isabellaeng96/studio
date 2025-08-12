@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -42,6 +43,7 @@ const transactionSchema = z.object({
   responsible: z.string().min(2, 'O responsável é obrigatório.'),
   supplier: z.string().optional(),
   invoice: z.string().optional(),
+  osNumber: z.string().optional(),
   workStage: z.string().optional(),
   workFront: z.string().optional(),
   costCenter: z.string().optional(),
@@ -70,6 +72,7 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
       materialId: defaultMaterialId ?? '',
       supplier: '',
       invoice: '',
+      osNumber: '',
       workStage: '',
       workFront: '',
       costCenter: '',
@@ -99,6 +102,7 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
         materialId: defaultMaterialId ?? '',
         supplier: '',
         invoice: '',
+        osNumber: '',
         workStage: '',
         workFront: '',
         costCenter: '',
@@ -119,6 +123,7 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
       quantity: 0,
       supplier: '',
       invoice: '',
+      osNumber: '',
       workStage: '',
       workFront: '',
       costCenter: '',
@@ -189,6 +194,19 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
               <>
                 <FormField
                   control={form.control}
+                  name="osNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Número da OS (Opcional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="OS-98765" {...field} value={field.value ?? ''} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
                   name="workStage"
                   render={({ field }) => (
                     <FormItem>
@@ -242,7 +260,7 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {costCenters.map(cc => (
+                       {costCenters.map(cc => (
                         <SelectItem key={cc.id} value={cc.name}>
                           {cc.name}
                         </SelectItem>
