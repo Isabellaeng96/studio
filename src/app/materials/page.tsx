@@ -1,6 +1,7 @@
+
 "use client";
 
-import { PlusCircle, Tag, Upload, FileSpreadsheet } from 'lucide-react';
+import { PlusCircle, Tag, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MaterialsTable } from './components/materials-table';
 import { MaterialForm } from './components/material-form';
@@ -53,3 +54,4 @@ export default function MaterialsPage() {
     </div>
   );
 }
+
