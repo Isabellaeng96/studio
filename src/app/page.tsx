@@ -7,7 +7,8 @@ import {
   ArrowUpCircle,
   Package,
   PlusCircle,
-  Archive
+  Archive,
+  ChevronRight
 } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
@@ -54,10 +55,6 @@ export default function DashboardPage() {
     return getRecentTransactions(transactions)
   }, [transactions]);
   
-  const totalCurrentStock = useMemo(() => {
-    return materials.reduce((total, material) => total + material.currentStock, 0);
-  }, [materials]);
-
 
   return (
     <div className="flex flex-col gap-8">
@@ -78,7 +75,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card className="bg-destructive/10 border-destructive">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-destructive">
@@ -91,7 +88,7 @@ export default function DashboardPage() {
               {lowStockMaterials.length}
             </div>
             <p className="text-xs text-destructive/80">
-              itens precisam de reposição em breve.
+              itens precisam de reposição.
             </p>
           </CardContent>
         </Card>
@@ -109,18 +106,6 @@ export default function DashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Estoque Geral</CardTitle>
-            <Archive className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalCurrentStock}</div>
-            <p className="text-xs text-muted-foreground">
-              unidades totais em estoque.
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Atividade Recente
             </CardTitle>
@@ -131,7 +116,7 @@ export default function DashboardPage() {
               {recentTransactions.length}
             </div>
             <p className="text-xs text-muted-foreground">
-              transações nos últimos 5 dias.
+              últimas transações registradas.
             </p>
           </CardContent>
         </Card>
@@ -145,7 +130,7 @@ export default function DashboardPage() {
               Um registro dos últimos movimentos de estoque.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -191,34 +176,46 @@ export default function DashboardPage() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Itens com Estoque Baixo</CardTitle>
-            <CardDescription>
-              Estes materiais estão abaixo do nível mínimo de estoque.
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Níveis de Estoque</CardTitle>
+              <CardDescription>
+                Visão geral do inventário atual.
+              </CardDescription>
+            </div>
+            <Button size="sm" variant="outline" asChild>
+              <Link href="/materials">
+                Ver Todos <ChevronRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
           </CardHeader>
-          <CardContent>
-            {lowStockMaterials.length > 0 ? (
-              <ul className="space-y-4">
-                {lowStockMaterials.map(material => (
-                  <li key={material.id} className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{material.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Atual: {material.currentStock} | Mín: {material.minStock}
-                      </p>
-                    </div>
-                    <Button variant="secondary" size="sm" asChild>
-                      <Link href={`/transactions?tab=entrada&materialId=${material.id}`}>Repor</Link>
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8">
-                <p>Todos os materiais estão acima dos níveis mínimos de estoque.</p>
-              </div>
-            )}
+          <CardContent className="p-0">
+             <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Material</TableHead>
+                    <TableHead className="text-right">Estoque</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {materials.map(material => (
+                     <TableRow key={material.id}>
+                        <TableCell>
+                          <p className="font-medium">{material.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Mín: {material.minStock}
+                          </p>
+                        </TableCell>
+                        <TableCell className={cn(
+                          "text-right font-mono",
+                          material.currentStock < material.minStock ? "text-destructive font-bold" : ""
+                        )}>
+                          {material.currentStock}
+                        </TableCell>
+                      </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
           </CardContent>
         </Card>
       </div>
