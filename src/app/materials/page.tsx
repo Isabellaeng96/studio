@@ -95,7 +95,7 @@ function MaterialsPageContent() {
                 </SelectTrigger>
                 <SelectContent>
                     <SelectItem value="all">Todas as Categorias</SelectItem>
-                    {categories.map(cat => (
+                    {categories.filter(cat => cat && cat.trim() !== '').map(cat => (
                         <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                     ))}
                 </SelectContent>
