@@ -106,6 +106,7 @@ export function MaterialsTable({ data, onSave, onDelete, onDeleteMultiple, categ
                   />
               </TableHead>
               <TableHead>Nome</TableHead>
+              <TableHead>Código</TableHead>
               <TableHead>Categoria</TableHead>
               <TableHead>Unidade</TableHead>
               <TableHead className="text-right">Estoque Atual</TableHead>
@@ -124,6 +125,9 @@ export function MaterialsTable({ data, onSave, onDelete, onDeleteMultiple, categ
                     />
                  </TableCell>
                 <TableCell className="font-medium">{material.name}</TableCell>
+                <TableCell>
+                  <span className="font-mono text-xs">{material.id}</span>
+                </TableCell>
                 <TableCell>
                   <Badge variant="secondary">{material.category}</Badge>
                 </TableCell>
