@@ -67,7 +67,11 @@ export function MaterialImporter({ children, onImport }: MaterialImporterProps) 
           supplier: row.supplier || undefined,
         }));
         
-        setParsedData(materials.map(m => ({...m, name: m.name.toUpperCase()})));
+        setParsedData(materials.map(m => ({
+            ...m, 
+            name: m.name.toUpperCase(),
+            supplier: m.supplier?.toUpperCase()
+        })));
       },
       error: (err) => {
         setError(`Erro ao analisar o arquivo: ${err.message}`);

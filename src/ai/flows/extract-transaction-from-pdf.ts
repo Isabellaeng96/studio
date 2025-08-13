@@ -59,6 +59,16 @@ const extractTransactionFlow = ai.defineFlow(
     const data = await pdf(pdfBuffer);
     
     const { output } = await prompt({ pdfTextContent: data.text });
+    
+    if (output) {
+      if (output.supplier) {
+        output.supplier = output.supplier.toUpperCase();
+      }
+      if (output.materialName) {
+        output.materialName = output.materialName.toUpperCase();
+      }
+    }
+    
     return output!;
   }
 );

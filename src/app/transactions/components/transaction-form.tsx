@@ -41,7 +41,7 @@ const transactionSchema = z.object({
   quantity: z.coerce.number().positive('A quantidade deve ser positiva.'),
   date: z.date({ required_error: 'A data é obrigatória.' }),
   responsible: z.string().min(2, 'O responsável é obrigatório.'),
-  supplier: z.string().optional(),
+  supplier: z.string().optional().transform(val => val ? val.toUpperCase() : val),
   invoice: z.string().optional(),
   osNumber: z.string().optional(),
   workFront: z.string().optional(),
@@ -184,7 +184,7 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
                   <FormItem>
                     <FormLabel>Fornecedor</FormLabel>
                     <FormControl>
-                      <Input placeholder="Nome do fornecedor" {...field} value={field.value ?? ''} />
+                      <Input placeholder="Nome do fornecedor" {...field} value={field.value ?? ''} className="uppercase"/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

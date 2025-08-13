@@ -35,7 +35,7 @@ const materialSchema = z.object({
   category: z.string().min(1, 'A categoria é obrigatória.'),
   unit: z.string().min(1, 'A unidade é obrigatória.'),
   minStock: z.coerce.number().min(0, 'O estoque mínimo não pode ser negativo.'),
-  supplier: z.string().optional(),
+  supplier: z.string().optional().transform(val => val ? val.toUpperCase() : val),
 });
 
 type MaterialFormValues = z.infer<typeof materialSchema>;
@@ -184,7 +184,7 @@ export function MaterialForm({ children, material, onSave, categories }: Materia
                 <FormItem>
                   <FormLabel>Fornecedor Padrão (Opcional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="ex: Votorantim" {...field} value={field.value ?? ''}/>
+                    <Input placeholder="ex: Votorantim" {...field} value={field.value ?? ''} className="uppercase"/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

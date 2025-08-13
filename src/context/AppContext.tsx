@@ -145,6 +145,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const newMaterial: Material = {
       ...material,
       name: materialNameUpper,
+      supplier: material.supplier?.toUpperCase(),
       id: generateId('PRD'),
       currentStock: 0,
     };
@@ -166,6 +167,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         materialsToAdd.push({
           ...material,
           name: materialNameUpper,
+          supplier: material.supplier?.toUpperCase(),
           id: generateId('PRD'),
           currentStock: 0,
         });
@@ -203,7 +205,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
-    setMaterials(prev => prev.map(m => m.id === material.id ? { ...m, ...material, name: materialNameUpper } : m));
+    setMaterials(prev => prev.map(m => m.id === material.id ? { ...m, ...material, name: materialNameUpper, supplier: material.supplier?.toUpperCase() } : m));
     if (!categories.includes(material.category)) {
       addCategory(material.category);
     }
@@ -236,6 +238,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       type: type,
       date: transaction.date.getTime(),
       materialName: material.name,
+      supplier: transaction.supplier?.toUpperCase(),
     };
 
     setTransactions(prev => [newTransaction, ...prev]);
