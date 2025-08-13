@@ -4,16 +4,11 @@
 import { ChangePasswordForm } from './components/change-password-form';
 import { UserProfileCard } from './components/user-profile-card';
 import { useAuth } from '@/context/AuthContext';
-import { UsersTable } from './components/users-table';
-import { useAppContext } from '@/context/AppContext';
-import { PlusCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { AlertSettingsCard } from './components/alert-settings-card';
 import { SectorEmailCard } from './components/sector-email-card';
 
 export default function SettingsPage() {
   const { role } = useAuth();
-  const { users, addUser, updateUser, deleteUser } = useAppContext();
   
   const isAdmin = role === 'Administrador';
 
@@ -41,18 +36,7 @@ export default function SettingsPage() {
 
        {isAdmin && (
          <div className="flex flex-col gap-8">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight">Gerenciamento de Usuários</h2>
-                <p className="text-muted-foreground">
-                  Adicione, edite ou remova usuários do sistema.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                 {/* This section will be re-enabled when UserForm is implemented */}
-              </div>
-            </div>
-             {/* This section will be re-enabled when UsersTable is implemented with user management */}
+            {/* Seção de gerenciamento de usuários removida temporariamente */}
          </div>
       )}
     </div>
