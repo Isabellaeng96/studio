@@ -7,7 +7,6 @@ import { useAuth } from '@/context/AuthContext';
 import { UsersTable } from './components/users-table';
 import { useAppContext } from '@/context/AppContext';
 import { PlusCircle } from 'lucide-react';
-import { UserForm } from './components/user-form';
 import { Button } from '@/components/ui/button';
 import { AlertSettingsCard } from './components/alert-settings-card';
 import { SectorEmailCard } from './components/sector-email-card';
@@ -50,19 +49,10 @@ export default function SettingsPage() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <UserForm onSave={addUser}>
-                  <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Adicionar Usuário
-                  </Button>
-                </UserForm>
+                 {/* This section will be re-enabled when UserForm is implemented */}
               </div>
             </div>
-            <UsersTable 
-              data={users} 
-              onSave={updateUser} 
-              onDelete={deleteUser} 
-            />
+             {/* This section will be re-enabled when UsersTable is implemented with user management */}
          </div>
       )}
     </div>
