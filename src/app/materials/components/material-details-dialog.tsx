@@ -44,7 +44,7 @@ export function MaterialDetailsDialog({ open, onOpenChange, material, stockByLoc
         const svgString = new XMLSerializer().serializeToString(qrCodeSvg);
         const printWindow = window.open('', '_blank');
         if (printWindow) {
-          printWindow.document.write('<html><head><title>QR Code - ' + material.name + '</title>');
+          printWindow.document.write('<html><head><meta charset="UTF-8"><title>QR Code - ' + material.name + '</title>');
           printWindow.document.write('<style>body { font-family: sans-serif; text-align: center; margin-top: 20px; } .qr-container { display: inline-block; padding: 20px; border: 1px solid #ccc; border-radius: 8px; } h3 { margin-bottom: 10px; } </style>');
           printWindow.document.write('</head><body>');
           printWindow.document.write('<div class="qr-container"><h3>' + material.name + '</h3>' + svgString + '<p style="margin-top:10px;">Código: ' + material.id + '</p></div>');
