@@ -3,6 +3,9 @@
 
 import { ChangePasswordForm } from './components/change-password-form';
 import { UserProfileCard } from './components/user-profile-card';
+import { AlertSettingsCard } from './components/alert-settings-card';
+import { SectorEmailCard } from './components/sector-email-card';
+
 
 export default function SettingsPage() {
   
@@ -16,12 +19,16 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 flex flex-col gap-8">
           <UserProfileCard />
+          <ChangePasswordForm />
         </div>
-        <div className="lg:col-span-2">
-            <ChangePasswordForm />
+        <div className="lg:col-span-2 flex flex-col gap-8">
+            <SectorEmailCard />
         </div>
+      </div>
+      <div>
+        <AlertSettingsCard />
       </div>
     </div>
   );

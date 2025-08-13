@@ -9,7 +9,6 @@ import {
   Landmark,
   Settings,
   Truck,
-  AlertCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -23,7 +22,6 @@ const navItems = [
   { href: '/suppliers', label: 'Fornecedores', icon: Truck },
   { href: '/cost-centers', label: 'Centros de Custo', icon: Landmark },
   { href: '/analysis', label: 'Análise', icon: BarChart3 },
-  { href: '/alerts', label: 'Alertas', icon: AlertCircle },
   { href: '/settings', label: 'Configurações', icon: Settings },
 ];
 
@@ -33,7 +31,7 @@ export function AppSidebarNav({ isMobile = false }: { isMobile?: boolean }) {
   return (
     <nav className={cn("grid items-start gap-1 px-4 text-sm font-medium", isMobile && "p-0")}>
       {navItems.map(({ href, label, icon: Icon }) => {
-        const isActive = pathname === href;
+        const isActive = pathname === href || (href.length > 1 && pathname.startsWith(href));
         return (
           <Link key={href} href={href}>
             <Button
