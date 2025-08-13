@@ -248,11 +248,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addTransaction = (transaction: TransactionSave, type: 'entrada' | 'saida') => {
     // Check for duplicate invoice on entry
     if (type === 'entrada' && transaction.invoice && transaction.supplier) {
-      const isDuplicate = transactions.some(
-        tx => tx.type === 'entrada' &&
-              tx.invoice === transaction.invoice &&
-              tx.supplier?.toUpperCase() === transaction.supplier?.toUpperCase()
+      const newInvoice = transaction.invoice.trim().toUpperCase();
+      const newSupplier = transaction.supplier.trim().toUpperCase();
+
+      const isDuplicate = transactions.some(tx => 
+        tx.type === 'entrada' &&
+        tx.invoice?.trim().toUpperCase() === newInvoice &&
+        tx.supplier?.trim().toUpperCase() === newSupplier
       );
+
       if (isDuplicate) {
         toast({
           variant: 'destructive',
