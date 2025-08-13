@@ -11,6 +11,8 @@ import { PdfImporter } from './components/pdf-importer';
 import { TransactionForm, type TransactionFormValues } from './components/transaction-form';
 import { TransactionsTable } from './components/transactions-table';
 import { useToast } from '@/hooks/use-toast';
+import type { TransactionSave } from '@/types';
+
 
 type ExtractedData = Partial<TransactionFormValues & { unit?: string; category?: string }>;
 
@@ -26,6 +28,18 @@ function TransactionsPageContent() {
   const materialId = searchParams.get('materialId');
 
   const [formValues, setFormValues] = useState<ExtractedData>({});
+  
+  const handleSaveTransaction = (transaction: TransactionSave, type: 'entrada' | 'saida') => {
+    addTransaction(transaction, type);
+    
+    // After saving, redirect to the transactions list
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    current.delete('showForm');
+    current.delete('materialId');
+    const search = current.toString();
+    const query = search ? `?${search}` : '';
+    router.push(`${pathname}${query}`);
+  };
 
   const handlePdfDataExtracted = useCallback((data: ExtractedData) => {
     let materialForTransaction = materials.find(m => m.name === data.materialName);
@@ -41,21 +55,11 @@ function TransactionsPageContent() {
       });
 
       if (wasSaved) {
-        // Find the newly created material to get its ID
-        // Note: This relies on addMaterial adding the new material to the state
-        // before this logic continues. A more robust solution might return the new material.
-        // For now, we find it again. This might be a race condition if state updates are slow.
-        // Let's refactor AppContext to return the new material. (Next step if needed)
-        
-        // This is a temporary workaround. We need to get the latest materials state.
-        // A better approach is to make addMaterial return the new material object.
-        // For now, we just show a toast. The user will have to select it.
          toast({
           title: "Novo Material Cadastrado!",
           description: `O material "${data.materialName}" foi criado.`,
         });
       } else {
-         // If saving failed (e.g., duplicate), stop here
          return;
       }
     }
@@ -100,7 +104,7 @@ function TransactionsPageContent() {
                   type="entrada" 
                   materials={materials} 
                   costCenters={costCenters}
-                  onSave={addTransaction} 
+                  onSave={handleSaveTransaction} 
                   defaultMaterialId={materialId}
                   key={`entrada-${JSON.stringify(formValues)}`}
                   initialValues={formValues} 
@@ -110,7 +114,7 @@ function TransactionsPageContent() {
                   type="saida" 
                   materials={materials} 
                   costCenters={costCenters}
-                  onSave={addTransaction} 
+                  onSave={handleSaveTransaction}
                   defaultMaterialId={materialId} 
                   key={`saida-${materialId}`}
                 />

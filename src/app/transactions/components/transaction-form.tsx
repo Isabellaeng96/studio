@@ -121,18 +121,6 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
       title: 'Transação Registrada',
       description: `Uma nova transação de ${type} de ${data.quantity} unidades foi salva.`,
     });
-    form.reset({
-      ...form.getValues(),
-      responsible: user?.displayName ?? '', // Keep responsible user after reset
-      materialId: '',
-      quantity: 0,
-      supplier: '',
-      invoice: '',
-      osNumber: '',
-      workFront: '',
-      costCenter: '',
-      stockLocation: '',
-    });
   };
 
   return (
