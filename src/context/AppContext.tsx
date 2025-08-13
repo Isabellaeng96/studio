@@ -120,7 +120,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // Initial user setup
         const initialUsers = [
             // This user will be linked to the default auth user
-            { id: 'usr-1', name: 'Usuário Admin', email: 'admin@geostoque.com.br', role: 'Administrador', sector: 'Engenharia' },
+            { id: 'usr-1', name: 'Usuário Admin', email: 'tec08@geoblue.com.br', role: 'Administrador', sector: 'Engenharia' },
+            { id: 'usr-2', name: 'Compras Admin', email: 'compras@geoblue.com.br', role: 'Administrador', sector: 'Administrativo' },
         ];
         setUsers(initialUsers);
     }
