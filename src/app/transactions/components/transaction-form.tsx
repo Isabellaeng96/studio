@@ -233,7 +233,14 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
                 <FormItem>
                   <FormLabel>Quantidade</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="0" {...field} />
+                    <Input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="0"
+                      {...field}
+                      onWheel={(e) => (e.target as HTMLElement).blur()}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
