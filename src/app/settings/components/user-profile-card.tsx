@@ -13,7 +13,6 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 
 
 const profileSchema = z.object({
@@ -24,7 +23,7 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 
 
 export function UserProfileCard() {
-  const { user, updateUserProfile, role, sector } = useAuth();
+  const { user, updateUserProfile } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -93,10 +92,6 @@ export function UserProfileCard() {
                 </Avatar>
                 <div className="text-center">
                     <p className="text-sm text-muted-foreground">{user?.email}</p>
-                     <div className="flex items-center gap-2 pt-2">
-                        {role && <Badge variant="outline">Função: {role}</Badge>}
-                        {sector && <Badge variant="secondary">Setor: {sector}</Badge>}
-                    </div>
                 </div>
             </div>
              <FormField

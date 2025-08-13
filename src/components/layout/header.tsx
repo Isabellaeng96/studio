@@ -19,10 +19,9 @@ import { AppSidebarNav } from './sidebar-nav';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Logo } from '../logo';
-import { Badge } from '../ui/badge';
 
 export function Header() {
-  const { logout, user, role, sector } = useAuth();
+  const { logout, user } = useAuth();
   const router = useRouter();
 
   const getInitials = (name?: string | null, email?: string | null) => {
@@ -90,10 +89,6 @@ export function Header() {
               <p className="text-xs leading-none text-muted-foreground">
                 {user?.email}
               </p>
-               <div className="flex items-center gap-2 pt-2">
-                 {role && <Badge variant="outline">{role}</Badge>}
-                 {sector && <Badge variant="secondary">{sector}</Badge>}
-               </div>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
