@@ -28,6 +28,7 @@ import type { Material, MaterialSave } from '@/types';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAppContext } from '@/context/AppContext';
 
 const materialSchema = z.object({
   name: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres.'),
@@ -42,13 +43,14 @@ type MaterialFormValues = z.infer<typeof materialSchema>;
 interface MaterialFormProps {
   children: React.ReactNode;
   material?: Material;
-  onSave: (data: MaterialSave & { id?: string }) => void;
+  onSave: (data: MaterialSave & { id?: string }) => boolean;
   categories: string[];
 }
 
 export function MaterialForm({ children, material, onSave, categories }: MaterialFormProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const { materials } = useAppContext();
 
   const form = useForm<MaterialFormValues>({
     resolver: zodResolver(materialSchema),
@@ -80,13 +82,15 @@ export function MaterialForm({ children, material, onSave, categories }: Materia
 
 
   const onSubmit = (data: MaterialFormValues) => {
-    onSave({ ...data, id: material?.id });
-    toast({
-      title: `Material ${material ? 'Atualizado' : 'Criado'}`,
-      description: `O material "${data.name}" foi salvo com sucesso.`,
-    });
-    setOpen(false);
-    form.reset();
+    const isSaved = onSave({ ...data, id: material?.id });
+    if(isSaved) {
+      toast({
+        title: `Material ${material ? 'Atualizado' : 'Criado'}`,
+        description: `O material "${data.name}" foi salvo com sucesso.`,
+      });
+      setOpen(false);
+      form.reset();
+    }
   };
   
   const validCategories = categories.filter(c => c && c.trim() !== '');

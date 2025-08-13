@@ -4,6 +4,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import type { Material, Transaction, TransactionSave, MaterialSave, CostCenter } from '@/types';
 import { materials as initialMaterials, transactions as initialTransactions } from '@/lib/mock-data';
+import { useToast } from '@/hooks/use-toast';
 
 // Helper function to get item from localStorage safely
 function getFromStorage<T>(key: string, defaultValue: T): T {
@@ -54,9 +55,9 @@ interface AppContextType {
   transactions: Transaction[];
   categories: string[];
   costCenters: CostCenter[];
-  addMaterial: (material: MaterialSave) => void;
+  addMaterial: (material: MaterialSave) => boolean;
   addMultipleMaterials: (materials: MaterialSave[]) => void;
-  updateMaterial: (material: MaterialSave & { id: string }) => void;
+  updateMaterial: (material: MaterialSave & { id: string }) => boolean;
   deleteMaterial: (materialId: string) => void;
   deleteMultipleMaterials: (materialIds: string[]) => void;
   addCategory: (category: string) => void;
@@ -75,6 +76,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [categories, setCategories] = useState<string[]>([]);
   const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     // Load from storage only once
@@ -126,6 +128,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [costCenters, isLoaded]);
 
   const addMaterial = (material: MaterialSave) => {
+    const existingMaterial = materials.find(
+      (m) => m.name.toLowerCase() === material.name.toLowerCase()
+    );
+
+    if (existingMaterial) {
+      toast({
+        variant: 'destructive',
+        title: 'Material Duplicado',
+        description: `Um material com o nome "${material.name}" já existe.`,
+      });
+      return false;
+    }
+
     const newMaterial: Material = {
       ...material,
       id: generateId('PRD'),
@@ -135,27 +150,57 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!categories.includes(newMaterial.category)) {
       addCategory(newMaterial.category);
     }
+    return true;
   };
   
   const addMultipleMaterials = (newMaterials: MaterialSave[]) => {
-    const materialsToAdd: Material[] = newMaterials.map((material) => ({
-      ...material,
-      id: generateId('PRD'),
-      currentStock: 0,
-    }));
-    
-    setMaterials(prev => [...materialsToAdd, ...prev]);
-    
+    const materialsToAdd: Material[] = [];
     const newCategories = new Set(categories);
-    materialsToAdd.forEach(m => newCategories.add(m.category));
+
+    newMaterials.forEach((material) => {
+      const existing = materials.some(m => m.name.toLowerCase() === material.name.toLowerCase());
+      if (!existing) {
+        materialsToAdd.push({
+          ...material,
+          id: generateId('PRD'),
+          currentStock: 0,
+        });
+        newCategories.add(material.category);
+      }
+    });
+
+    setMaterials(prev => [...materialsToAdd, ...prev]);
     setCategories(Array.from(newCategories));
+    
+    const skippedCount = newMaterials.length - materialsToAdd.length;
+    if (skippedCount > 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Materiais Duplicados Ignorados',
+        description: `${skippedCount} materiais não foram importados pois já existem.`,
+      });
+    }
   };
 
   const updateMaterial = (material: MaterialSave & { id: string }) => {
+    const existingMaterial = materials.find(
+      (m) => m.id !== material.id && m.name.toLowerCase() === material.name.toLowerCase()
+    );
+
+    if (existingMaterial) {
+      toast({
+        variant: 'destructive',
+        title: 'Nome de Material Duplicado',
+        description: `Outro material já existe com o nome "${material.name}".`,
+      });
+      return false;
+    }
+
     setMaterials(prev => prev.map(m => m.id === material.id ? { ...m, ...material } : m));
     if (!categories.includes(material.category)) {
       addCategory(material.category);
     }
+    return true;
   };
   
   const deleteMaterial = (materialId: string) => {

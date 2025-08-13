@@ -41,7 +41,7 @@ import { useAppContext } from '@/context/AppContext';
 
 interface MaterialsTableProps {
   data: Material[];
-  onSave: (material: MaterialSave & { id?: string }) => void;
+  onSave: (material: MaterialSave & { id?: string }) => boolean;
   onDelete: (materialId: string) => void;
   onDeleteMultiple: (materialIds: string[]) => void;
   categories: string[];
@@ -80,8 +80,10 @@ export function MaterialsTable({ data, onSave, onDelete, onDeleteMultiple, categ
   };
   
   const handleSave = (material: MaterialSave & { id?: string }) => {
-    onSave(material);
-    setOpenDropdownId(null); 
+    const isSaved = onSave(material);
+    if (isSaved) {
+        setOpenDropdownId(null); 
+    }
   };
 
 
