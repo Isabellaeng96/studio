@@ -57,7 +57,7 @@ interface AppContextType {
   costCenters: CostCenter[];
   suppliers: Supplier[];
   activeMaterials: Material[]; // Materials that are not deleted
-  addMaterial: (material: MaterialSave) => boolean;
+  addMaterial: (material: MaterialSave) => string | null;
   addMultipleMaterials: (materials: MaterialSave[]) => void;
   updateMaterial: (material: MaterialSave & { id: string }) => boolean;
   deleteMaterial: (materialId: string) => void;
@@ -147,12 +147,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const activeMaterials = useMemo(() => materials.filter(m => !m.deleted), [materials]);
 
-  const addMaterial = (material: MaterialSave) => {
+  const addMaterial = useCallback((material: MaterialSave): string | null => {
     const materialNameUpper = material.name.toUpperCase();
     
-    // Check for an active material with the same name
-    const existingActiveMaterial = activeMaterials.find(
-      (m) => m.name.toUpperCase() === materialNameUpper
+    const existingActiveMaterial = materials.find(
+      (m) => !m.deleted && m.name.toUpperCase() === materialNameUpper
     );
     if (existingActiveMaterial) {
       toast({
@@ -160,41 +159,50 @@ export function AppProvider({ children }: { children: ReactNode }) {
         title: 'Material Duplicado',
         description: `Um material com o nome "${material.name}" já existe.`,
       });
-      return false;
+      return null;
     }
     
-    // Check if a deleted material with the same name exists
-    const existingDeletedMaterial = materials.find(
+    const existingDeletedIndex = materials.findIndex(
       (m) => m.deleted && m.name.toUpperCase() === materialNameUpper
     );
 
-    if (existingDeletedMaterial) {
-       // Reactivate and update the existing material
-      updateMaterial({ ...material, id: existingDeletedMaterial.id });
+    let materialId: string;
+    if (existingDeletedIndex !== -1) {
+      const updatedMaterial = {
+          ...materials[existingDeletedIndex],
+          ...material,
+          name: materialNameUpper,
+          supplier: material.supplier?.toUpperCase(),
+          deleted: false
+      };
+      setMaterials(prev => {
+        const newMaterials = [...prev];
+        newMaterials[existingDeletedIndex] = updatedMaterial;
+        return newMaterials;
+      });
+      materialId = updatedMaterial.id;
       toast({
         title: 'Material Reativado',
         description: `O material "${material.name}" foi reativado com o código existente.`,
       });
-      // We don't return false because we want the form to close.
-      // The updateMaterial function will handle the state update.
-      return true;
+    } else {
+      const newMaterial: Material = {
+        ...material,
+        name: materialNameUpper,
+        supplier: material.supplier?.toUpperCase(),
+        id: generateId('PRD'),
+        currentStock: 0,
+        deleted: false,
+      };
+      setMaterials(prev => [newMaterial, ...prev]);
+      materialId = newMaterial.id;
     }
 
-
-    const newMaterial: Material = {
-      ...material,
-      name: materialNameUpper,
-      supplier: material.supplier?.toUpperCase(),
-      id: generateId('PRD'),
-      currentStock: 0,
-      deleted: false,
-    };
-    setMaterials(prev => [newMaterial, ...prev]);
-    if (!categories.includes(newMaterial.category)) {
-      addCategory(newMaterial.category);
+    if (!categories.includes(material.category)) {
+      addCategory(material.category);
     }
-    return true;
-  };
+    return materialId;
+  }, [materials, categories, toast]);
   
   const addMultipleMaterials = (newMaterials: MaterialSave[]) => {
     let addedCount = 0;
@@ -297,12 +305,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCategories(prev => {
       if (prev.includes(category)) return prev;
       const newCategories = new Set([...prev, category]);
-      return Array.from(newCategories);
+      return Array.from(newCategories).sort();
     });
   };
 
   const addTransaction = (transaction: TransactionSave, type: 'entrada' | 'saida'): boolean => {
-    // Check for duplicate invoice on entry
     if (type === 'entrada' && transaction.invoice && transaction.supplier) {
       const newInvoice = transaction.invoice.trim().toUpperCase();
       const newSupplier = transaction.supplier.trim().toUpperCase();
@@ -319,53 +326,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
           title: 'Transação Duplicada',
           description: `Esta nota fiscal já foi registrada para o fornecedor "${transaction.supplier}".`,
         });
-        return false; // Stop the function and indicate failure
+        return false;
       }
     }
 
     let materialId = transaction.materialId;
-    let materialName = transaction.materialName;
     
-    // If materialId is missing, it's a new material being created via the transaction form
-    if (!materialId && transaction.materialName) {
-        const materialToSave: MaterialSave = {
+    if (!materialId && transaction.materialName && type === 'entrada') {
+        const newMaterialId = addMaterial({
             name: transaction.materialName,
             category: transaction.category || 'GERAL',
             unit: transaction.unit || 'un',
             minStock: 0,
             supplier: transaction.supplier,
-        };
-        
-        // This is a critical check to ensure no active duplicate material is created.
-        const existingMaterial = activeMaterials.find(m => m.name.toUpperCase() === materialToSave.name.toUpperCase());
-        if (existingMaterial) {
-             toast({
-                variant: 'destructive',
-                title: 'Material Duplicado',
-                description: `Um material com o nome "${materialToSave.name}" já existe. Selecione-o na lista.`,
-            });
-            return false;
-        }
-        
-        const success = addMaterial(materialToSave);
-        if (!success) {
-            // addMaterial already showed a toast, but we stop the transaction.
-            return false;
-        }
+        });
 
-        // Find the newly created material to get its ID
-        const newMaterial = materials.find(m => !m.deleted && m.name.toUpperCase() === materialToSave.name.toUpperCase());
-        
-        // This should theoretically always find the material, but it's a safe check.
-        if (newMaterial) {
-            materialId = newMaterial.id;
-            materialName = newMaterial.name;
-        } else {
-             toast({ variant: 'destructive', title: 'Erro', description: 'Falha ao criar e encontrar o novo material.' });
+        if (!newMaterialId) {
             return false;
         }
+        materialId = newMaterialId;
     }
-
 
     const material = materials.find(m => m.id === materialId);
     if (!material) {
@@ -391,7 +371,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     setTransactions(prev => [newTransaction, ...prev]);
 
-    // Update stock
     setMaterials(prev => prev.map(m => {
       if (m.id === materialId) {
         const newStock = type === 'entrada'
@@ -407,7 +386,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         description: `Uma nova transação de ${type} de ${transaction.quantity} unidades foi salva.`,
     });
     
-    return true; // Indicate success
+    return true;
   };
 
   const addCostCenter = (costCenter: Omit<CostCenter, 'id'>) => {
@@ -442,7 +421,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // Remove locations with zero or negative stock to keep it clean
     Object.keys(stockMap).forEach(key => {
       if (stockMap[key] <= 0) {
         delete stockMap[key];

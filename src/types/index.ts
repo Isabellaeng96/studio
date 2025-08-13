@@ -1,4 +1,5 @@
 
+
 export type Material = {
   id: string;
   name: string;
@@ -32,7 +33,7 @@ export type Transaction = {
 export type TransactionSave = Omit<Transaction, 'id' | 'type' | 'date' | 'materialName'> & {
   date: Date;
   materialName?: string;
-  // Fields for new material creation from PDF
+  // Fields for new material creation
   unit?: string;
   category?: string;
 };
@@ -65,4 +66,3 @@ export type Supplier = {
   phone?: string;
   email?: string;
 };
-

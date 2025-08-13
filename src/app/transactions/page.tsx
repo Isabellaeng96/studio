@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Suspense, useState, useCallback } from 'react';
+import { Suspense, useState, useCallback, useEffect } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useAppContext } from '@/context/AppContext';
@@ -11,40 +11,38 @@ import { PdfImporter } from './components/pdf-importer';
 import { TransactionForm, type TransactionFormValues } from './components/transaction-form';
 import { TransactionsTable } from './components/transactions-table';
 import { useToast } from '@/hooks/use-toast';
-import type { TransactionSave, MaterialSave } from '@/types';
+import type { TransactionSave } from '@/types';
 import type { TransactionExtractionOutput } from '@/ai/flows/extract-transaction-from-pdf';
 
 
 type ExtractedData = Partial<TransactionFormValues & { unit?: string; category?: string }>;
 
 function TransactionsPageContent() {
-  const { activeMaterials, materials, transactions, addTransaction, addMultipleMaterials, costCenters } = useAppContext();
+  const { activeMaterials, materials, transactions, addTransaction, costCenters } = useAppContext();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
 
-  const transactionType = searchParams.get('tab') === 'saida' ? 'saida' : 'entrada';
-  const showForm = searchParams.has('showForm');
-  const materialId = searchParams.get('materialId');
+  const getTab = () => searchParams.get('tab') === 'saida' ? 'saida' : 'entrada';
+  const getShowForm = () => searchParams.has('showForm');
+  const getMaterialId = () => searchParams.get('materialId');
 
+  const [transactionType, setTransactionType] = useState(getTab());
+  const [showForm, setShowForm] = useState(getShowForm());
+  const [materialId, setMaterialId] = useState(getMaterialId());
   const [formValues, setFormValues] = useState<ExtractedData>({});
   
-  const handleSaveTransaction = (transaction: TransactionSave, type: 'entrada' | 'saida') => {
-    const wasSaved = addTransaction(transaction, type);
-    if (wasSaved) {
-       const current = new URLSearchParams(Array.from(searchParams.entries()));
-       current.delete('showForm');
-       current.delete('materialId');
-       current.delete('tab');
-       const search = current.toString();
-       const query = search ? `?${search}` : '';
-       router.push(`${pathname}${query}`);
-       setFormValues({}); // Clear form values after successful save
-    }
-    return wasSaved;
-  };
+  useEffect(() => {
+    setTransactionType(getTab());
+    setShowForm(getShowForm());
+    setMaterialId(getMaterialId());
+  }, [searchParams]);
 
+  const handleSaveTransaction = (transaction: TransactionSave, type: 'entrada' | 'saida') => {
+    return addTransaction(transaction, type);
+  };
+  
   const handlePdfDataExtracted = useCallback((data: TransactionExtractionOutput) => {
     if (!data.materials || data.materials.length === 0) {
       toast({
@@ -55,17 +53,26 @@ function TransactionsPageContent() {
       return;
     }
     
-    const materialsToSave: MaterialSave[] = data.materials.map(m => ({
-        name: m.materialName || 'NOME INVÁLIDO',
-        category: m.category || 'GERAL',
-        unit: m.unit || 'un',
-        minStock: 0,
-        supplier: data.supplier
-    })).filter(m => m.name !== 'NOME INVÁLIDO');
+    // Take the first material and pre-fill the form
+    const firstItem = data.materials[0];
+    const extractedValues: ExtractedData = {
+      materialName: firstItem.materialName,
+      quantity: firstItem.quantity,
+      unit: firstItem.unit,
+      category: firstItem.category,
+      supplier: data.supplier,
+      invoice: data.invoice,
+    };
+    
+    setFormValues(extractedValues);
 
-    addMultipleMaterials(materialsToSave);
+    // Switch to the form view
+    const params = new URLSearchParams();
+    params.set('tab', 'entrada');
+    params.set('showForm', 'true');
+    router.push(`${pathname}?${params.toString()}`);
 
-  }, [addMultipleMaterials, toast]);
+  }, [toast, router, pathname]);
 
 
   return (

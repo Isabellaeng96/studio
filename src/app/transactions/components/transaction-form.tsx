@@ -51,7 +51,7 @@ const transactionSchema = z.object({
   workFront: z.string().optional(),
   costCenter: z.string().optional(),
   stockLocation: z.string().optional(),
-  // Fields for new material creation from PDF
+  // Fields for new material creation
   unit: z.string().optional(),
   category: z.string().optional(),
 }).refine(data => data.materialId || data.materialName, {
@@ -105,40 +105,53 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
 
   useEffect(() => {
     if (initialValues) {
-      const existingMaterial = materials.find(m => m.name.toUpperCase() === initialValues.materialName?.toUpperCase());
+      // Logic to handle pre-filling from PDF extraction or other sources
+      const existingMaterial = initialValues.materialName ? materials.find(m => m.name.toUpperCase() === initialValues.materialName?.toUpperCase()) : null;
       if (existingMaterial) {
           initialValues.materialId = existingMaterial.id;
-          initialValues.materialName = undefined; // Use ID instead if exists
+          initialValues.materialName = undefined; // Use ID instead if it already exists
       }
       form.reset({
         date: new Date(),
         responsible: user?.displayName ?? '',
-        quantity: 0,
-        supplier: '',
-        invoice: '',
+        quantity: initialValues.quantity || 0,
+        supplier: initialValues.supplier || '',
+        invoice: initialValues.invoice || '',
+        materialId: initialValues.materialId,
+        materialName: initialValues.materialName,
+        unit: initialValues.unit,
+        category: initialValues.category,
         osNumber: '',
         workFront: '',
         costCenter: '',
         stockLocation: '',
-        ...initialValues,
       });
     }
-  }, [initialValues, form, materials, defaultMaterialId, user]);
+  }, [initialValues, form, materials, user]);
+
 
   const onSubmit = (data: TransactionFormValues) => {
-    // If materialId is selected, clear materialName to avoid confusion
     if (data.materialId) {
       const selectedMaterial = materials.find(m => m.id === data.materialId);
       data.materialName = selectedMaterial?.name;
+      // Clear new material specific fields if an existing one is chosen
+      data.unit = undefined;
+      data.category = undefined;
+    } else if (data.materialName) {
+        if (!data.unit) data.unit = 'un'; // Default unit if not provided
+        if (!data.category) data.category = 'GERAL'; // Default category
     }
     
     const wasSaved = onSave(data, type);
-    // The onSave function now handles navigation/state clearing on its own
-    // so we don't need to do anything here except maybe form.reset if it wasn't saved.
-    if (!wasSaved) {
-        // an error toast is already shown in the onSave handler
-    } else {
-        form.reset(); // clear form on success
+    if (wasSaved) {
+        form.reset();
+        const current = new URLSearchParams(Array.from(searchParams.entries()));
+        current.delete('showForm');
+        current.delete('materialId');
+        current.delete('tab');
+        const search = current.toString();
+        const query = search ? `?${search}` : '';
+        router.push(`${pathname}${query}`);
     }
   };
   
@@ -156,16 +169,10 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
       costCenter: '',
       stockLocation: '',
     });
-     const current = new URLSearchParams(Array.from(searchParams.entries()));
-      current.delete('showForm');
-      current.delete('materialId');
-      current.delete('tab');
-      const search = current.toString();
-      const query = search ? `?${search}` : '';
-      router.push(`${pathname}${query}`);
   }
   
   const selectedMaterialId = form.watch('materialId');
+  const newMaterialName = form.watch('materialName');
 
   return (
     <Card>
@@ -181,7 +188,7 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Material</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} disabled={!!form.getValues('materialName')}>
+                  <Select onValueChange={field.onChange} value={field.value} disabled={!!newMaterialName}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione um material existente" />
