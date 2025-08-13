@@ -1,15 +1,14 @@
 'use server';
 /**
- * @fileOverview Extrai informações de transação de um documento PDF.
+ * @fileOverview Extrai informações de transação de um documento PDF, incluindo detalhes do material.
  *
- * - extractTransactionFromPdf - Analisa um arquivo PDF para extrair detalhes da transação.
+ * - extractTransactionFromPdf - Analisa um arquivo PDF para extrair detalhes da transação e do material.
  * - TransactionExtractionInput - O tipo de entrada para a função extractTransactionFromPdf.
  * - TransactionExtractionOutput - O tipo de retorno para a função extractTransactionFromPdf.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-// import pdf from 'pdf-parse'; // Will be dynamically imported
 
 const TransactionExtractionInputSchema = z.object({
   pdfDataUri: z.string().describe("O arquivo PDF como um data URI, que deve incluir um MIME type e usar codificação Base64. Formato esperado: 'data:<mimetype>;base64,<encoded_data>'."),
@@ -21,6 +20,8 @@ const TransactionExtractionOutputSchema = z.object({
   quantity: z.number().optional().describe('A quantidade do material.'),
   supplier: z.string().optional().describe('O nome do fornecedor ou da empresa que emitiu o documento.'),
   invoice: z.string().optional().describe('O número da nota fiscal ou fatura, se encontrado.'),
+  unit: z.string().optional().describe('A unidade de medida do material (ex: un, kg, m).'),
+  category: z.string().optional().describe('Uma categoria sugerida para o material com base no seu nome ou tipo.'),
 });
 export type TransactionExtractionOutput = z.infer<typeof TransactionExtractionOutputSchema>;
 
@@ -34,9 +35,12 @@ const prompt = ai.definePrompt({
   input: { schema: z.object({ pdfTextContent: z.string() }) },
   output: { schema: TransactionExtractionOutputSchema },
   prompt: `Você é um assistente de entrada de dados especializado em analisar texto de notas fiscais e faturas.
-Analise o seguinte texto extraído de um PDF e identifique os seguintes campos: nome do material, quantidade, fornecedor e número da nota fiscal.
+Analise o seguinte texto extraído de um PDF e identifique os seguintes campos: nome do material, quantidade, fornecedor, número da nota fiscal, unidade de medida e sugira uma categoria.
 
-Se um campo não for encontrado, deixe-o em branco. Foque em extrair os valores exatos. Para o nome do material, procure por uma descrição de produto.
+Se um campo não for encontrado, deixe-o em branco. Foque em extrair os valores exatos.
+Para o nome do material, procure por uma descrição de produto.
+Para a unidade, procure por abreviações como 'un', 'pc', 'kg', 'm', 'm2', 'm3', 'sc'.
+Para a categoria, sugira uma categoria com base no nome do produto (ex: 'Hidráulica', 'Elétrica', 'Ferramenta', 'Agregado', 'Estrutura').
 
 Texto do PDF:
 {{{pdfTextContent}}}

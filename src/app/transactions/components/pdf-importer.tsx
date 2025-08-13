@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -16,7 +17,7 @@ import type { TransactionSave } from '@/types';
 import { extractTransactionFromPdf } from '@/ai/flows/extract-transaction-from-pdf';
 
 interface PdfImporterProps {
-  onDataExtracted: (data: Partial<TransactionSave>) => void;
+  onDataExtracted: (data: Partial<TransactionSave & { unit?: string; category?: string }>) => void;
 }
 
 export function PdfImporter({ onDataExtracted }: PdfImporterProps) {

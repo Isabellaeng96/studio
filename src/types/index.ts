@@ -30,7 +30,10 @@ export type Transaction = {
 
 export type TransactionSave = Omit<Transaction, 'id' | 'type' | 'date' | 'materialName'> & {
   date: Date;
-  materialName?: string; // Add this to handle names from PDF extraction
+  materialName?: string;
+  // Fields for new material creation from PDF
+  unit?: string;
+  category?: string;
 };
 
 

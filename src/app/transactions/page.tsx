@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useCallback } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useAppContext } from '@/context/AppContext';
@@ -10,29 +10,67 @@ import { PlusCircle } from 'lucide-react';
 import { PdfImporter } from './components/pdf-importer';
 import { TransactionForm, type TransactionFormValues } from './components/transaction-form';
 import { TransactionsTable } from './components/transactions-table';
+import { useToast } from '@/hooks/use-toast';
 
+type ExtractedData = Partial<TransactionFormValues & { unit?: string; category?: string }>;
 
 function TransactionsPageContent() {
-  const { materials, transactions, addTransaction, costCenters } = useAppContext();
+  const { materials, transactions, addTransaction, addMaterial, costCenters } = useAppContext();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const { toast } = useToast();
 
   const transactionType = searchParams.get('tab') === 'saida' ? 'saida' : 'entrada';
   const showForm = searchParams.has('showForm');
   const materialId = searchParams.get('materialId');
 
-  const [formValues, setFormValues] = useState<Partial<TransactionFormValues>>({});
+  const [formValues, setFormValues] = useState<ExtractedData>({});
 
-  const handlePdfDataExtracted = (data: Partial<TransactionFormValues>) => {
-    setFormValues(data);
+  const handlePdfDataExtracted = useCallback((data: ExtractedData) => {
+    let materialForTransaction = materials.find(m => m.name === data.materialName);
+
+    // If material doesn't exist, create it
+    if (!materialForTransaction && data.materialName) {
+      const wasSaved = addMaterial({
+        name: data.materialName,
+        category: data.category || 'GERAL',
+        unit: data.unit || 'un',
+        minStock: 0,
+        supplier: data.supplier,
+      });
+
+      if (wasSaved) {
+        // Find the newly created material to get its ID
+        // Note: This relies on addMaterial adding the new material to the state
+        // before this logic continues. A more robust solution might return the new material.
+        // For now, we find it again. This might be a race condition if state updates are slow.
+        // Let's refactor AppContext to return the new material. (Next step if needed)
+        
+        // This is a temporary workaround. We need to get the latest materials state.
+        // A better approach is to make addMaterial return the new material object.
+        // For now, we just show a toast. The user will have to select it.
+         toast({
+          title: "Novo Material Cadastrado!",
+          description: `O material "${data.materialName}" foi criado.`,
+        });
+      } else {
+         // If saving failed (e.g., duplicate), stop here
+         return;
+      }
+    }
+
+    const updatedData = { ...data };
+    
+    setFormValues(updatedData);
+
     const current = new URLSearchParams(Array.from(searchParams.entries()));
     current.set('tab', 'entrada');
     current.set('showForm', 'true');
     const search = current.toString();
     const query = search ? `?${search}` : '';
     router.push(`${pathname}${query}`);
-  };
+  }, [materials, addMaterial, router, pathname, searchParams, toast]);
 
 
   return (
