@@ -128,8 +128,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [costCenters, isLoaded]);
 
   const addMaterial = (material: MaterialSave) => {
+    const materialNameUpper = material.name.toUpperCase();
     const existingMaterial = materials.find(
-      (m) => m.name.toLowerCase() === material.name.toLowerCase()
+      (m) => m.name.toUpperCase() === materialNameUpper
     );
 
     if (existingMaterial) {
@@ -143,6 +144,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const newMaterial: Material = {
       ...material,
+      name: materialNameUpper,
       id: generateId('PRD'),
       currentStock: 0,
     };
@@ -158,14 +160,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const newCategories = new Set(categories);
 
     newMaterials.forEach((material) => {
-      const existing = materials.some(m => m.name.toLowerCase() === material.name.toLowerCase());
+      const materialNameUpper = material.name.toUpperCase();
+      const existing = materials.some(m => m.name.toUpperCase() === materialNameUpper);
       if (!existing) {
         materialsToAdd.push({
           ...material,
+          name: materialNameUpper,
           id: generateId('PRD'),
           currentStock: 0,
         });
-        newCategories.add(material.category);
+        if (material.category) {
+            newCategories.add(material.category);
+        }
       }
     });
 
@@ -183,8 +189,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const updateMaterial = (material: MaterialSave & { id: string }) => {
+    const materialNameUpper = material.name.toUpperCase();
     const existingMaterial = materials.find(
-      (m) => m.id !== material.id && m.name.toLowerCase() === material.name.toLowerCase()
+      (m) => m.id !== material.id && m.name.toUpperCase() === materialNameUpper
     );
 
     if (existingMaterial) {
@@ -196,7 +203,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
-    setMaterials(prev => prev.map(m => m.id === material.id ? { ...m, ...material } : m));
+    setMaterials(prev => prev.map(m => m.id === material.id ? { ...m, ...material, name: materialNameUpper } : m));
     if (!categories.includes(material.category)) {
       addCategory(material.category);
     }

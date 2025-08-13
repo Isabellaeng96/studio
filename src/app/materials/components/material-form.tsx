@@ -31,7 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAppContext } from '@/context/AppContext';
 
 const materialSchema = z.object({
-  name: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres.'),
+  name: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres.').transform(val => val.toUpperCase()),
   category: z.string().min(1, 'A categoria é obrigatória.'),
   unit: z.string().min(1, 'A unidade é obrigatória.'),
   minStock: z.coerce.number().min(0, 'O estoque mínimo não pode ser negativo.'),
@@ -119,7 +119,7 @@ export function MaterialForm({ children, material, onSave, categories }: Materia
                 <FormItem>
                   <FormLabel>Nome do Material</FormLabel>
                   <FormControl>
-                    <Input placeholder="ex: Cimento CP-II" {...field} />
+                    <Input placeholder="ex: CIMENTO CP-II" {...field} className="uppercase"/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

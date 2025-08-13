@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -66,7 +67,7 @@ export function MaterialImporter({ children, onImport }: MaterialImporterProps) 
           supplier: row.supplier || undefined,
         }));
         
-        setParsedData(materials);
+        setParsedData(materials.map(m => ({...m, name: m.name.toUpperCase()})));
       },
       error: (err) => {
         setError(`Erro ao analisar o arquivo: ${err.message}`);
