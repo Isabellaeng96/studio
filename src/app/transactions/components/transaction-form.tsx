@@ -6,7 +6,7 @@ import { CalendarIcon } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -67,6 +67,7 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
   const { user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
@@ -123,6 +124,13 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
         title: 'Transação Registrada',
         description: `Uma nova transação de ${type} de ${data.quantity} unidades foi salva.`,
       });
+      
+      const current = new URLSearchParams(Array.from(searchParams.entries()));
+      current.delete('showForm');
+      current.delete('materialId');
+      const search = current.toString();
+      const query = search ? `?${search}` : '';
+      router.push(`${pathname}${query}`);
     }
   };
   
@@ -139,7 +147,6 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
       costCenter: '',
       stockLocation: '',
     });
-    router.push(pathname);
   }
 
   return (
