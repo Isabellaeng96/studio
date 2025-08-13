@@ -1,7 +1,7 @@
 
 "use client";
 
-import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react';
 import type { Material, Transaction, TransactionSave, MaterialSave, CostCenter, Supplier } from '@/types';
 import { materials as initialMaterials, transactions as initialTransactions } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
@@ -56,6 +56,7 @@ interface AppContextType {
   categories: string[];
   costCenters: CostCenter[];
   suppliers: Supplier[];
+  activeMaterials: Material[]; // Materials that are not deleted
   addMaterial: (material: MaterialSave) => boolean;
   addMultipleMaterials: (materials: MaterialSave[]) => void;
   updateMaterial: (material: MaterialSave & { id: string }) => boolean;
@@ -144,13 +145,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [suppliers, isLoaded]);
 
+  const activeMaterials = useMemo(() => materials.filter(m => !m.deleted), [materials]);
+
   const addMaterial = (material: MaterialSave) => {
     const materialNameUpper = material.name.toUpperCase();
-    const existingMaterial = materials.find(
+    
+    // Check for an active material with the same name
+    const existingActiveMaterial = activeMaterials.find(
       (m) => m.name.toUpperCase() === materialNameUpper
     );
-
-    if (existingMaterial) {
+    if (existingActiveMaterial) {
       toast({
         variant: 'destructive',
         title: 'Material Duplicado',
@@ -158,6 +162,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
       return false;
     }
+    
+    // Check if a deleted material with the same name exists
+    const existingDeletedMaterial = materials.find(
+      (m) => m.deleted && m.name.toUpperCase() === materialNameUpper
+    );
+
+    if (existingDeletedMaterial) {
+       // Reactivate and update the existing material
+      updateMaterial({ ...material, id: existingDeletedMaterial.id });
+      toast({
+        title: 'Material Reativado',
+        description: `O material "${material.name}" foi reativado com o código existente.`,
+      });
+      // We don't return false because we want the form to close.
+      // The updateMaterial function will handle the state update.
+      return true;
+    }
+
 
     const newMaterial: Material = {
       ...material,
@@ -165,6 +187,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       supplier: material.supplier?.toUpperCase(),
       id: generateId('PRD'),
       currentStock: 0,
+      deleted: false,
     };
     setMaterials(prev => [newMaterial, ...prev]);
     if (!categories.includes(newMaterial.category)) {
@@ -174,30 +197,52 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
   
   const addMultipleMaterials = (newMaterials: MaterialSave[]) => {
-    const materialsToAdd: Material[] = [];
+    let addedCount = 0;
     const newCategories = new Set(categories);
+
+    const updatedMaterials = [...materials];
 
     newMaterials.forEach((material) => {
       const materialNameUpper = material.name.toUpperCase();
-      const existing = materials.some(m => m.name.toUpperCase() === materialNameUpper);
-      if (!existing) {
-        materialsToAdd.push({
+      const existingActive = updatedMaterials.some(m => !m.deleted && m.name.toUpperCase() === materialNameUpper);
+
+      if (existingActive) {
+        return; // Skip if already exists and is active
+      }
+      
+      const existingDeletedIndex = updatedMaterials.findIndex(m => m.deleted && m.name.toUpperCase() === materialNameUpper);
+
+      if (existingDeletedIndex !== -1) {
+        // Reactivate and update
+        const reactivatedMaterial = {
+          ...updatedMaterials[existingDeletedIndex],
+          ...material,
+          name: materialNameUpper,
+          supplier: material.supplier?.toUpperCase(),
+          deleted: false
+        };
+        updatedMaterials[existingDeletedIndex] = reactivatedMaterial;
+        addedCount++;
+        if (material.category) newCategories.add(material.category);
+      } else {
+        // Add as new
+        updatedMaterials.unshift({
           ...material,
           name: materialNameUpper,
           supplier: material.supplier?.toUpperCase(),
           id: generateId('PRD'),
           currentStock: 0,
+          deleted: false,
         });
-        if (material.category) {
-            newCategories.add(material.category);
-        }
+        addedCount++;
+        if (material.category) newCategories.add(material.category);
       }
     });
-
-    setMaterials(prev => [...materialsToAdd, ...prev]);
+    
+    setMaterials(updatedMaterials);
     setCategories(Array.from(newCategories));
     
-    const skippedCount = newMaterials.length - materialsToAdd.length;
+    const skippedCount = newMaterials.length - addedCount;
     if (skippedCount > 0) {
       toast({
         variant: 'destructive',
@@ -210,7 +255,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const updateMaterial = (material: MaterialSave & { id: string }) => {
     const materialNameUpper = material.name.toUpperCase();
     const existingMaterial = materials.find(
-      (m) => m.id !== material.id && m.name.toUpperCase() === materialNameUpper
+      (m) => !m.deleted && m.id !== material.id && m.name.toUpperCase() === materialNameUpper
     );
 
     if (existingMaterial) {
@@ -222,7 +267,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
-    setMaterials(prev => prev.map(m => m.id === material.id ? { ...m, ...material, name: materialNameUpper, supplier: material.supplier?.toUpperCase() } : m));
+    setMaterials(prev => prev.map(m => m.id === material.id ? { ...m, ...material, name: materialNameUpper, supplier: material.supplier?.toUpperCase(), deleted: false } : m));
     if (!categories.includes(material.category)) {
       addCategory(material.category);
     }
@@ -230,11 +275,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
   
   const deleteMaterial = (materialId: string) => {
-    setMaterials(prev => prev.filter(m => m.id !== materialId));
+    setMaterials(prev => prev.map(m => m.id === materialId ? { ...m, deleted: true } : m));
   };
 
   const deleteMultipleMaterials = (materialIds: string[]) => {
-    setMaterials(prev => prev.filter(m => !materialIds.includes(m.id)));
+    setMaterials(prev => prev.map(m => materialIds.includes(m.id) ? { ...m, deleted: true } : m));
   };
 
   const addCategory = (category: string) => {
@@ -363,6 +408,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     categories,
     costCenters,
     suppliers,
+    activeMaterials,
     addMaterial,
     addMultipleMaterials,
     updateMaterial,

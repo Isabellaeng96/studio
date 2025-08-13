@@ -46,7 +46,7 @@ function getRecentTransactions(transactions: Transaction[], limit = 5): Transact
 }
 
 export default function DashboardPage() {
-  const { materials, transactions, costCenters } = useAppContext();
+  const { materials, activeMaterials, transactions, costCenters } = useAppContext();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -54,8 +54,8 @@ export default function DashboardPage() {
   }, []);
 
   const lowStockMaterials = useMemo(() => {
-    return materials.filter(material => material.currentStock < material.minStock)
-  }, [materials]);
+    return activeMaterials.filter(material => material.currentStock < material.minStock)
+  }, [activeMaterials]);
 
   const recentTransactions = useMemo(() => {
     return getRecentTransactions(transactions, 5)
@@ -107,7 +107,7 @@ export default function DashboardPage() {
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{materials.length}</div>
+              <div className="text-2xl font-bold">{activeMaterials.length}</div>
               <p className="text-xs text-muted-foreground">
                 itens únicos no catálogo.
               </p>
@@ -189,7 +189,7 @@ export default function DashboardPage() {
                         </TableCell>
                         <TableCell className="text-right font-mono">{tx.quantity}</TableCell>
                         <TableCell className="font-mono text-xs">{tx.invoice || tx.osNumber || '-'}</TableCell>
-                        <TableCell>{isClient ? format(new Date(tx.date), 'dd/MM/yyyy') : ''}</TableCell>
+                        <TableCell>{isClient ? format(new Date(tx.date), 'dd/MM/yyyy', { locale: ptBR }) : ''}</TableCell>
                         <TableCell>{tx.responsible}</TableCell>
                       </TableRow>
                     </DialogTrigger>
@@ -246,7 +246,7 @@ export default function DashboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {materials.slice(0, 5).map(material => (
+                  {activeMaterials.slice(0, 5).map(material => (
                      <TableRow key={material.id}>
                         <TableCell>
                           <p className="font-medium">{material.name}</p>

@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
 
 function MaterialsPageContent() {
-  const { materials, categories, addMaterial, updateMaterial, deleteMaterial, deleteMultipleMaterials, addCategory, addMultipleMaterials } = useAppContext();
+  const { activeMaterials, categories, addMaterial, updateMaterial, deleteMaterial, deleteMultipleMaterials, addCategory, addMultipleMaterials } = useAppContext();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -29,7 +29,7 @@ function MaterialsPageContent() {
   const categoryFilter = searchParams.get('category');
 
   const filteredMaterials = useMemo(() => {
-    let filtered = [...materials];
+    let filtered = [...activeMaterials];
 
     if (searchQuery) {
         const lowercasedQuery = searchQuery.toLowerCase();
@@ -53,7 +53,7 @@ function MaterialsPageContent() {
     }
 
     return filtered.sort((a, b) => a.name.localeCompare(b.name));
-  }, [materials, stockFilter, categoryFilter, searchQuery]);
+  }, [activeMaterials, stockFilter, categoryFilter, searchQuery]);
 
   const handleCategoryChange = (category: string) => {
     const current = new URLSearchParams(Array.from(searchParams.entries()));

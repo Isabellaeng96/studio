@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -91,7 +92,7 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
                       </FormControl>
                       <SelectContent>
                         {materials.map(m => (
-                          <SelectItem key={m.id} value={m.id}>
+                          <SelectItem key={m.id} value={m.id} disabled={m.deleted}>
                             {m.name}
                           </SelectItem>
                         ))}
@@ -176,7 +177,7 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
                 </CardHeader>
                  <CardFooter>
                   <p className="text-xs text-muted-foreground">pontuação de confiança do modelo</p>
-                </CardFooter>
+                 </CardFooter>
               </Card>
             </CardContent>
              <CardFooter className="flex-col items-start gap-2">

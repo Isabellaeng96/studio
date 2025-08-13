@@ -18,7 +18,7 @@ import type { TransactionExtractionOutput } from '@/ai/flows/extract-transaction
 type ExtractedData = Partial<TransactionFormValues & { unit?: string; category?: string }>;
 
 function TransactionsPageContent() {
-  const { materials, transactions, addTransaction, addMaterial, costCenters } = useAppContext();
+  const { activeMaterials, materials, transactions, addTransaction, addMaterial, addMultipleMaterials, costCenters } = useAppContext();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -45,33 +45,35 @@ function TransactionsPageContent() {
   };
 
   const handlePdfDataExtracted = useCallback((data: TransactionExtractionOutput) => {
-    let newMaterialsCount = 0;
-    
-    data.materials.forEach(item => {
-      if (item.materialName) {
-        const materialExists = materials.some(m => m.name === item.materialName);
-        if (!materialExists) {
-          const wasSaved = addMaterial({
-            name: item.materialName!,
-            category: item.category || 'GERAL',
-            unit: item.unit || 'un',
-            minStock: 0,
-            supplier: data.supplier,
-          });
-          if (wasSaved) {
-            newMaterialsCount++;
-          }
-        }
-      }
-    });
+    if (!data.materials || data.materials.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Nenhum material encontrado",
+        description: "A IA não conseguiu extrair itens do PDF. Verifique o documento.",
+      });
+      return;
+    }
 
+    const newMaterialsToSave = data.materials.map(item => ({
+      name: item.materialName || 'N/A',
+      category: item.category || 'GERAL',
+      unit: item.unit || 'un',
+      minStock: 0,
+      supplier: data.supplier,
+    })).filter(item => item.name !== 'N/A');
+
+    const originalCount = newMaterialsToSave.length;
+    addMultipleMaterials(newMaterialsToSave);
+    const finalCount = materials.length;
+    const newMaterialsCount = finalCount - activeMaterials.length;
+    
     if (newMaterialsCount > 0) {
       toast({
         title: "Novos Materiais Cadastrados!",
         description: `${newMaterialsCount} novo(s) material(is) foi(ram) adicionado(s) ao catálogo.`,
       });
-    } else {
-        toast({
+    } else if (originalCount > 0) {
+      toast({
         title: "Nenhum material novo",
         description: `Todos os materiais do PDF já estavam cadastrados.`,
       });
@@ -81,7 +83,7 @@ function TransactionsPageContent() {
     // The main benefit is the batch material creation.
     setFormValues({});
 
-  }, [materials, addMaterial, toast]);
+  }, [materials, activeMaterials, addMultipleMaterials, toast]);
 
 
   return (
@@ -109,7 +111,7 @@ function TransactionsPageContent() {
              {transactionType === 'entrada' ? (
                  <TransactionForm 
                   type="entrada" 
-                  materials={materials} 
+                  materials={activeMaterials} 
                   costCenters={costCenters}
                   onSave={handleSaveTransaction} 
                   defaultMaterialId={materialId}
@@ -119,7 +121,7 @@ function TransactionsPageContent() {
              ) : (
                 <TransactionForm 
                   type="saida" 
-                  materials={materials} 
+                  materials={activeMaterials} 
                   costCenters={costCenters}
                   onSave={handleSaveTransaction}
                   defaultMaterialId={materialId} 

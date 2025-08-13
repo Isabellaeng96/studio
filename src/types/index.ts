@@ -7,9 +7,10 @@ export type Material = {
   minStock: number;
   currentStock: number;
   supplier?: string;
+  deleted?: boolean;
 };
 
-export type MaterialSave = Omit<Material, 'id' | 'currentStock'>;
+export type MaterialSave = Omit<Material, 'id' | 'currentStock' | 'deleted'>;
 
 export type Transaction = {
   id: string;
@@ -64,3 +65,4 @@ export type Supplier = {
   phone?: string;
   email?: string;
 };
+

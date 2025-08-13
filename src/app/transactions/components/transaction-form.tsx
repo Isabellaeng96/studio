@@ -310,7 +310,7 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
                             !field.value && 'text-muted-foreground'
                           )}
                         >
-                          {field.value ? format(field.value, 'dd/MM/yyyy') : <span>Escolha uma data</span>}
+                          {field.value ? format(field.value, 'dd/MM/yyyy', { locale: ptBR }) : <span>Escolha uma data</span>}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
                       </FormControl>

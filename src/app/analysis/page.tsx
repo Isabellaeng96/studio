@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -7,7 +8,7 @@ import { PredictiveAnalysis } from "./components/predictive-analysis";
 import { useAppContext } from '@/context/AppContext';
 
 export default function AnalysisPage() {
-  const { materials, transactions } = useAppContext();
+  const { activeMaterials, transactions } = useAppContext();
   const [activeTab, setActiveTab] = useState('charts');
 
   return (
@@ -25,10 +26,10 @@ export default function AnalysisPage() {
           <TabsTrigger value="predictive">Análise Preditiva</TabsTrigger>
         </TabsList>
         <TabsContent value="charts" className="mt-6">
-          <ChartsView materials={materials} transactions={transactions} />
+          <ChartsView materials={activeMaterials} transactions={transactions} />
         </TabsContent>
         <TabsContent value="predictive" className="mt-6">
-          <PredictiveAnalysis materials={materials} transactions={transactions}/>
+          <PredictiveAnalysis materials={activeMaterials} transactions={transactions}/>
         </TabsContent>
       </Tabs>
     </div>
