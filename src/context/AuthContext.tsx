@@ -5,12 +5,13 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { onAuthStateChanged, User, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updatePassword, updateProfile } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
+import { useAppContext } from './AppContext';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  role: string; // Add role
-  sector: string; // Add sector
+  role: string;
+  sector: string;
   login: (email: string, pass: string) => Promise<any>;
   signup: (email: string, pass: string, name: string) => Promise<any>;
   logout: () => Promise<void>;
@@ -23,26 +24,33 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [role, setRole] = useState('Visitante');
+  const [sector, setSector] = useState('');
   const router = useRouter();
-
-  // For demonstration, we'll hardcode the role and sector.
-  // In a real app, this would come from a database (like Firestore)
-  // after the user logs in, based on their user ID.
-  const role = "Administrador";
-  const sector = "Engenharia";
+  const appContext = useAppContext();
 
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
-      setLoading(false);
-      if (!user) {
+      if (user && appContext) {
+         const appUser = appContext.getUserByEmail(user.email || '');
+         if (appUser) {
+           setRole(appUser.role);
+           setSector(appUser.sector);
+         } else {
+            // Default role if user is not in our custom user list
+            setRole('Visitante');
+            setSector('');
+         }
+      } else {
         router.push('/login');
       }
+      setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [router]);
+  }, [router, appContext]);
 
   const login = (email: string, pass: string) => {
     return signInWithEmailAndPassword(auth, email, pass);
@@ -54,6 +62,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await updateProfile(userCredential.user, {
             displayName: name
         });
+        // Add user to our app context as well
+        if (appContext) {
+            appContext.addUser({ name, email, role: 'Administrador', sector: 'Engenharia' });
+        }
     }
     return userCredential;
   };
@@ -77,6 +89,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await updateProfile(auth.currentUser, { displayName: name });
     // Manually update the user object in state to reflect the change immediately
     setUser(auth.currentUser ? { ...auth.currentUser } : null);
+    
+    // Also update in our user list
+     if (appContext && auth.currentUser?.email) {
+        const appUser = appContext.getUserByEmail(auth.currentUser.email);
+        if (appUser) {
+            appContext.updateUser({ ...appUser, name });
+        }
+    }
   };
 
 
@@ -91,6 +111,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     updateUserPassword,
     updateUserProfile,
   };
+
+  // We need to make sure AppContext is loaded before rendering children
+  if (!appContext && !loading) {
+    return null; // Or a loading indicator
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

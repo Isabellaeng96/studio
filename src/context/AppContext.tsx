@@ -2,7 +2,7 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react';
-import type { Material, Transaction, TransactionSave, MaterialSave, CostCenter, Supplier } from '@/types';
+import type { Material, Transaction, TransactionSave, MaterialSave, CostCenter, Supplier, User } from '@/types';
 import { materials as initialMaterials, transactions as initialTransactions } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 
@@ -56,6 +56,7 @@ interface AppContextType {
   categories: string[];
   costCenters: CostCenter[];
   suppliers: Supplier[];
+  users: User[];
   activeMaterials: Material[]; // Materials that are not deleted
   addMaterial: (material: MaterialSave) => string | null;
   addMultipleMaterials: (materials: MaterialSave[]) => void;
@@ -71,6 +72,10 @@ interface AppContextType {
   addSupplier: (supplier: Omit<Supplier, 'id'>) => void;
   updateSupplier: (supplier: Supplier) => void;
   deleteSupplier: (supplierId: string) => void;
+  addUser: (user: Omit<User, 'id'>) => void;
+  updateUser: (user: User) => void;
+  deleteUser: (userId: string) => void;
+  getUserByEmail: (email: string) => User | undefined;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -81,6 +86,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [categories, setCategories] = useState<string[]>([]);
   const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const { toast } = useToast();
 
@@ -93,6 +99,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setCategories(getFromStorage<string[]>('categories', []));
         setCostCenters(getFromStorage<CostCenter[]>('costCenters', []));
         setSuppliers(getFromStorage<Supplier[]>('suppliers', []));
+        setUsers(getFromStorage<User[]>('users', []));
     } else {
         // LocalStorage is empty, load mock data
         setMaterials(initialMaterials);
@@ -110,6 +117,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
           { id: 'sup-2', name: 'TIGRE', cnpj: '98.765.432/0001-10', contactName: 'Carlos Silva', phone: '47 3441-4444', email: 'vendas@tigre.com' },
         ];
         setSuppliers(initialSuppliers);
+        // Initial user setup
+        const initialUsers = [
+            // This user will be linked to the default auth user
+            { id: 'usr-1', name: 'Usuário Admin', email: 'admin@geostoque.com.br', role: 'Administrador', sector: 'Engenharia' },
+        ];
+        setUsers(initialUsers);
     }
     setIsLoaded(true);
   }, []);
@@ -144,6 +157,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setInStorage('suppliers', suppliers);
     }
   }, [suppliers, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      setInStorage('users', users);
+    }
+  }, [users, isLoaded]);
 
   const activeMaterials = useMemo(() => materials.filter(m => !m.deleted), [materials]);
 
@@ -447,6 +466,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSuppliers(prev => prev.filter(s => s.id !== supplierId));
   };
 
+  const addUser = (user: Omit<User, 'id'>) => {
+    if (users.some(u => u.email.toLowerCase() === user.email.toLowerCase())) {
+        toast({
+            variant: 'destructive',
+            title: 'Email já Cadastrado',
+            description: 'Este endereço de e-mail já está em uso.',
+        });
+        return;
+    }
+    const newUser: User = {
+        ...user,
+        id: generateId('USR'),
+    };
+    setUsers(prev => [newUser, ...prev]);
+  };
+
+  const updateUser = (user: User) => {
+    setUsers(prev => prev.map(u => u.id === user.id ? user : u));
+  };
+
+  const deleteUser = (userId: string) => {
+    setUsers(prev => prev.filter(u => u.id !== userId));
+  };
+
+  const getUserByEmail = useCallback((email: string): User | undefined => {
+    return users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  }, [users]);
+
 
   const value = {
     materials,
@@ -454,6 +501,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     categories,
     costCenters,
     suppliers,
+    users,
     activeMaterials,
     addMaterial,
     addMultipleMaterials,
@@ -469,6 +517,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addSupplier,
     updateSupplier,
     deleteSupplier,
+    addUser,
+    updateUser,
+    deleteUser,
+    getUserByEmail,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

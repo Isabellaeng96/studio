@@ -61,17 +61,17 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <head>
-          <title>Geostoque</title>
+          <title>WellFlow Inventory</title>
           <meta name="description" content="Gestão de estoque para materiais geológicos e de construção." />
           <link rel="icon" href="/favicon.svg" />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <AuthProvider>
-          <AppProvider>
+        <AppProvider>
+          <AuthProvider>
             <AppContent>{children}</AppContent>
             <Toaster />
-          </AppProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </AppProvider>
       </body>
     </html>
   );

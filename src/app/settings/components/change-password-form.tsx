@@ -30,6 +30,10 @@ export function ChangePasswordForm() {
 
   const form = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordSchema),
+    defaultValues: {
+        newPassword: "",
+        confirmPassword: "",
+    }
   });
 
   const onSubmit = async (data: PasswordFormValues) => {
@@ -58,7 +62,7 @@ export function ChangePasswordForm() {
       <CardHeader>
         <CardTitle>Alterar Senha</CardTitle>
         <CardDescription>
-          Escolha uma nova senha para sua conta.
+          Escolha uma nova senha para sua conta. Esta ação se aplica apenas ao seu usuário logado.
         </CardDescription>
       </CardHeader>
       <Form {...form}>

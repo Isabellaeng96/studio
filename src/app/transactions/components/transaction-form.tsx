@@ -48,7 +48,6 @@ const transactionSchema = z.object({
   supplier: z.string().optional().transform(val => val ? val.toUpperCase() : val),
   invoice: z.string().optional(),
   osNumber: z.string().optional(),
-  workFront: z.string().optional(),
   costCenter: z.string().optional(),
   stockLocation: z.string().optional(),
   // Fields for new material creation
@@ -89,7 +88,6 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
       supplier: '',
       invoice: '',
       osNumber: '',
-      workFront: '',
       costCenter: '',
       stockLocation: '',
        ...initialValues
@@ -122,7 +120,6 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
         unit: initialValues.unit,
         category: initialValues.category,
         osNumber: '',
-        workFront: '',
         costCenter: '',
         stockLocation: '',
       });
@@ -165,7 +162,6 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
       supplier: '',
       invoice: '',
       osNumber: '',
-      workFront: '',
       costCenter: '',
       stockLocation: '',
     });
@@ -259,7 +255,6 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
                 )}
               />
             ) : (
-              <>
                 <FormField
                   control={form.control}
                   name="osNumber"
@@ -273,20 +268,6 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="workFront"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Frente de Trabalho (Opcional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="ex: Poço P-03" {...field} value={field.value ?? ''} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </>
             )}
 
             <FormField
