@@ -41,7 +41,16 @@ export function MaterialDetailsDialog({ open, onOpenChange, material, stockByLoc
     if (printElement) {
       const qrCodeSvg = printElement.querySelector("svg");
       if (qrCodeSvg) {
-        const svgString = new XMLSerializer().serializeToString(qrCodeSvg);
+        // Clone the SVG to manipulate it without affecting the displayed one
+        const svgClone = qrCodeSvg.cloneNode(true) as SVGSVGElement;
+        
+        // Sanitize the SVG for better compatibility
+        svgClone.removeAttribute("style");
+        svgClone.setAttribute("width", "256");
+        svgClone.setAttribute("height", "256");
+
+        const svgString = new XMLSerializer().serializeToString(svgClone);
+        
         const printWindow = window.open('', '_blank');
         if (printWindow) {
           printWindow.document.write('<html><head><meta charset="UTF-8"><title>QR Code - ' + material.name + '</title>');
@@ -51,8 +60,11 @@ export function MaterialDetailsDialog({ open, onOpenChange, material, stockByLoc
           printWindow.document.write('</body></html>');
           printWindow.document.close();
           printWindow.focus();
-          printWindow.print();
-          printWindow.close();
+          // Delay printing slightly to ensure content is rendered
+          setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+          }, 250);
         }
       }
     }
