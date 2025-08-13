@@ -6,6 +6,7 @@ import { CalendarIcon } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -56,7 +57,7 @@ interface TransactionFormProps {
   type: 'entrada' | 'saida';
   materials: Material[];
   costCenters: CostCenter[];
-  onSave: (transaction: TransactionSave, type: 'entrada' | 'saida') => void;
+  onSave: (transaction: TransactionSave, type: 'entrada' | 'saida') => boolean;
   defaultMaterialId?: string | null;
   initialValues?: Partial<TransactionFormValues>;
 }
@@ -64,6 +65,8 @@ interface TransactionFormProps {
 export function TransactionForm({ type, materials, costCenters, onSave, defaultMaterialId, initialValues }: TransactionFormProps) {
   const { toast } = useToast();
   const { user } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
@@ -86,13 +89,11 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
     if (defaultMaterialId) {
       form.setValue('materialId', defaultMaterialId);
     }
-    // Set responsible user when form is re-initialized
     form.setValue('responsible', user?.displayName ?? '');
   }, [defaultMaterialId, form, user]);
 
   useEffect(() => {
     if (initialValues) {
-      // Try to find a matching material
       if (initialValues.materialName) {
         const foundMaterial = materials.find(m => m.name.toLowerCase().includes(initialValues.materialName!.toLowerCase()));
         if (foundMaterial) {
@@ -116,12 +117,30 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
   }, [initialValues, form, materials, defaultMaterialId, user]);
 
   const onSubmit = (data: TransactionFormValues) => {
-    onSave(data, type);
-    toast({
-      title: 'Transação Registrada',
-      description: `Uma nova transação de ${type} de ${data.quantity} unidades foi salva.`,
-    });
+    const wasSaved = onSave(data, type);
+    if (wasSaved) {
+       toast({
+        title: 'Transação Registrada',
+        description: `Uma nova transação de ${type} de ${data.quantity} unidades foi salva.`,
+      });
+    }
   };
+  
+  const handleCancel = () => {
+    form.reset({
+      date: new Date(),
+      responsible: user?.displayName ?? '',
+      quantity: 0,
+      materialId: '',
+      supplier: '',
+      invoice: '',
+      osNumber: '',
+      workFront: '',
+      costCenter: '',
+      stockLocation: '',
+    });
+    router.push(pathname);
+  }
 
   return (
     <Card>
@@ -315,9 +334,14 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
               )}
             />
 
-            <Button type="submit" className="w-full">
-              Salvar Transação
-            </Button>
+            <div className="flex justify-end gap-2 pt-4">
+                <Button type="button" variant="ghost" onClick={handleCancel}>
+                    Cancelar
+                </Button>
+                <Button type="submit">
+                    Salvar Transação
+                </Button>
+            </div>
           </form>
         </Form>
       </CardContent>
