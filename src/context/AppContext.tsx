@@ -2,7 +2,7 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react';
-import type { Material, Transaction, TransactionSave, MaterialSave, CostCenter, Supplier } from '@/types';
+import type { Material, Transaction, TransactionSave, MaterialSave, CostCenter, Supplier, AlertSetting } from '@/types';
 import { materials as initialMaterials, transactions as initialTransactions } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 
@@ -71,6 +71,10 @@ interface AppContextType {
   addSupplier: (supplier: Omit<Supplier, 'id'>) => void;
   updateSupplier: (supplier: Supplier) => void;
   deleteSupplier: (supplierId: string) => void;
+  // Alert Settings
+  alertSettings: AlertSetting[];
+  availableSectors: string[];
+  updateAlertSetting: (materialId: string, sectors: string[]) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -81,8 +85,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [categories, setCategories] = useState<string[]>([]);
   const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [alertSettings, setAlertSettings] = useState<AlertSetting[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const { toast } = useToast();
+
+  const availableSectors = ['Engenharia', 'Manutenção', 'Compras'];
 
   useEffect(() => {
     // Load from storage only once
@@ -93,6 +100,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setCategories(getFromStorage<string[]>('categories', []));
         setCostCenters(getFromStorage<CostCenter[]>('costCenters', []));
         setSuppliers(getFromStorage<Supplier[]>('suppliers', []));
+        setAlertSettings(getFromStorage<AlertSetting[]>('alertSettings', []));
     } else {
         // LocalStorage is empty, load mock data
         setMaterials(initialMaterials);
@@ -110,6 +118,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
           { id: 'sup-2', name: 'TIGRE', cnpj: '98.765.432/0001-10', contactName: 'Carlos Silva', phone: '47 3441-4444', email: 'vendas@tigre.com' },
         ];
         setSuppliers(initialSuppliers);
+        // Default alert settings: notify Engineering for all low-stock items
+        const initialAlertSettings = initialMaterials
+          .filter(m => m.currentStock < m.minStock)
+          .map(m => ({ materialId: m.id, sectors: ['Engenharia'] }));
+        setAlertSettings(initialAlertSettings);
     }
     setIsLoaded(true);
   }, []);
@@ -144,6 +157,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setInStorage('suppliers', suppliers);
     }
   }, [suppliers, isLoaded]);
+  
+  useEffect(() => {
+    if (isLoaded) {
+      setInStorage('alertSettings', alertSettings);
+    }
+  }, [alertSettings, isLoaded]);
 
   const activeMaterials = useMemo(() => materials.filter(m => !m.deleted), [materials]);
 
@@ -446,6 +465,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const deleteSupplier = (supplierId: string) => {
     setSuppliers(prev => prev.filter(s => s.id !== supplierId));
   };
+  
+  const updateAlertSetting = (materialId: string, sectors: string[]) => {
+    setAlertSettings(prev => {
+      const existingSettingIndex = prev.findIndex(s => s.materialId === materialId);
+      const newSettings = [...prev];
+
+      if (existingSettingIndex > -1) {
+        if (sectors.length === 0) {
+          // Remove the setting if no sectors are selected
+          newSettings.splice(existingSettingIndex, 1);
+        } else {
+          // Update existing setting
+          newSettings[existingSettingIndex] = { ...newSettings[existingSettingIndex], sectors };
+        }
+      } else if (sectors.length > 0) {
+        // Add new setting
+        newSettings.push({ materialId, sectors });
+      }
+      
+      return newSettings;
+    });
+  };
 
   const value = {
     materials,
@@ -468,6 +509,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addSupplier,
     updateSupplier,
     deleteSupplier,
+    alertSettings,
+    availableSectors,
+    updateAlertSetting,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

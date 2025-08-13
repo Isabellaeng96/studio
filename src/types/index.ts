@@ -1,5 +1,4 @@
 
-
 export type Material = {
   id: string;
   name: string;
@@ -70,6 +69,11 @@ export type User = {
     id: string;
     name: string;
     email: string;
-    role: 'Administrador' | 'Gerente de Estoque' | 'Operador de Campo' | 'Visitante';
+    role: 'Administrador' | 'Gerente de Estoque' | 'Operador de Campo' | 'Visitante' | string;
     sector: string;
+};
+
+export type AlertSetting = {
+  materialId: string;
+  sectors: string[];
 };
