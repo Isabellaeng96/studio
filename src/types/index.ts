@@ -65,3 +65,10 @@ export type Supplier = {
   phone?: string;
   email?: string;
 };
+
+export type User = {
+    id: string;
+    name: string;
+    email: string;
+    role: 'Administrador' | 'Gerente de Estoque' | 'Operador de Campo' | 'Visitante';
+};

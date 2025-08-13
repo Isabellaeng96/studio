@@ -19,9 +19,10 @@ import { AppSidebarNav } from './sidebar-nav';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Logo } from '../logo';
+import { Badge } from '../ui/badge';
 
 export function Header() {
-  const { logout, user } = useAuth();
+  const { logout, user, role } = useAuth();
   const router = useRouter();
 
   const getInitials = (name?: string | null, email?: string | null) => {
@@ -89,6 +90,11 @@ export function Header() {
               <p className="text-xs leading-none text-muted-foreground">
                 {user?.email}
               </p>
+               {role && (
+                <Badge variant="outline" className="mt-2 w-fit">
+                  {role}
+                </Badge>
+              )}
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
