@@ -7,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import type { Material } from '@/types';
@@ -38,20 +37,21 @@ export function MaterialDetailsDialog({ open, onOpenChange, material, stockByLoc
   });
   
   const handlePrint = () => {
-    const printContent = qrCodeRef.current?.innerHTML;
-    if (printContent) {
+    const printElement = qrCodeRef.current;
+    if (printElement) {
+      const printContent = printElement.outerHTML;
       const windowUrl = 'about:blank';
-      const a = window.open(windowUrl, 'Print', 'height=600,width=800');
-      if (a) {
-        a.document.write(`<html><head><title>QR Code - ${material.name}</title>`);
-        a.document.write('<style>body { font-family: sans-serif; text-align: center; margin-top: 20px; } .qr-container { display: inline-block; padding: 20px; border: 1px solid #ccc; border-radius: 8px; } h3 { margin-bottom: 10px; } </style>');
-        a.document.write('</head><body>');
-        a.document.write(`<div class="qr-container"><h3>${material.name}</h3><div>${printContent}</div><p style="margin-top:10px;">Código: ${material.id}</p></div>`);
-        a.document.write('</body></html>');
-        a.document.close();
-        a.focus();
-        a.print();
-        a.close();
+      const printWindow = window.open(windowUrl, 'Print', 'height=600,width=800');
+      if (printWindow) {
+        printWindow.document.write('<html><head><title>QR Code - ' + material.name + '</title>');
+        printWindow.document.write('<style>body { font-family: sans-serif; text-align: center; margin-top: 20px; } .qr-container { display: inline-block; padding: 20px; border: 1px solid #ccc; border-radius: 8px; } h3 { margin-bottom: 10px; } </style>');
+        printWindow.document.write('</head><body>');
+        printWindow.document.write('<div class="qr-container"><h3>' + material.name + '</h3>' + printContent + '<p style="margin-top:10px;">Código: ' + material.id + '</p></div>');
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
       }
     }
   };
@@ -59,7 +59,7 @@ export function MaterialDetailsDialog({ open, onOpenChange, material, stockByLoc
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl grid-cols-2 gap-8">
+      <DialogContent className="sm:max-w-4xl grid-cols-1 gap-8 md:grid-cols-2">
         <div>
             <DialogHeader>
               <DialogTitle>{material.name}</DialogTitle>
@@ -111,13 +111,15 @@ export function MaterialDetailsDialog({ open, onOpenChange, material, stockByLoc
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <QrCode className="h-5 w-5"/> Código QR do Material
             </h3>
-            <div ref={qrCodeRef} className="bg-white p-4 rounded-md shadow-md">
-                 <QRCode
-                    size={256}
-                    style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                    value={qrCodeValue}
-                    viewBox={`0 0 256 256`}
+            <div className="bg-white p-4 rounded-md shadow-md">
+                 <div ref={qrCodeRef}>
+                    <QRCode
+                        size={256}
+                        style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                        value={qrCodeValue}
+                        viewBox={`0 0 256 256`}
                     />
+                 </div>
             </div>
              <p className="text-xs text-muted-foreground mt-2 text-center">Contém ID, nome, categoria, unidade e fornecedor.</p>
              <Button onClick={handlePrint} className="mt-6">
