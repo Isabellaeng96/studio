@@ -34,6 +34,7 @@ import type { Material, Transaction } from '@/types';
 import { useAppContext } from '@/context/AppContext';
 import { useMemo, useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { TransactionTypeDialog } from './transactions/components/transaction-type-dialog';
 
 function getRecentTransactions(transactions: Transaction[], limit = 5): Transaction[] {
   return [...transactions]
@@ -68,12 +69,12 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button asChild>
-            <Link href="/transactions">
+          <TransactionTypeDialog>
+            <Button>
               <PlusCircle className="mr-2 h-4 w-4" />
               Nova Transação
-            </Link>
-          </Button>
+            </Button>
+          </TransactionTypeDialog>
         </div>
       </div>
 
