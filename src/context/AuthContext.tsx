@@ -113,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // We need to make sure AppContext is loaded before rendering children
-  if (!appContext && !loading) {
+  if (appContext === undefined && !loading) {
     return null; // Or a loading indicator
   }
 
