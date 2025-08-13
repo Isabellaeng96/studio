@@ -45,9 +45,6 @@ interface MaterialFormProps {
   material?: Material;
   onSave: (data: MaterialSave & { id?: string }) => boolean;
   categories: string[];
-  initialValues?: Partial<MaterialSave>;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
 }
 
 export function MaterialForm({ 
@@ -55,17 +52,10 @@ export function MaterialForm({
   material, 
   onSave, 
   categories,
-  initialValues,
-  open: controlledOpen,
-  onOpenChange: setControlledOpen 
 }: MaterialFormProps) {
-  const [internalOpen, setInternalOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  const { materials } = useAppContext();
   
-  const open = controlledOpen ?? internalOpen;
-  const setOpen = setControlledOpen ?? setInternalOpen;
-
   const form = useForm<MaterialFormValues>({
     resolver: zodResolver(materialSchema),
     defaultValues: {
@@ -79,15 +69,7 @@ export function MaterialForm({
 
   useEffect(() => {
     if (open) {
-      if (initialValues) {
-        form.reset({
-            name: initialValues.name || '',
-            category: initialValues.category || '',
-            unit: initialValues.unit || '',
-            minStock: initialValues.minStock || 0,
-            supplier: initialValues.supplier || '',
-        });
-      } else if (material) {
+      if (material) {
         form.reset({
           ...material,
           supplier: material.supplier || '',
@@ -102,7 +84,7 @@ export function MaterialForm({
         });
       }
     }
-  }, [material, form, open, initialValues]);
+  }, [material, form, open]);
 
 
   const onSubmit = (data: MaterialFormValues) => {
