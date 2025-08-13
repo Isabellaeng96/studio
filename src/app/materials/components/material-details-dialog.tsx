@@ -28,13 +28,13 @@ export function MaterialDetailsDialog({ open, onOpenChange, material, stockByLoc
   const hasLocations = Object.keys(stockByLocation).length > 0;
   const qrCodeRef = useRef<HTMLDivElement>(null);
 
-  const qrCodeValue = `
-Material: ${material.name}
-Código: ${material.id}
-Categoria: ${material.category}
-Unidade: ${material.unit}
-Fornecedor: ${material.supplier || 'N/A'}
-  `.trim();
+  const qrCodeValue = [
+    `Material: ${material.name}`,
+    `Código: ${material.id}`,
+    `Categoria: ${material.category}`,
+    `Unidade: ${material.unit}`,
+    `Fornecedor: ${material.supplier || 'N/A'}`
+  ].join('\n');
   
   const handlePrint = () => {
     const printElement = qrCodeRef.current;
