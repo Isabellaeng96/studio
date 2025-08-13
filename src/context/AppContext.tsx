@@ -2,7 +2,7 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react';
-import type { Material, Transaction, TransactionSave, MaterialSave, CostCenter, Supplier, User as AppUser, AlertSetting, SectorEmailConfig } from '@/types';
+import type { Material, Transaction, TransactionSave, MaterialSave, CostCenter, Supplier, AlertSetting, SectorEmailConfig } from '@/types';
 import { materials as initialMaterials, transactions as initialTransactions } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 
@@ -54,7 +54,7 @@ interface AppContextType {
   suppliers: Supplier[];
   activeMaterials: Material[]; // Materials that are not deleted
   addMaterial: (material: MaterialSave) => string | null;
-  addMultipleMaterials: (materials: MaterialSave[]) => void;
+  addMultipleMaterials: (materials: MaterialSave[]) => { addedCount: number; skippedCount: number };
   updateMaterial: (material: MaterialSave & { id: string }) => boolean;
   deleteMaterial: (materialId: string) => void;
   deleteMultipleMaterials: (materialIds: string[]) => void;
@@ -204,26 +204,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return materialId;
   }, [materials, categories, toast]);
   
-  const addMultipleMaterials = (newMaterials: MaterialSave[]) => {
+  const addMultipleMaterials = (newMaterials: MaterialSave[]): { addedCount: number; skippedCount: number } => {
     let addedCount = 0;
     const newCategories = new Set(categories);
-
-    // Create a mutable copy to work with
     const updatedMaterials = [...materials];
-
+  
     newMaterials.forEach((material) => {
       const materialNameUpper = material.name.toUpperCase();
-      // Check against the current state of updatedMaterials within the loop
       const existingActive = updatedMaterials.some(m => !m.deleted && m.name.toUpperCase() === materialNameUpper);
-
+  
       if (existingActive) {
         return; // Skip if already exists and is active
       }
       
       const existingDeletedIndex = updatedMaterials.findIndex(m => m.deleted && m.name.toUpperCase() === materialNameUpper);
-
+  
       if (existingDeletedIndex !== -1) {
-        // Reactivate and update in the copied array
         updatedMaterials[existingDeletedIndex] = {
           ...updatedMaterials[existingDeletedIndex],
           ...material,
@@ -234,7 +230,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         addedCount++;
         if (material.category) newCategories.add(material.category);
       } else {
-        // Add as new to the beginning of the copied array
         updatedMaterials.unshift({
           ...material,
           name: materialNameUpper,
@@ -248,27 +243,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     });
     
-    // Set the final state once
     setMaterials(updatedMaterials);
     if(newCategories.size > categories.length) {
       setCategories(Array.from(newCategories).sort());
     }
     
     const skippedCount = newMaterials.length - addedCount;
-
-    if (addedCount > 0) {
-      toast({
-        title: 'Importação Concluída',
-        description: `${addedCount} novos materiais foram cadastrados.`,
-      });
-    }
-
-    if (skippedCount > 0) {
-      toast({
-        title: 'Materiais Ignorados',
-        description: `${skippedCount} materiais foram ignorados pois já existiam no catálogo.`,
-      });
-    }
+  
+    return { addedCount, skippedCount };
   };
 
   const updateMaterial = (material: MaterialSave & { id: string }) => {
@@ -591,5 +573,3 @@ export function useAppContext() {
   }
   return context;
 }
-
-    
