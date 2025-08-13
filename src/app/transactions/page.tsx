@@ -78,9 +78,11 @@ function TransactionsPageContent() {
                 />
              )}
           </div>
-          <div className="lg:col-span-1">
-            <PdfImporter onDataExtracted={handlePdfDataExtracted} />
-          </div>
+            {transactionType === 'entrada' && (
+              <div className="lg:col-span-1">
+                <PdfImporter onDataExtracted={handlePdfDataExtracted} />
+              </div>
+            )}
         </div>
       ) : (
          <div>
