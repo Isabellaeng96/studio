@@ -54,7 +54,7 @@ interface AppContextType {
   suppliers: Supplier[];
   activeMaterials: Material[]; // Materials that are not deleted
   addMaterial: (material: MaterialSave) => string | null;
-  addMultipleMaterials: (materials: MaterialSave[]) => { addedCount: number; skippedCount: number };
+  addMultipleMaterials: (materials: MaterialSave[]) => { added: number; skipped: number, messages: {variant: "default" | "destructive", title: string, description: string}[] };
   updateMaterial: (material: MaterialSave & { id: string }) => boolean;
   deleteMaterial: (materialId: string) => void;
   deleteMultipleMaterials: (materialIds: string[]) => void;
@@ -204,8 +204,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return materialId;
   }, [materials, categories, toast]);
   
-  const addMultipleMaterials = (newMaterials: MaterialSave[]): { addedCount: number; skippedCount: number } => {
+  const addMultipleMaterials = (newMaterials: MaterialSave[]): { added: number; skipped: number, messages: {variant: "default" | "destructive", title: string, description: string}[] } => {
     let addedCount = 0;
+    const messages = [];
     const newCategories = new Set(categories);
     const updatedMaterials = [...materials];
   
@@ -249,8 +250,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     
     const skippedCount = newMaterials.length - addedCount;
+
+    if (addedCount > 0) {
+      messages.push({
+        variant: 'default',
+        title: 'Importação Concluída',
+        description: `${addedCount} materiais foram importados com sucesso.`,
+      });
+    }
+     if (skippedCount > 0) {
+      messages.push({
+        variant: 'default',
+        title: 'Materiais Ignorados',
+        description: `${skippedCount} materiais foram ignorados pois já existiam.`,
+      });
+    }
   
-    return { addedCount, skippedCount };
+    return { added: addedCount, skipped: skippedCount, messages };
   };
 
   const updateMaterial = (material: MaterialSave & { id: string }) => {
@@ -367,55 +383,59 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return false;
     }
     
-    const newTransaction: Transaction = {
-      id: generateId('TRN'),
-      type: type,
-      date: transaction.date.getTime(),
-      materialId: material.id,
-      materialName: material.name,
-      quantity: transaction.quantity,
-      responsible: transaction.responsible,
-      supplier: transaction.supplier?.toUpperCase(),
-      invoice: transaction.invoice,
-      osNumber: transaction.osNumber,
-      workFront: transaction.workFront,
-      costCenter: transaction.costCenter,
-      stockLocation: transaction.stockLocation,
-    };
-
-    setTransactions(prev => [newTransaction, ...prev]);
-    
+    let wasSuccessful = false;
     const materialBefore = { ...material };
     let materialAfter: Material | undefined;
 
-    setMaterials(prev => prev.map(m => {
-      if (m.id === materialId) {
-        const newStock = type === 'entrada'
-          ? m.currentStock + transaction.quantity
-          : m.currentStock - transaction.quantity;
-        
-        if (newStock < 0) {
-            toast({
-                variant: 'destructive',
-                title: 'Estoque Insuficiente',
-                description: `Não há estoque suficiente de "${m.name}" para esta saída.`,
-            });
-            // Revert transaction addition
-            setTransactions(current => current.filter(t => t.id !== newTransaction.id));
-            return m; // Return original material state
-        }
-        materialAfter = { ...m, currentStock: newStock };
-        return materialAfter;
+    setMaterials(prev => {
+      const newMaterials = [...prev];
+      const index = newMaterials.findIndex(m => m.id === materialId);
+      if (index === -1) return prev;
+
+      const currentMaterial = newMaterials[index];
+      const newStock = type === 'entrada'
+        ? currentMaterial.currentStock + transaction.quantity
+        : currentMaterial.currentStock - transaction.quantity;
+      
+      if (newStock < 0) {
+          toast({
+              variant: 'destructive',
+              title: 'Estoque Insuficiente',
+              description: `Não há estoque suficiente de "${currentMaterial.name}" para esta saída.`,
+          });
+          wasSuccessful = false;
+          return prev;
       }
-      return m;
-    }));
-    
-    // Check if the transaction was successful before proceeding
-    if (materialAfter) {
+      
+      materialAfter = { ...currentMaterial, currentStock: newStock };
+      newMaterials[index] = materialAfter;
+      wasSuccessful = true;
+      return newMaterials;
+    });
+
+    if (wasSuccessful && materialAfter) {
+       const newTransaction: Transaction = {
+          id: generateId('TRN'),
+          type: type,
+          date: transaction.date.getTime(),
+          materialId: material.id,
+          materialName: material.name,
+          quantity: transaction.quantity,
+          responsible: transaction.responsible,
+          supplier: transaction.supplier?.toUpperCase(),
+          invoice: transaction.invoice,
+          osNumber: transaction.osNumber,
+          workFront: transaction.workFront,
+          costCenter: transaction.costCenter,
+          stockLocation: transaction.stockLocation,
+        };
+
+        setTransactions(prev => [newTransaction, ...prev]);
+
       if (type === 'saida') {
         checkAndSendAlert(materialBefore, materialAfter);
       }
-      toast({
+       toast({
           title: 'Transação Registrada',
           description: `Uma nova transação de ${type} de ${transaction.quantity} unidades foi salva.`,
       });
