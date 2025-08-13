@@ -2,7 +2,7 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react';
-import type { Material, Transaction, TransactionSave, MaterialSave, CostCenter, Supplier, AlertSetting } from '@/types';
+import type { Material, Transaction, TransactionSave, MaterialSave, CostCenter, Supplier, AlertSetting, User, SectorEmailConfig } from '@/types';
 import { materials as initialMaterials, transactions as initialTransactions } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 
@@ -40,13 +40,9 @@ function setInStorage<T>(key: string, value: T): void {
 
 // Helper function to generate a unique product ID
 function generateId(prefix: string): string {
-  if (prefix === 'PRD') {
-    // Ensure an 8-digit random number
-    const randomNumber = Math.floor(10000000 + Math.random() * 90000000);
-    return `${prefix}${randomNumber}`;
-  }
-  const randomNumber = Math.floor(100000 + Math.random() * 900000);
-  return `${prefix}${Date.now()}${randomNumber}`;
+    const timestamp = Date.now();
+    const randomNumber = Math.floor(Math.random() * 1000000);
+    return `${prefix}-${timestamp}-${randomNumber}`;
 }
 
 
@@ -56,6 +52,7 @@ interface AppContextType {
   categories: string[];
   costCenters: CostCenter[];
   suppliers: Supplier[];
+  users: User[];
   activeMaterials: Material[]; // Materials that are not deleted
   addMaterial: (material: MaterialSave) => string | null;
   addMultipleMaterials: (materials: MaterialSave[]) => void;
@@ -71,10 +68,17 @@ interface AppContextType {
   addSupplier: (supplier: Omit<Supplier, 'id'>) => void;
   updateSupplier: (supplier: Supplier) => void;
   deleteSupplier: (supplierId: string) => void;
+  addUser: (user: Omit<User, 'id'>) => void;
+  updateUser: (user: User) => void;
+  deleteUser: (userId: string) => void;
   // Alert Settings
   alertSettings: AlertSetting[];
   availableSectors: string[];
   updateAlertSetting: (materialId: string, sectors: string[]) => void;
+  // Sector Email Config
+  sectorEmailConfig: SectorEmailConfig;
+  addEmailToSector: (sector: string, email: string) => void;
+  removeEmailFromSector: (sector: string, email: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -85,11 +89,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [categories, setCategories] = useState<string[]>([]);
   const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [alertSettings, setAlertSettings] = useState<AlertSetting[]>([]);
+  const [sectorEmailConfig, setSectorEmailConfig] = useState<SectorEmailConfig>({});
+
   const [isLoaded, setIsLoaded] = useState(false);
   const { toast } = useToast();
 
-  const availableSectors = ['Engenharia', 'Manutenção', 'Compras'];
+  const availableSectors = useMemo(() => ['Engenharia', 'Manutenção', 'Compras'], []);
 
   useEffect(() => {
     // Load from storage only once
@@ -100,7 +107,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setCategories(getFromStorage<string[]>('categories', []));
         setCostCenters(getFromStorage<CostCenter[]>('costCenters', []));
         setSuppliers(getFromStorage<Supplier[]>('suppliers', []));
+        setUsers(getFromStorage<User[]>('users', []));
         setAlertSettings(getFromStorage<AlertSetting[]>('alertSettings', []));
+        setSectorEmailConfig(getFromStorage<SectorEmailConfig>('sectorEmailConfig', {}));
     } else {
         // LocalStorage is empty, load mock data
         setMaterials(initialMaterials);
@@ -118,51 +127,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
           { id: 'sup-2', name: 'TIGRE', cnpj: '98.765.432/0001-10', contactName: 'Carlos Silva', phone: '47 3441-4444', email: 'vendas@tigre.com' },
         ];
         setSuppliers(initialSuppliers);
+
+        const initialUsers: User[] = [
+            { id: 'user-1', name: 'Admin Principal', email: 'admin@geoblue.com.br', role: 'Administrador', sector: 'Engenharia' },
+            { id: 'user-2', name: 'TEC08 Geoblue', email: 'tec08@geoblue.com.br', role: 'Administrador', sector: 'Engenharia' },
+            { id: 'user-3', name: 'Compras Geoblue', email: 'compras@geoblue.com.br', role: 'Administrador', sector: 'Compras' },
+            { id: 'user-4', name: 'Usuário Campo', email: 'campo@geoblue.com.br', role: 'Operador de Campo', sector: 'Manutenção' },
+        ];
+        setUsers(initialUsers);
+
         // Default alert settings: notify Engineering for all low-stock items
         const initialAlertSettings = initialMaterials
           .filter(m => m.currentStock < m.minStock)
           .map(m => ({ materialId: m.id, sectors: ['Engenharia'] }));
         setAlertSettings(initialAlertSettings);
+        
+        const initialSectorEmails: SectorEmailConfig = {
+            'Engenharia': ['engenharia@exemplo.com'],
+            'Manutenção': ['manutencao@exemplo.com'],
+            'Compras': ['compras@exemplo.com'],
+        };
+        setSectorEmailConfig(initialSectorEmails);
     }
     setIsLoaded(true);
   }, []);
 
 
-  useEffect(() => {
-    if (isLoaded) {
-      setInStorage('materials', materials);
-    }
-  }, [materials, isLoaded]);
-
-  useEffect(() => {
-    if (isLoaded) {
-      setInStorage('transactions', transactions);
-    }
-  }, [transactions, isLoaded]);
-
-  useEffect(() => {
-    if (isLoaded) {
-      setInStorage('categories', categories);
-    }
-  }, [categories, isLoaded]);
-
-  useEffect(() => {
-    if (isLoaded) {
-      setInStorage('costCenters', costCenters);
-    }
-  }, [costCenters, isLoaded]);
-
-  useEffect(() => {
-    if (isLoaded) {
-      setInStorage('suppliers', suppliers);
-    }
-  }, [suppliers, isLoaded]);
-  
-  useEffect(() => {
-    if (isLoaded) {
-      setInStorage('alertSettings', alertSettings);
-    }
-  }, [alertSettings, isLoaded]);
+  useEffect(() => { if (isLoaded) setInStorage('materials', materials); }, [materials, isLoaded]);
+  useEffect(() => { if (isLoaded) setInStorage('transactions', transactions); }, [transactions, isLoaded]);
+  useEffect(() => { if (isLoaded) setInStorage('categories', categories); }, [categories, isLoaded]);
+  useEffect(() => { if (isLoaded) setInStorage('costCenters', costCenters); }, [costCenters, isLoaded]);
+  useEffect(() => { if (isLoaded) setInStorage('suppliers', suppliers); }, [suppliers, isLoaded]);
+  useEffect(() => { if (isLoaded) setInStorage('users', users); }, [users, isLoaded]);
+  useEffect(() => { if (isLoaded) setInStorage('alertSettings', alertSettings); }, [alertSettings, isLoaded]);
+  useEffect(() => { if (isLoaded) setInStorage('sectorEmailConfig', sectorEmailConfig); }, [sectorEmailConfig, isLoaded]);
 
   const activeMaterials = useMemo(() => materials.filter(m => !m.deleted), [materials]);
 
@@ -466,6 +464,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSuppliers(prev => prev.filter(s => s.id !== supplierId));
   };
   
+  const addUser = useCallback((user: Omit<User, 'id'>) => {
+    setUsers(prev => [{ ...user, id: generateId('USR') }, ...prev]);
+  }, []);
+  
+  const updateUser = useCallback((user: User) => {
+    setUsers(prev => prev.map(u => u.id === user.id ? user : u));
+  }, []);
+  
+  const deleteUser = useCallback((userId: string) => {
+    setUsers(prev => prev.filter(u => u.id !== userId));
+  }, []);
+  
   const updateAlertSetting = (materialId: string, sectors: string[]) => {
     setAlertSettings(prev => {
       const existingSettingIndex = prev.findIndex(s => s.materialId === materialId);
@@ -488,12 +498,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const addEmailToSector = (sector: string, email: string) => {
+    setSectorEmailConfig(prev => {
+      const newConfig = { ...prev };
+      const emails = newConfig[sector] || [];
+      if (!emails.includes(email)) {
+        newConfig[sector] = [...emails, email];
+      }
+      return newConfig;
+    });
+  };
+
+  const removeEmailFromSector = (sector: string, email: string) => {
+    setSectorEmailConfig(prev => {
+      const newConfig = { ...prev };
+      const emails = newConfig[sector] || [];
+      newConfig[sector] = emails.filter(e => e !== email);
+      return newConfig;
+    });
+  };
+
   const value = {
     materials,
     transactions,
     categories,
     costCenters,
     suppliers,
+    users,
     activeMaterials,
     addMaterial,
     addMultipleMaterials,
@@ -509,9 +540,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addSupplier,
     updateSupplier,
     deleteSupplier,
+    addUser,
+    updateUser,
+    deleteUser,
     alertSettings,
     availableSectors,
     updateAlertSetting,
+    sectorEmailConfig,
+    addEmailToSector,
+    removeEmailFromSector,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

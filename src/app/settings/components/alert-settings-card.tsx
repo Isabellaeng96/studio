@@ -1,5 +1,4 @@
-
-// src/app/alerts/page.tsx
+// src/app/settings/components/alert-settings-card.tsx
 "use client";
 
 import { useAppContext } from "@/context/AppContext";
@@ -7,8 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-export default function AlertsPage() {
+export function AlertSettingsCard() {
   const { activeMaterials, availableSectors, alertSettings, updateAlertSetting } = useAppContext();
 
   const handleCheckboxChange = (materialId: string, sector: string, checked: boolean) => {
@@ -25,25 +25,17 @@ export default function AlertsPage() {
   };
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Configuração de Alertas</h1>
-        <p className="text-muted-foreground">
-          Defina quais setores devem receber notificações quando o estoque de um material estiver baixo.
-        </p>
-      </div>
-
       <Card>
         <CardHeader>
-          <CardTitle>Regras de Notificação por Material</CardTitle>
+          <CardTitle>Configuração de Alertas de Estoque Mínimo</CardTitle>
           <CardDescription>
-            Marque os setores para ativar os alertas de estoque mínimo. Os alertas serão enviados quando o "Estoque Atual" for menor que o "Estoque Mínimo".
+            Defina quais setores devem receber notificações por e-mail quando o estoque de um material estiver baixo.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="border rounded-md">
+          <ScrollArea className="h-96 w-full rounded-md border">
             <Table>
-              <TableHeader>
+              <TableHeader className="sticky top-0 bg-card z-10">
                 <TableRow>
                   <TableHead>Material</TableHead>
                   <TableHead>Categoria</TableHead>
@@ -78,9 +70,8 @@ export default function AlertsPage() {
                 })}
               </TableBody>
             </Table>
-          </div>
+          </ScrollArea>
         </CardContent>
       </Card>
-    </div>
   );
 }

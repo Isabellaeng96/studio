@@ -22,13 +22,13 @@ export type Transaction = {
   supplier?: string;
   invoice?: string;
   osNumber?: string;
-  workFront?: string;
   responsible: string;
   costCenter?: string;
   stockLocation?: string;
+  workFront?: string;
 };
 
-export type TransactionSave = Omit<Transaction, 'id' | 'type' | 'date' | 'materialName' | 'workFront'> & {
+export type TransactionSave = Omit<Transaction, 'id' | 'type' | 'date' | 'materialName'> & {
   date: Date;
   materialName?: string;
   // Fields for new material creation
@@ -69,11 +69,15 @@ export type User = {
     id: string;
     name: string;
     email: string;
-    role: 'Administrador' | 'Gerente de Estoque' | 'Operador de Campo' | 'Visitante' | string;
-    sector: string;
+    role: 'Administrador' | 'Gerente de Estoque' | 'Operador de Campo' | 'Visitante';
+    sector: 'Engenharia' | 'Manutenção' | 'Compras' | 'N/A';
 };
 
 export type AlertSetting = {
   materialId: string;
   sectors: string[];
+};
+
+export type SectorEmailConfig = {
+  [sector: string]: string[];
 };
