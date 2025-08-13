@@ -12,6 +12,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   role: string | null;
+  sector: string | null;
   login: (email: string, pass: string) => Promise<any>;
   signup: (email: string, pass: string, name: string) => Promise<any>;
   logout: () => Promise<void>;
@@ -25,6 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<string | null>(null);
+  const [sector, setSector] = useState<string | null>(null);
   const router = useRouter();
   const appContext = useAppContext();
 
@@ -36,8 +38,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // For simplicity, all logged-in users are admins for now.
         // This can be expanded with a user management system.
         setRole("Administrador");
+        setSector("Engenharia"); // Default sector
       } else {
         setRole(null);
+        setSector(null);
         router.push('/login');
       }
       setLoading(false);
@@ -86,6 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     loading,
     role,
+    sector,
     login,
     signup,
     logout,

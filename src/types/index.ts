@@ -71,4 +71,5 @@ export type User = {
     name: string;
     email: string;
     role: 'Administrador' | 'Gerente de Estoque' | 'Operador de Campo' | 'Visitante';
+    sector: string;
 };

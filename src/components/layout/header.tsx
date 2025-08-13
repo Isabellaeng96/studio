@@ -22,7 +22,7 @@ import { Logo } from '../logo';
 import { Badge } from '../ui/badge';
 
 export function Header() {
-  const { logout, user, role } = useAuth();
+  const { logout, user, role, sector } = useAuth();
   const router = useRouter();
 
   const getInitials = (name?: string | null, email?: string | null) => {
@@ -90,11 +90,18 @@ export function Header() {
               <p className="text-xs leading-none text-muted-foreground">
                 {user?.email}
               </p>
-               {role && (
-                <Badge variant="outline" className="mt-2 w-fit">
-                  {role}
-                </Badge>
-              )}
+              <div className="flex items-center gap-2 pt-2">
+                {role && (
+                    <Badge variant="outline" className="w-fit">
+                    {role}
+                    </Badge>
+                )}
+                 {sector && (
+                    <Badge variant="secondary" className="w-fit">
+                    {sector}
+                    </Badge>
+                )}
+              </div>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
