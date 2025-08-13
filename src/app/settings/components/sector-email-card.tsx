@@ -54,11 +54,7 @@ export function SectorEmailCard() {
 
   const handleAddEmail = (data: SectorEmailFormValues) => {
     addEmailToSector(data.sector, data.email);
-    toast({
-      title: "E-mail Adicionado",
-      description: `O e-mail ${data.email} foi adicionado ao setor ${data.sector}.`,
-    });
-    form.reset({ email: "", sector: "" });
+    form.reset({ email: "", sector: data.sector }); // Keep sector selected
   };
 
   const handleRemoveEmail = (sector: string, email: string) => {
@@ -172,3 +168,5 @@ export function SectorEmailCard() {
     </Card>
   );
 }
+
+    

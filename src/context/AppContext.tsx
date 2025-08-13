@@ -102,11 +102,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setCostCenters(getFromStorage<CostCenter[]>('costCenters', []));
         setSuppliers(getFromStorage<Supplier[]>('suppliers', []));
         setAlertSettings(getFromStorage<AlertSetting[]>('alertSettings', []));
-        setSectorEmailConfig(getFromStorage<SectorEmailConfig>('sectorEmailConfig', {
-           'Engenharia': ['tec08@geoblue.com.br'],
-           'Manutenção': ['tec08@geoblue.com.br'],
-           'Compras': ['compras@geoblue.com.br'],
-        }));
+        setSectorEmailConfig(getFromStorage<SectorEmailConfig>('sectorEmailConfig', {}));
     } else {
         // LocalStorage is empty, load mock data
         setMaterials(initialMaterials);
@@ -131,9 +127,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           .map(m => ({ materialId: m.id, sectors: ['Engenharia'] }));
         setAlertSettings(initialAlertSettings);
         setSectorEmailConfig({
-           'Engenharia': ['tec08@geoblue.com.br'],
-           'Manutenção': ['tec08@geoblue.com.br'],
-           'Compras': ['compras@geoblue.com.br'],
+          'Engenharia': ['tec08@geoblue.com.br'],
+          'Manutenção': ['tec08@geoblue.com.br'],
+          'Compras': ['compras@geoblue.com.br'],
         });
     }
     setIsLoaded(true);
@@ -313,6 +309,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const checkAndSendAlert = (materialBefore: Material, materialAfter: Material) => {
+    const wasAboveMin = materialBefore.currentStock >= materialBefore.minStock;
+    const isBelowMin = materialAfter.currentStock < materialAfter.minStock;
+  
+    if (wasAboveMin && isBelowMin) {
+      const setting = alertSettings.find(s => s.materialId === materialAfter.id);
+      if (!setting || setting.sectors.length === 0) return;
+  
+      const recipientEmails = new Set<string>();
+      setting.sectors.forEach(sector => {
+        const emails = sectorEmailConfig[sector];
+        if (emails) {
+          emails.forEach(email => recipientEmails.add(email));
+        }
+      });
+  
+      if (recipientEmails.size > 0) {
+        console.log(`-- SIMULATING EMAIL ALERT --`);
+        console.log(`To: ${Array.from(recipientEmails).join(', ')}`);
+        console.log(`Subject: Alerta de Estoque Baixo - ${materialAfter.name}`);
+        console.log(`Body: O material "${materialAfter.name}" (ID: ${materialAfter.id}) atingiu o estoque mínimo.`);
+        console.log(`   - Estoque Atual: ${materialAfter.currentStock}`);
+        console.log(`   - Estoque Mínimo: ${materialAfter.minStock}`);
+        console.log(`-----------------------------`);
+        toast({
+            title: `Alerta de Estoque Baixo: ${materialAfter.name}`,
+            description: `Notificação enviada para o(s) setor(es): ${setting.sectors.join(', ')}`,
+        })
+      }
+    }
+  };
+
   const addTransaction = (transaction: TransactionSave, type: 'entrada' | 'saida'): boolean => {
     if (type === 'entrada' && transaction.invoice && transaction.supplier) {
       const newInvoice = transaction.invoice.trim().toUpperCase();
@@ -374,23 +402,45 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
 
     setTransactions(prev => [newTransaction, ...prev]);
+    
+    const materialBefore = { ...material };
+    let materialAfter: Material | undefined;
 
     setMaterials(prev => prev.map(m => {
       if (m.id === materialId) {
         const newStock = type === 'entrada'
           ? m.currentStock + transaction.quantity
           : m.currentStock - transaction.quantity;
-        return { ...m, currentStock: newStock };
+        
+        if (newStock < 0) {
+            toast({
+                variant: 'destructive',
+                title: 'Estoque Insuficiente',
+                description: `Não há estoque suficiente de "${m.name}" para esta saída.`,
+            });
+            // Revert transaction addition
+            setTransactions(current => current.filter(t => t.id !== newTransaction.id));
+            return m; // Return original material state
+        }
+        materialAfter = { ...m, currentStock: newStock };
+        return materialAfter;
       }
       return m;
     }));
     
-    toast({
-        title: 'Transação Registrada',
-        description: `Uma nova transação de ${type} de ${transaction.quantity} unidades foi salva.`,
-    });
+    // Check if the transaction was successful before proceeding
+    if (materialAfter) {
+      if (type === 'saida') {
+        checkAndSendAlert(materialBefore, materialAfter);
+      }
+      toast({
+          title: 'Transação Registrada',
+          description: `Uma nova transação de ${type} de ${transaction.quantity} unidades foi salva.`,
+      });
+      return true;
+    }
     
-    return true;
+    return false;
   };
 
   const addCostCenter = (costCenter: Omit<CostCenter, 'id'>) => {
@@ -476,7 +526,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addEmailToSector = (sector: string, email: string) => {
     setSectorEmailConfig(prev => {
         const currentEmails = prev[sector] || [];
-        if (currentEmails.includes(email)) return prev;
+        if (currentEmails.includes(email)) {
+            toast({
+                variant: "destructive",
+                title: "E-mail Duplicado",
+                description: `O e-mail ${email} já está cadastrado para o setor ${sector}.`
+            });
+            return prev;
+        }
         return {
             ...prev,
             [sector]: [...currentEmails, email]
@@ -534,3 +591,5 @@ export function useAppContext() {
   }
   return context;
 }
+
+    
