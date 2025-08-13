@@ -44,7 +44,7 @@ export function MaterialDetailsDialog({ open, onOpenChange, material, stockByLoc
         // Clone the SVG to manipulate it without affecting the displayed one
         const svgClone = qrCodeSvg.cloneNode(true) as SVGSVGElement;
         
-        // Sanitize the SVG for better compatibility
+        // Sanitize the SVG for better compatibility by removing style attributes
         svgClone.removeAttribute("style");
         svgClone.setAttribute("width", "256");
         svgClone.setAttribute("height", "256");
