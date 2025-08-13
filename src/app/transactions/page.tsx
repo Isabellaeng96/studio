@@ -30,15 +30,17 @@ function TransactionsPageContent() {
   const [formValues, setFormValues] = useState<ExtractedData>({});
   
   const handleSaveTransaction = (transaction: TransactionSave, type: 'entrada' | 'saida') => {
-    addTransaction(transaction, type);
+    const wasSaved = addTransaction(transaction, type);
     
-    // After saving, redirect to the transactions list
-    const current = new URLSearchParams(Array.from(searchParams.entries()));
-    current.delete('showForm');
-    current.delete('materialId');
-    const search = current.toString();
-    const query = search ? `?${search}` : '';
-    router.push(`${pathname}${query}`);
+    // After saving, redirect to the transactions list only if successful
+    if (wasSaved) {
+      const current = new URLSearchParams(Array.from(searchParams.entries()));
+      current.delete('showForm');
+      current.delete('materialId');
+      const search = current.toString();
+      const query = search ? `?${search}` : '';
+      router.push(`${pathname}${query}`);
+    }
   };
 
   const handlePdfDataExtracted = useCallback((data: ExtractedData) => {

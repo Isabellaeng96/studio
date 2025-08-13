@@ -62,7 +62,7 @@ interface AppContextType {
   deleteMaterial: (materialId: string) => void;
   deleteMultipleMaterials: (materialIds: string[]) => void;
   addCategory: (category: string) => void;
-  addTransaction: (transaction: TransactionSave, type: 'entrada' | 'saida') => void;
+  addTransaction: (transaction: TransactionSave, type: 'entrada' | 'saida') => boolean;
   addCostCenter: (costCenter: Omit<CostCenter, 'id'>) => void;
   updateCostCenter: (costCenter: CostCenter) => void;
   deleteCostCenter: (costCenterId: string) => void;
@@ -263,12 +263,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
           title: 'Transação Duplicada',
           description: `Esta nota fiscal já foi registrada para o fornecedor "${transaction.supplier}".`,
         });
-        return; // Stop the function
+        return false; // Stop the function and indicate failure
       }
     }
 
     const material = materials.find(m => m.id === transaction.materialId);
-    if (!material) return;
+    if (!material) {
+        toast({ variant: 'destructive', title: 'Erro', description: 'Material não encontrado.' });
+        return false;
+    }
     
     const newTransaction: Transaction = {
       ...transaction,
@@ -291,6 +294,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       return m;
     }));
+    return true; // Indicate success
   };
 
   const addCostCenter = (costCenter: Omit<CostCenter, 'id'>) => {
