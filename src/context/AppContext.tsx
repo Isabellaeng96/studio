@@ -245,7 +245,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const addTransaction = (transaction: TransactionSave, type: 'entrada' | 'saida') => {
+  const addTransaction = (transaction: TransactionSave, type: 'entrada' | 'saida'): boolean => {
     // Check for duplicate invoice on entry
     if (type === 'entrada' && transaction.invoice && transaction.supplier) {
       const newInvoice = transaction.invoice.trim().toUpperCase();
