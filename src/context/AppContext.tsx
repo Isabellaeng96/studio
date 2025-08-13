@@ -1,7 +1,7 @@
 
 "use client";
 
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import type { Material, Transaction, TransactionSave, MaterialSave, CostCenter } from '@/types';
 import { materials as initialMaterials, transactions as initialTransactions } from '@/lib/mock-data';
 
@@ -64,6 +64,7 @@ interface AppContextType {
   addCostCenter: (costCenter: Omit<CostCenter, 'id'>) => void;
   updateCostCenter: (costCenter: CostCenter) => void;
   deleteCostCenter: (costCenterId: string) => void;
+  getStockByLocation: (materialId: string) => Record<string, number>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -214,6 +215,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const deleteCostCenter = (costCenterId: string) => {
     setCostCenters(prev => prev.filter(cc => cc.id !== costCenterId));
   };
+  
+  const getStockByLocation = useCallback((materialId: string): Record<string, number> => {
+    const stockMap: Record<string, number> = {};
+    const materialTransactions = transactions.filter(t => t.materialId === materialId);
+
+    materialTransactions.forEach(t => {
+      const location = t.stockLocation || 'Não especificado';
+      if (!stockMap[location]) {
+        stockMap[location] = 0;
+      }
+      if (t.type === 'entrada') {
+        stockMap[location] += t.quantity;
+      } else {
+        stockMap[location] -= t.quantity;
+      }
+    });
+
+    // Remove locations with zero or negative stock to keep it clean
+    Object.keys(stockMap).forEach(key => {
+      if (stockMap[key] <= 0) {
+        delete stockMap[key];
+      }
+    });
+
+    return stockMap;
+  }, [transactions]);
+
 
   const value = {
     materials,
@@ -230,6 +258,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addCostCenter,
     updateCostCenter,
     deleteCostCenter,
+    getStockByLocation,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
