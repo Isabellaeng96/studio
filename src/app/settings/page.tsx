@@ -3,15 +3,9 @@
 
 import { ChangePasswordForm } from './components/change-password-form';
 import { UserProfileCard } from './components/user-profile-card';
-import { useAuth } from '@/context/AuthContext';
-import { AlertSettingsCard } from './components/alert-settings-card';
-import { SectorEmailCard } from './components/sector-email-card';
 
 export default function SettingsPage() {
-  const { role } = useAuth();
   
-  const isAdmin = role === 'Administrador';
-
   return (
     <div className="flex flex-col gap-8">
       <div>
@@ -29,16 +23,6 @@ export default function SettingsPage() {
             <ChangePasswordForm />
         </div>
       </div>
-
-       <AlertSettingsCard />
-
-       <SectorEmailCard />
-
-       {isAdmin && (
-         <div className="flex flex-col gap-8">
-            {/* Seção de gerenciamento de usuários removida temporariamente */}
-         </div>
-      )}
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
   Landmark,
   Settings,
   Truck,
+  AlertCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -22,6 +23,7 @@ const navItems = [
   { href: '/suppliers', label: 'Fornecedores', icon: Truck },
   { href: '/cost-centers', label: 'Centros de Custo', icon: Landmark },
   { href: '/analysis', label: 'Análise', icon: BarChart3 },
+  { href: '/alerts', label: 'Alertas', icon: AlertCircle },
   { href: '/settings', label: 'Configurações', icon: Settings },
 ];
 

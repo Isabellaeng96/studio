@@ -77,7 +77,3 @@ export type AlertSetting = {
   materialId: string;
   sectors: string[];
 };
-
-export type SectorEmailConfig = {
-  [sector: string]: string[];
-};
