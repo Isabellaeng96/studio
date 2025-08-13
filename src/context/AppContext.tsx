@@ -2,7 +2,7 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react';
-import type { Material, Transaction, TransactionSave, MaterialSave, CostCenter, Supplier, AlertSetting, User, SectorEmailConfig } from '@/types';
+import type { Material, Transaction, TransactionSave, MaterialSave, CostCenter, Supplier, AlertSetting, SectorEmailConfig } from '@/types';
 import { materials as initialMaterials, transactions as initialTransactions } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 
@@ -52,7 +52,6 @@ interface AppContextType {
   categories: string[];
   costCenters: CostCenter[];
   suppliers: Supplier[];
-  users: User[];
   activeMaterials: Material[]; // Materials that are not deleted
   addMaterial: (material: MaterialSave) => string | null;
   addMultipleMaterials: (materials: MaterialSave[]) => void;
@@ -68,9 +67,6 @@ interface AppContextType {
   addSupplier: (supplier: Omit<Supplier, 'id'>) => void;
   updateSupplier: (supplier: Supplier) => void;
   deleteSupplier: (supplierId: string) => void;
-  addUser: (user: Omit<User, 'id'>) => void;
-  updateUser: (user: User) => void;
-  deleteUser: (userId: string) => void;
   // Alert Settings
   alertSettings: AlertSetting[];
   availableSectors: string[];
@@ -89,7 +85,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [categories, setCategories] = useState<string[]>([]);
   const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
   const [alertSettings, setAlertSettings] = useState<AlertSetting[]>([]);
   const [sectorEmailConfig, setSectorEmailConfig] = useState<SectorEmailConfig>({});
 
@@ -107,7 +102,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setCategories(getFromStorage<string[]>('categories', []));
         setCostCenters(getFromStorage<CostCenter[]>('costCenters', []));
         setSuppliers(getFromStorage<Supplier[]>('suppliers', []));
-        setUsers(getFromStorage<User[]>('users', []));
         setAlertSettings(getFromStorage<AlertSetting[]>('alertSettings', []));
         setSectorEmailConfig(getFromStorage<SectorEmailConfig>('sectorEmailConfig', {}));
     } else {
@@ -127,14 +121,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
           { id: 'sup-2', name: 'TIGRE', cnpj: '98.765.432/0001-10', contactName: 'Carlos Silva', phone: '47 3441-4444', email: 'vendas@tigre.com' },
         ];
         setSuppliers(initialSuppliers);
-
-        const initialUsers: User[] = [
-            { id: 'user-1', name: 'Admin Principal', email: 'admin@geoblue.com.br', role: 'Administrador', sector: 'Engenharia' },
-            { id: 'user-2', name: 'TEC08 Geoblue', email: 'tec08@geoblue.com.br', role: 'Administrador', sector: 'Engenharia' },
-            { id: 'user-3', name: 'Compras Geoblue', email: 'compras@geoblue.com.br', role: 'Administrador', sector: 'Compras' },
-            { id: 'user-4', name: 'Usuário Campo', email: 'campo@geoblue.com.br', role: 'Operador de Campo', sector: 'Manutenção' },
-        ];
-        setUsers(initialUsers);
 
         // Default alert settings: notify Engineering for all low-stock items
         const initialAlertSettings = initialMaterials
@@ -158,7 +144,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => { if (isLoaded) setInStorage('categories', categories); }, [categories, isLoaded]);
   useEffect(() => { if (isLoaded) setInStorage('costCenters', costCenters); }, [costCenters, isLoaded]);
   useEffect(() => { if (isLoaded) setInStorage('suppliers', suppliers); }, [suppliers, isLoaded]);
-  useEffect(() => { if (isLoaded) setInStorage('users', users); }, [users, isLoaded]);
   useEffect(() => { if (isLoaded) setInStorage('alertSettings', alertSettings); }, [alertSettings, isLoaded]);
   useEffect(() => { if (isLoaded) setInStorage('sectorEmailConfig', sectorEmailConfig); }, [sectorEmailConfig, isLoaded]);
 
@@ -464,18 +449,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSuppliers(prev => prev.filter(s => s.id !== supplierId));
   };
   
-  const addUser = useCallback((user: Omit<User, 'id'>) => {
-    setUsers(prev => [{ ...user, id: generateId('USR') }, ...prev]);
-  }, []);
-  
-  const updateUser = useCallback((user: User) => {
-    setUsers(prev => prev.map(u => u.id === user.id ? user : u));
-  }, []);
-  
-  const deleteUser = useCallback((userId: string) => {
-    setUsers(prev => prev.filter(u => u.id !== userId));
-  }, []);
-  
   const updateAlertSetting = (materialId: string, sectors: string[]) => {
     setAlertSettings(prev => {
       const existingSettingIndex = prev.findIndex(s => s.materialId === materialId);
@@ -524,7 +497,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     categories,
     costCenters,
     suppliers,
-    users,
     activeMaterials,
     addMaterial,
     addMultipleMaterials,
@@ -540,9 +512,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addSupplier,
     updateSupplier,
     deleteSupplier,
-    addUser,
-    updateUser,
-    deleteUser,
     alertSettings,
     availableSectors,
     updateAlertSetting,
@@ -561,3 +530,5 @@ export function useAppContext() {
   }
   return context;
 }
+
+    
