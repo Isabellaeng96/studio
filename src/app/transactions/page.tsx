@@ -11,14 +11,14 @@ import { PdfImporter } from './components/pdf-importer';
 import { TransactionForm, type TransactionFormValues } from './components/transaction-form';
 import { TransactionsTable } from './components/transactions-table';
 import { useToast } from '@/hooks/use-toast';
-import type { TransactionSave } from '@/types';
+import type { TransactionSave, MaterialSave } from '@/types';
 import type { TransactionExtractionOutput } from '@/ai/flows/extract-transaction-from-pdf';
 
 
 type ExtractedData = Partial<TransactionFormValues & { unit?: string; category?: string }>;
 
 function TransactionsPageContent() {
-  const { activeMaterials, materials, transactions, addTransaction, addMaterial, costCenters } = useAppContext();
+  const { activeMaterials, materials, transactions, addTransaction, addMultipleMaterials, costCenters } = useAppContext();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -55,32 +55,17 @@ function TransactionsPageContent() {
       return;
     }
     
-    // For now, let's take the first material and pre-fill the form.
-    // This links the material creation to the transaction saving.
-    const firstMaterial = data.materials[0];
+    const materialsToSave: MaterialSave[] = data.materials.map(m => ({
+        name: m.materialName || 'NOME INVÁLIDO',
+        category: m.category || 'GERAL',
+        unit: m.unit || 'un',
+        minStock: 0,
+        supplier: data.supplier
+    })).filter(m => m.name !== 'NOME INVÁLIDO');
 
-    // Check if the material already exists to pass the ID
-    const existingMaterial = activeMaterials.find(m => m.name.toUpperCase() === firstMaterial.materialName?.toUpperCase());
+    addMultipleMaterials(materialsToSave);
 
-    const valuesToSet: ExtractedData = {
-      materialId: existingMaterial?.id,
-      materialName: firstMaterial.materialName,
-      quantity: firstMaterial.quantity,
-      unit: firstMaterial.unit,
-      category: firstMaterial.category,
-      supplier: data.supplier,
-      invoice: data.invoice,
-    };
-    
-    setFormValues(valuesToSet);
-
-    // Navigate to the form view
-    const params = new URLSearchParams();
-    params.set('tab', 'entrada');
-    params.set('showForm', 'true');
-    router.push(`${pathname}?${params.toString()}`);
-
-  }, [activeMaterials, router, pathname, toast]);
+  }, [addMultipleMaterials, toast]);
 
 
   return (

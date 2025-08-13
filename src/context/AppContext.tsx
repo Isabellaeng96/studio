@@ -200,10 +200,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     let addedCount = 0;
     const newCategories = new Set(categories);
 
+    // Create a mutable copy to work with
     const updatedMaterials = [...materials];
 
     newMaterials.forEach((material) => {
       const materialNameUpper = material.name.toUpperCase();
+      // Check against the current state of updatedMaterials within the loop
       const existingActive = updatedMaterials.some(m => !m.deleted && m.name.toUpperCase() === materialNameUpper);
 
       if (existingActive) {
@@ -213,19 +215,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const existingDeletedIndex = updatedMaterials.findIndex(m => m.deleted && m.name.toUpperCase() === materialNameUpper);
 
       if (existingDeletedIndex !== -1) {
-        // Reactivate and update
-        const reactivatedMaterial = {
+        // Reactivate and update in the copied array
+        updatedMaterials[existingDeletedIndex] = {
           ...updatedMaterials[existingDeletedIndex],
           ...material,
           name: materialNameUpper,
           supplier: material.supplier?.toUpperCase(),
-          deleted: false
+          deleted: false,
         };
-        updatedMaterials[existingDeletedIndex] = reactivatedMaterial;
         addedCount++;
         if (material.category) newCategories.add(material.category);
       } else {
-        // Add as new
+        // Add as new to the beginning of the copied array
         updatedMaterials.unshift({
           ...material,
           name: materialNameUpper,
@@ -239,15 +240,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     });
     
+    // Set the final state once
     setMaterials(updatedMaterials);
-    setCategories(Array.from(newCategories));
+    if(newCategories.size > categories.length) {
+      setCategories(Array.from(newCategories).sort());
+    }
     
     const skippedCount = newMaterials.length - addedCount;
+
+    if (addedCount > 0) {
+      toast({
+        title: 'Importação Concluída',
+        description: `${addedCount} novos materiais foram cadastrados.`,
+      });
+    }
+
     if (skippedCount > 0) {
       toast({
-        variant: 'destructive',
-        title: 'Materiais Duplicados Ignorados',
-        description: `${skippedCount} materiais não foram importados pois já existem.`,
+        title: 'Materiais Ignorados',
+        description: `${skippedCount} materiais foram ignorados pois já existiam no catálogo.`,
       });
     }
   };
@@ -315,7 +326,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     let materialId = transaction.materialId;
     let materialName = transaction.materialName;
     
-    // If materialId is missing, it's a new material
+    // If materialId is missing, it's a new material being created via the transaction form
     if (!materialId && transaction.materialName) {
         const materialToSave: MaterialSave = {
             name: transaction.materialName,
@@ -324,8 +335,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
             minStock: 0,
             supplier: transaction.supplier,
         };
-
-        const existingMaterial = materials.find(m => m.name.toUpperCase() === materialToSave.name.toUpperCase());
+        
+        // This is a critical check to ensure no active duplicate material is created.
+        const existingMaterial = activeMaterials.find(m => m.name.toUpperCase() === materialToSave.name.toUpperCase());
         if (existingMaterial) {
              toast({
                 variant: 'destructive',
@@ -334,21 +346,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
             });
             return false;
         }
-
-        const newMaterial: Material = {
-            ...materialToSave,
-            id: generateId('PRD'),
-            currentStock: 0,
-            deleted: false,
-        };
         
-        setMaterials(prev => [newMaterial, ...prev]);
-        if (!categories.includes(newMaterial.category)) {
-          addCategory(newMaterial.category);
+        const success = addMaterial(materialToSave);
+        if (!success) {
+            // addMaterial already showed a toast, but we stop the transaction.
+            return false;
         }
-        materialId = newMaterial.id;
-        materialName = newMaterial.name;
+
+        // Find the newly created material to get its ID
+        const newMaterial = materials.find(m => !m.deleted && m.name.toUpperCase() === materialToSave.name.toUpperCase());
+        
+        // This should theoretically always find the material, but it's a safe check.
+        if (newMaterial) {
+            materialId = newMaterial.id;
+            materialName = newMaterial.name;
+        } else {
+             toast({ variant: 'destructive', title: 'Erro', description: 'Falha ao criar e encontrar o novo material.' });
+            return false;
+        }
     }
+
 
     const material = materials.find(m => m.id === materialId);
     if (!material) {
