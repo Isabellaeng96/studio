@@ -23,7 +23,6 @@ export type Transaction = {
   supplier?: string;
   invoice?: string;
   osNumber?: string;
-  workStage?: string;
   workFront?: string;
   responsible: string;
   costCenter?: string;

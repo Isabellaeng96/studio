@@ -10,10 +10,10 @@ export const materials: Material[] = [
 ];
 
 export const transactions: Transaction[] = [
-  { id: 'trn-001', type: 'saida', date: new Date('2024-07-20T10:00:00Z').getTime(), materialId: 'mat-001', materialName: 'Cimento CP-II', quantity: 10, workStage: 'Fundação', responsible: 'João Silva' },
+  { id: 'trn-001', type: 'saida', date: new Date('2024-07-20T10:00:00Z').getTime(), materialId: 'mat-001', materialName: 'Cimento CP-II', quantity: 10, responsible: 'João Silva' },
   { id: 'trn-002', type: 'entrada', date: new Date('2024-07-19T15:30:00Z').getTime(), materialId: 'mat-002', materialName: 'Tubo de Revestimento 6"', quantity: 100, supplier: 'Tigre', invoice: 'NF-12345', responsible: 'Maria Oliveira' },
-  { id: 'trn-003', type: 'saida', date: new Date('2024-07-18T08:00:00Z').getTime(), materialId: 'mat-004', materialName: 'Bomba Submersa 1.5CV', quantity: 1, workStage: 'Instalação', workFront: 'Poço P-03', responsible: 'Carlos Pereira' },
+  { id: 'trn-003', type: 'saida', date: new Date('2024-07-18T08:00:00Z').getTime(), materialId: 'mat-004', materialName: 'Bomba Submersa 1.5CV', quantity: 1, workFront: 'Poço P-03', responsible: 'Carlos Pereira' },
   { id: 'trn-004', type: 'entrada', date: new Date('2024-07-17T11:00:00Z').getTime(), materialId: 'mat-001', materialName: 'Cimento CP-II', quantity: 50, supplier: 'Votorantim', invoice: 'NF-12300', responsible: 'Maria Oliveira' },
-  { id: 'trn-005', type: 'saida', date: new Date('2024-07-16T14:20:00Z').getTime(), materialId: 'mat-005', materialName: 'Cabo Elétrico 4mm', quantity: 200, workStage: 'Ligação Elétrica', responsible: 'João Silva' },
+  { id: 'trn-005', type: 'saida', date: new Date('2024-07-16T14:20:00Z').getTime(), materialId: 'mat-005', materialName: 'Cabo Elétrico 4mm', quantity: 200, responsible: 'João Silva' },
   { id: 'trn-006', type: 'entrada', date: new Date('2024-07-15T09:00:00Z').getTime(), materialId: 'mat-006', materialName: 'Tinta Acrílica Branca', quantity: 10, supplier: 'Suvinil', invoice: 'NF-99887', responsible: 'Maria Oliveira' },
 ];

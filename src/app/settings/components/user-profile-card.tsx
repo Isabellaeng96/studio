@@ -24,7 +24,7 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 
 
 export function UserProfileCard() {
-  const { user, updateUserProfile, role } = useAuth();
+  const { user, updateUserProfile, role, sector } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -93,7 +93,10 @@ export function UserProfileCard() {
                 </Avatar>
                 <div className="text-center">
                     <p className="text-sm text-muted-foreground">{user?.email}</p>
-                    {role && <Badge variant="outline" className="mt-2">{role}</Badge>}
+                     <div className="flex items-center gap-2 pt-2">
+                        {role && <Badge variant="outline">Função: {role}</Badge>}
+                        {sector && <Badge variant="secondary">Setor: {sector}</Badge>}
+                    </div>
                 </div>
             </div>
              <FormField

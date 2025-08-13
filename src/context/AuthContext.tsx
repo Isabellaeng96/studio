@@ -10,6 +10,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   role: string; // Add role
+  sector: string; // Add sector
   login: (email: string, pass: string) => Promise<any>;
   signup: (email: string, pass: string, name: string) => Promise<any>;
   logout: () => Promise<void>;
@@ -24,10 +25,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // For demonstration, we'll hardcode the role.
+  // For demonstration, we'll hardcode the role and sector.
   // In a real app, this would come from a database (like Firestore)
-  // after the user logs in.
+  // after the user logs in, based on their user ID.
   const role = "Administrador";
+  const sector = "Engenharia";
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -81,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     loading,
     role,
+    sector,
     login,
     signup,
     logout,
