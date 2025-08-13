@@ -54,7 +54,7 @@ interface AppContextType {
   suppliers: Supplier[];
   activeMaterials: Material[]; // Materials that are not deleted
   addMaterial: (material: MaterialSave) => string | null;
-  addMultipleMaterials: (materials: MaterialSave[]) => { added: number; skipped: number, messages: {variant: "default" | "destructive", title: string, description: string}[] };
+  addMultipleMaterials: (materials: MaterialSave[]) => { addedCount: number; skippedCount: number };
   updateMaterial: (material: MaterialSave & { id: string }) => boolean;
   deleteMaterial: (materialId: string) => void;
   deleteMultipleMaterials: (materialIds: string[]) => void;
@@ -123,7 +123,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         // Default alert settings: notify Engineering for all low-stock items
         const initialAlertSettings = initialMaterials
-          .filter(m => m.currentStock < m.minStock)
           .map(m => ({ materialId: m.id, sectors: ['Engenharia'] }));
         setAlertSettings(initialAlertSettings);
         setSectorEmailConfig({
@@ -204,9 +203,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return materialId;
   }, [materials, categories, toast]);
   
-  const addMultipleMaterials = (newMaterials: MaterialSave[]): { added: number; skipped: number, messages: {variant: "default" | "destructive", title: string, description: string}[] } => {
+  const addMultipleMaterials = (newMaterials: MaterialSave[]): { addedCount: number; skippedCount: number } => {
     let addedCount = 0;
-    const messages = [];
     const newCategories = new Set(categories);
     const updatedMaterials = [...materials];
   
@@ -250,23 +248,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     
     const skippedCount = newMaterials.length - addedCount;
-
-    if (addedCount > 0) {
-      messages.push({
-        variant: 'default',
-        title: 'Importação Concluída',
-        description: `${addedCount} materiais foram importados com sucesso.`,
-      });
-    }
-     if (skippedCount > 0) {
-      messages.push({
-        variant: 'default',
-        title: 'Materiais Ignorados',
-        description: `${skippedCount} materiais foram ignorados pois já existiam.`,
-      });
-    }
-  
-    return { added: addedCount, skipped: skippedCount, messages };
+    return { addedCount, skippedCount };
   };
 
   const updateMaterial = (material: MaterialSave & { id: string }) => {
@@ -307,12 +289,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const checkAndSendAlert = (materialBefore: Material, materialAfter: Material) => {
-    const wasAboveMin = materialBefore.currentStock >= materialBefore.minStock;
-    const isBelowMin = materialAfter.currentStock < materialAfter.minStock;
+  const checkAndSendAlert = (material: Material) => {
+    const isBelowMin = material.currentStock < material.minStock;
   
-    if (wasAboveMin && isBelowMin) {
-      const setting = alertSettings.find(s => s.materialId === materialAfter.id);
+    if (isBelowMin) {
+      const setting = alertSettings.find(s => s.materialId === material.id);
       if (!setting || setting.sectors.length === 0) return;
   
       const recipientEmails = new Set<string>();
@@ -326,14 +307,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (recipientEmails.size > 0) {
         console.log(`-- SIMULATING EMAIL ALERT --`);
         console.log(`To: ${Array.from(recipientEmails).join(', ')}`);
-        console.log(`Subject: Alerta de Estoque Baixo - ${materialAfter.name}`);
-        console.log(`Body: O material "${materialAfter.name}" (ID: ${materialAfter.id}) atingiu o estoque mínimo.`);
-        console.log(`   - Estoque Atual: ${materialAfter.currentStock}`);
-        console.log(`   - Estoque Mínimo: ${materialAfter.minStock}`);
+        console.log(`Subject: Alerta de Estoque Baixo - ${material.name}`);
+        console.log(`Body: O material "${material.name}" (ID: ${material.id}) está com estoque baixo.`);
+        console.log(`   - Estoque Atual: ${material.currentStock}`);
+        console.log(`   - Estoque Mínimo: ${material.minStock}`);
         console.log(`-----------------------------`);
         toast({
-            title: `Alerta de Estoque Baixo: ${materialAfter.name}`,
-            description: `Notificação enviada para o(s) setor(es): ${setting.sectors.join(', ')}`,
+            title: `Alerta de Estoque Baixo: ${material.name}`,
+            description: `Notificação (simulada) enviada para: ${setting.sectors.join(', ')}`,
         })
       }
     }
@@ -384,7 +365,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     
     let wasSuccessful = false;
-    const materialBefore = { ...material };
     let materialAfter: Material | undefined;
 
     setMaterials(prev => {
@@ -425,7 +405,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
           supplier: transaction.supplier?.toUpperCase(),
           invoice: transaction.invoice,
           osNumber: transaction.osNumber,
-          workFront: transaction.workFront,
           costCenter: transaction.costCenter,
           stockLocation: transaction.stockLocation,
         };
@@ -433,7 +412,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setTransactions(prev => [newTransaction, ...prev]);
 
       if (type === 'saida') {
-        checkAndSendAlert(materialBefore, materialAfter);
+        checkAndSendAlert(materialAfter);
       }
        toast({
           title: 'Transação Registrada',
