@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -7,6 +8,7 @@ import {
   Replace,
   Landmark,
   Settings,
+  Truck,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -17,6 +19,7 @@ const navItems = [
   { href: '/', label: 'Painel', icon: Home },
   { href: '/materials', label: 'Materiais', icon: Package },
   { href: '/transactions', label: 'Transações', icon: Replace },
+  { href: '/suppliers', label: 'Fornecedores', icon: Truck },
   { href: '/cost-centers', label: 'Centros de Custo', icon: Landmark },
   { href: '/analysis', label: 'Análise', icon: BarChart3 },
   { href: '/settings', label: 'Configurações', icon: Settings },

@@ -2,7 +2,7 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
-import type { Material, Transaction, TransactionSave, MaterialSave, CostCenter } from '@/types';
+import type { Material, Transaction, TransactionSave, MaterialSave, CostCenter, Supplier } from '@/types';
 import { materials as initialMaterials, transactions as initialTransactions } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 
@@ -55,6 +55,7 @@ interface AppContextType {
   transactions: Transaction[];
   categories: string[];
   costCenters: CostCenter[];
+  suppliers: Supplier[];
   addMaterial: (material: MaterialSave) => boolean;
   addMultipleMaterials: (materials: MaterialSave[]) => void;
   updateMaterial: (material: MaterialSave & { id: string }) => boolean;
@@ -66,6 +67,9 @@ interface AppContextType {
   updateCostCenter: (costCenter: CostCenter) => void;
   deleteCostCenter: (costCenterId: string) => void;
   getStockByLocation: (materialId: string) => Record<string, number>;
+  addSupplier: (supplier: Omit<Supplier, 'id'>) => void;
+  updateSupplier: (supplier: Supplier) => void;
+  deleteSupplier: (supplierId: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -75,6 +79,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const { toast } = useToast();
 
@@ -86,6 +91,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setTransactions(getFromStorage<Transaction[]>('transactions', []));
         setCategories(getFromStorage<string[]>('categories', []));
         setCostCenters(getFromStorage<CostCenter[]>('costCenters', []));
+        setSuppliers(getFromStorage<Supplier[]>('suppliers', []));
     } else {
         // LocalStorage is empty, load mock data
         setMaterials(initialMaterials);
@@ -98,6 +104,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
             { id: 'cc-2', name: 'Manutenção Geral', description: 'Custos de manutenção de rotina' },
         ];
         setCostCenters(initialCostCenters);
+        const initialSuppliers = [
+          { id: 'sup-1', name: 'VOTORANTIM', contactName: 'Ana Costa', phone: '11 98765-4321', email: 'ana.costa@votorantim.com.br' },
+          { id: 'sup-2', name: 'TIGRE', contactName: 'Carlos Silva', phone: '47 3441-4444', email: 'vendas@tigre.com' },
+        ];
+        setSuppliers(initialSuppliers);
     }
     setIsLoaded(true);
   }, []);
@@ -126,6 +137,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setInStorage('costCenters', costCenters);
     }
   }, [costCenters, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      setInStorage('suppliers', suppliers);
+    }
+  }, [suppliers, isLoaded]);
 
   const addMaterial = (material: MaterialSave) => {
     const materialNameUpper = material.name.toUpperCase();
@@ -297,12 +314,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return stockMap;
   }, [transactions]);
 
+  const addSupplier = (supplier: Omit<Supplier, 'id'>) => {
+    const newSupplier: Supplier = {
+      ...supplier,
+      name: supplier.name.toUpperCase(),
+      id: generateId('SUP'),
+    };
+    setSuppliers(prev => [newSupplier, ...prev]);
+  };
+
+  const updateSupplier = (supplier: Supplier) => {
+    setSuppliers(prev => prev.map(s => s.id === supplier.id ? { ...supplier, name: supplier.name.toUpperCase() } : s));
+  };
+
+  const deleteSupplier = (supplierId: string) => {
+    setSuppliers(prev => prev.filter(s => s.id !== supplierId));
+  };
+
 
   const value = {
     materials,
     transactions,
     categories,
     costCenters,
+    suppliers,
     addMaterial,
     addMultipleMaterials,
     updateMaterial,
@@ -314,6 +349,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     updateCostCenter,
     deleteCostCenter,
     getStockByLocation,
+    addSupplier,
+    updateSupplier,
+    deleteSupplier,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
