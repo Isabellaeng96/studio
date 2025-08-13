@@ -54,7 +54,7 @@ interface AppContextType {
   suppliers: Supplier[];
   activeMaterials: Material[]; // Materials that are not deleted
   addMaterial: (material: MaterialSave) => string | null;
-  addMultipleMaterials: (materials: MaterialSave[]) => { addedCount: number; skippedCount: number };
+  addMultipleMaterials: (materials: MaterialSave[]) => { addedCount: number; skippedCount: number; messages: {variant: "default" | "destructive", title: string, description: string}[] };
   updateMaterial: (material: MaterialSave & { id: string }) => boolean;
   deleteMaterial: (materialId: string) => void;
   deleteMultipleMaterials: (materialIds: string[]) => void;
@@ -203,52 +203,73 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return materialId;
   }, [materials, categories, toast]);
   
-  const addMultipleMaterials = (newMaterials: MaterialSave[]): { addedCount: number; skippedCount: number } => {
+  const addMultipleMaterials = (newMaterials: MaterialSave[]) => {
+    const messages: {variant: "default" | "destructive", title: string, description: string}[] = [];
     let addedCount = 0;
     const newCategories = new Set(categories);
-    const updatedMaterials = [...materials];
-  
-    newMaterials.forEach((material) => {
-      const materialNameUpper = material.name.toUpperCase();
-      const existingActive = updatedMaterials.some(m => !m.deleted && m.name.toUpperCase() === materialNameUpper);
-  
-      if (existingActive) {
-        return; // Skip if already exists and is active
-      }
-      
-      const existingDeletedIndex = updatedMaterials.findIndex(m => m.deleted && m.name.toUpperCase() === materialNameUpper);
-  
-      if (existingDeletedIndex !== -1) {
-        updatedMaterials[existingDeletedIndex] = {
-          ...updatedMaterials[existingDeletedIndex],
-          ...material,
-          name: materialNameUpper,
-          supplier: material.supplier?.toUpperCase(),
-          deleted: false,
-        };
-        addedCount++;
-        if (material.category) newCategories.add(material.category);
-      } else {
-        updatedMaterials.unshift({
-          ...material,
-          name: materialNameUpper,
-          supplier: material.supplier?.toUpperCase(),
-          id: generateId('PRD'),
-          currentStock: 0,
-          deleted: false,
-        });
-        addedCount++;
-        if (material.category) newCategories.add(material.category);
-      }
-    });
     
-    setMaterials(updatedMaterials);
-    if(newCategories.size > categories.length) {
+    setMaterials(prevMaterials => {
+      const updatedMaterials = [...prevMaterials];
+      
+      newMaterials.forEach((material) => {
+        const materialNameUpper = material.name.toUpperCase();
+        const existingActive = updatedMaterials.some(m => !m.deleted && m.name.toUpperCase() === materialNameUpper);
+    
+        if (existingActive) {
+          return; // Skip if already exists and is active
+        }
+        
+        const existingDeletedIndex = updatedMaterials.findIndex(m => m.deleted && m.name.toUpperCase() === materialNameUpper);
+    
+        if (existingDeletedIndex !== -1) {
+          updatedMaterials[existingDeletedIndex] = {
+            ...updatedMaterials[existingDeletedIndex],
+            ...material,
+            name: materialNameUpper,
+            supplier: material.supplier?.toUpperCase(),
+            deleted: false,
+          };
+          addedCount++;
+          if (material.category) newCategories.add(material.category);
+        } else {
+          updatedMaterials.unshift({
+            ...material,
+            name: materialNameUpper,
+            supplier: material.supplier?.toUpperCase(),
+            id: generateId('PRD'),
+            currentStock: 0,
+            deleted: false,
+          });
+          addedCount++;
+          if (material.category) newCategories.add(material.category);
+        }
+      });
+      
+      return updatedMaterials;
+    });
+
+    if (newCategories.size > categories.length) {
       setCategories(Array.from(newCategories).sort());
     }
     
     const skippedCount = newMaterials.length - addedCount;
-    return { addedCount, skippedCount };
+    
+    if (addedCount > 0) {
+      messages.push({
+        variant: "default",
+        title: 'Importação Concluída',
+        description: `${addedCount} materiais foram importados com sucesso.`,
+      });
+    }
+    if (skippedCount > 0) {
+      messages.push({
+        variant: "default",
+        title: 'Materiais Ignorados',
+        description: `${skippedCount} materiais foram ignorados pois já existiam.`,
+      });
+    }
+
+    return { addedCount, skippedCount, messages };
   };
 
   const updateMaterial = (material: MaterialSave & { id: string }) => {
@@ -290,9 +311,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const checkAndSendAlert = (material: Material) => {
-    const isBelowMin = material.currentStock < material.minStock;
-  
-    if (isBelowMin) {
+    if (material.currentStock < material.minStock) {
       const setting = alertSettings.find(s => s.materialId === material.id);
       if (!setting || setting.sectors.length === 0) return;
   
@@ -342,6 +361,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     let materialId = transaction.materialId;
+    let isNewMaterial = false;
     
     if (!materialId && transaction.materialName && type === 'entrada') {
         const newMaterialId = addMaterial({
@@ -356,6 +376,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             return false;
         }
         materialId = newMaterialId;
+        isNewMaterial = true;
     }
 
     const material = materials.find(m => m.id === materialId);
@@ -365,7 +386,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     
     let wasSuccessful = false;
-    let materialAfter: Material | undefined;
+    let updatedMaterial: Material | undefined;
 
     setMaterials(prev => {
       const newMaterials = [...prev];
@@ -377,7 +398,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ? currentMaterial.currentStock + transaction.quantity
         : currentMaterial.currentStock - transaction.quantity;
       
-      if (newStock < 0) {
+      if (type === 'saida' && newStock < 0) {
           toast({
               variant: 'destructive',
               title: 'Estoque Insuficiente',
@@ -387,33 +408,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
           return prev;
       }
       
-      materialAfter = { ...currentMaterial, currentStock: newStock };
-      newMaterials[index] = materialAfter;
+      updatedMaterial = { ...currentMaterial, currentStock: newStock };
+      newMaterials[index] = updatedMaterial;
       wasSuccessful = true;
       return newMaterials;
     });
 
-    if (wasSuccessful && materialAfter) {
-       const newTransaction: Transaction = {
-          id: generateId('TRN'),
-          type: type,
-          date: transaction.date.getTime(),
-          materialId: material.id,
-          materialName: material.name,
-          quantity: transaction.quantity,
-          responsible: transaction.responsible,
-          supplier: transaction.supplier?.toUpperCase(),
-          invoice: transaction.invoice,
-          osNumber: transaction.osNumber,
-          costCenter: transaction.costCenter,
-          stockLocation: transaction.stockLocation,
-        };
+    if (wasSuccessful) {
+        if (!isNewMaterial) {
+            const materialToLog = updatedMaterial || material;
+            const newTransaction: Transaction = {
+              id: generateId('TRN'),
+              type: type,
+              date: transaction.date.getTime(),
+              materialId: materialToLog.id,
+              materialName: materialToLog.name,
+              quantity: transaction.quantity,
+              responsible: transaction.responsible,
+              supplier: transaction.supplier?.toUpperCase(),
+              invoice: transaction.invoice,
+              osNumber: transaction.osNumber,
+              costCenter: transaction.costCenter,
+              stockLocation: transaction.stockLocation,
+            };
+            setTransactions(prev => [newTransaction, ...prev]);
 
-        setTransactions(prev => [newTransaction, ...prev]);
-
-      if (type === 'saida') {
-        checkAndSendAlert(materialAfter);
-      }
+            if (type === 'saida') {
+                checkAndSendAlert(materialToLog);
+            }
+        }
+        
        toast({
           title: 'Transação Registrada',
           description: `Uma nova transação de ${type} de ${transaction.quantity} unidades foi salva.`,
