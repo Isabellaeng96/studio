@@ -35,6 +35,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { Material, TransactionSave, CostCenter } from '@/types';
 import { format } from 'date-fns';
+import { useAuth } from '@/context/AuthContext';
 
 const transactionSchema = z.object({
   materialId: z.string().min(1, 'Por favor, selecione um material.'),
@@ -62,12 +63,13 @@ interface TransactionFormProps {
 
 export function TransactionForm({ type, materials, costCenters, onSave, defaultMaterialId, initialValues }: TransactionFormProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
       date: new Date(),
-      responsible: '',
+      responsible: user?.displayName ?? '',
       quantity: 0,
       materialId: defaultMaterialId ?? '',
       supplier: '',
@@ -84,7 +86,9 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
     if (defaultMaterialId) {
       form.setValue('materialId', defaultMaterialId);
     }
-  }, [defaultMaterialId, form]);
+    // Set responsible user when form is re-initialized
+    form.setValue('responsible', user?.displayName ?? '');
+  }, [defaultMaterialId, form, user]);
 
   useEffect(() => {
     if (initialValues) {
@@ -97,7 +101,7 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
       }
       form.reset({
         date: new Date(),
-        responsible: '',
+        responsible: user?.displayName ?? '',
         quantity: 0,
         materialId: defaultMaterialId ?? '',
         supplier: '',
@@ -109,7 +113,7 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
         ...initialValues,
       });
     }
-  }, [initialValues, form, materials, defaultMaterialId]);
+  }, [initialValues, form, materials, defaultMaterialId, user]);
 
   const onSubmit = (data: TransactionFormValues) => {
     onSave(data, type);
@@ -119,6 +123,7 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
     });
     form.reset({
       ...form.getValues(),
+      responsible: user?.displayName ?? '', // Keep responsible user after reset
       materialId: '',
       quantity: 0,
       supplier: '',
