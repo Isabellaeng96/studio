@@ -20,7 +20,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
-import type { Material } from '@/types';
+import type { Material, MaterialSave } from '@/types';
 import { MaterialForm } from './material-form';
 import {
   AlertDialog,
@@ -41,7 +41,7 @@ import { useAppContext } from '@/context/AppContext';
 
 interface MaterialsTableProps {
   data: Material[];
-  onSave: (material: Omit<Material, 'id' | 'currentStock'> & { id?: string }) => void;
+  onSave: (material: MaterialSave & { id?: string }) => void;
   onDelete: (materialId: string) => void;
   onDeleteMultiple: (materialIds: string[]) => void;
   categories: string[];
@@ -52,6 +52,7 @@ export function MaterialsTable({ data, onSave, onDelete, onDeleteMultiple, categ
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
   const { getStockByLocation } = useAppContext();
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
 
   const handleSelectAll = (checked: boolean) => {
@@ -77,6 +78,12 @@ export function MaterialsTable({ data, onSave, onDelete, onDeleteMultiple, categ
     setSelectedMaterial(material);
     setDetailsOpen(true);
   };
+  
+  const handleSave = (material: MaterialSave & { id?: string }) => {
+    onSave(material);
+    setOpenDropdownId(null); 
+  };
+
 
   return (
     <>
@@ -163,7 +170,7 @@ export function MaterialsTable({ data, onSave, onDelete, onDeleteMultiple, categ
                     </TableCell>
                     <TableCell className="text-right font-mono" onClick={() => handleRowClick(material)}>{material.minStock}</TableCell>
                     <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenu>
+                        <DropdownMenu open={openDropdownId === material.id} onOpenChange={(isOpen) => setOpenDropdownId(isOpen ? material.id : null)}>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon">
                               <MoreHorizontal className="h-4 w-4" />
@@ -174,7 +181,7 @@ export function MaterialsTable({ data, onSave, onDelete, onDeleteMultiple, categ
                                 <PackageOpen className="mr-2 h-4 w-4" />
                                 Ver Detalhes
                             </DropdownMenuItem>
-                            <MaterialForm material={material} onSave={onSave} categories={categories}>
+                            <MaterialForm material={material} onSave={handleSave} categories={categories}>
                               <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                                   <Pencil className="mr-2 h-4 w-4" />
                                   Editar
