@@ -30,7 +30,8 @@ import { useEffect, useState, useMemo } from 'react';
 import { TransactionExporter } from './transaction-exporter';
 import { useAuth } from '@/context/AuthContext';
 import { useAppContext } from '@/context/AppContext';
-
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface TransactionsTableProps {
   data: Transaction[];
@@ -105,7 +106,7 @@ export function TransactionsTable({ data, materials }: TransactionsTableProps) {
                       <TableCell className="text-right font-mono">{tx.quantity}</TableCell>
                       <TableCell className="font-mono text-xs">{tx.invoice || tx.osNumber || '-'}</TableCell>
                       <TableCell>{tx.costCenter || '-'}</TableCell>
-                      <TableCell>{isClient ? new Date(tx.date).toLocaleDateString() : ''}</TableCell>
+                      <TableCell>{isClient ? format(new Date(tx.date), 'dd/MM/yyyy') : ''}</TableCell>
                     </TableRow>
                   </DialogTrigger>
                   <DialogContent>
@@ -120,7 +121,7 @@ export function TransactionsTable({ data, materials }: TransactionsTableProps) {
                            <div><span className="font-semibold">Material:</span> {tx.materialName}</div>
                            <div><span className="font-semibold">Tipo:</span> <span className={cn(tx.type === 'entrada' ? 'text-emerald-600' : 'text-amber-600')}>{tx.type === 'entrada' ? 'Entrada' : 'Saída'}</span></div>
                            <div><span className="font-semibold">Quantidade:</span> {tx.quantity}</div>
-                           <div><span className="font-semibold">Data:</span> {isClient ? new Date(tx.date).toLocaleString() : ''}</div>
+                           <div><span className="font-semibold">Data:</span> {isClient ? format(new Date(tx.date), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR }) : ''}</div>
                            <div><span className="font-semibold">Responsável:</span> {tx.responsible}</div>
                            {tx.costCenter && <div><span className="font-semibold">Centro de Custo:</span> {costCenters.find(c => c.id === tx.costCenter)?.name || tx.costCenter}</div>}
                            {tx.type === 'entrada' && tx.supplier && <div><span className="font-semibold">Fornecedor:</span> {tx.supplier}</div>}

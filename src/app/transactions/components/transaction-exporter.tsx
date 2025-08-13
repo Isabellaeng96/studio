@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { addDays, format, isAfter, isBefore } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { Calendar as CalendarIcon, FileText, Loader2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -68,7 +69,7 @@ export function TransactionExporter({ transactions, materials, user }: Transacti
         startY: 40,
         head: [['Data', 'Material', 'Tipo', 'Qtd', 'Responsável', 'Doc/OS', 'Centro de Custo']],
         body: filteredTransactions.map(tx => [
-          format(new Date(tx.date), 'dd/MM/yy HH:mm'),
+          format(new Date(tx.date), 'dd/MM/yyyy HH:mm'),
           materials.find(m => m.id === tx.materialId)?.name || 'N/A',
           tx.type === 'entrada' ? 'Entrada' : 'Saída',
           tx.quantity.toString(),
@@ -131,10 +132,10 @@ export function TransactionExporter({ transactions, materials, user }: Transacti
             {date?.from ? (
               date.to ? (
                 <>
-                  {format(date.from, 'LLL dd, y')} - {format(date.to, 'LLL dd, y')}
+                  {format(date.from, 'dd/MM/yyyy')} - {format(date.to, 'dd/MM/yyyy')}
                 </>
               ) : (
-                format(date.from, 'LLL dd, y')
+                format(date.from, 'dd/MM/yyyy')
               )
             ) : (
               <span>Selecione um período</span>
@@ -149,6 +150,7 @@ export function TransactionExporter({ transactions, materials, user }: Transacti
             selected={date}
             onSelect={setDate}
             numberOfMonths={2}
+            locale={ptBR}
           />
         </PopoverContent>
       </Popover>

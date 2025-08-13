@@ -52,7 +52,7 @@ function TransactionsPageContent() {
           description: `O material "${data.materialName}" foi criado.`,
         });
       } else {
-         return;
+         return; // Stop if material creation failed (e.g., duplicate name)
       }
     }
 

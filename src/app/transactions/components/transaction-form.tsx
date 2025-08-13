@@ -36,6 +36,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { Material, TransactionSave, CostCenter } from '@/types';
 import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { useAuth } from '@/context/AuthContext';
 
 const transactionSchema = z.object({
@@ -128,6 +129,7 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
       const current = new URLSearchParams(Array.from(searchParams.entries()));
       current.delete('showForm');
       current.delete('materialId');
+      current.delete('tab');
       const search = current.toString();
       const query = search ? `?${search}` : '';
       router.push(`${pathname}${query}`);
@@ -308,7 +310,7 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
                             !field.value && 'text-muted-foreground'
                           )}
                         >
-                          {field.value ? format(field.value, 'PPP') : <span>Escolha uma data</span>}
+                          {field.value ? format(field.value, 'dd/MM/yyyy') : <span>Escolha uma data</span>}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
                       </FormControl>
@@ -319,6 +321,7 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
                         selected={field.value}
                         onSelect={field.onChange}
                         initialFocus
+                        locale={ptBR}
                       />
                     </PopoverContent>
                   </Popover>
