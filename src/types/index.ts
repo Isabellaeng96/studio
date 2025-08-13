@@ -56,6 +56,7 @@ export type CostCenter = {
 export type Supplier = {
   id: string;
   name: string;
+  cnpj?: string;
   contactName?: string;
   phone?: string;
   email?: string;

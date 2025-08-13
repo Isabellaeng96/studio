@@ -46,6 +46,7 @@ export function SuppliersTable({ data, onSave, onDelete }: SuppliersTableProps) 
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
+              <TableHead>CNPJ</TableHead>
               <TableHead>Contato</TableHead>
               <TableHead>Telefone</TableHead>
               <TableHead>Email</TableHead>
@@ -56,6 +57,7 @@ export function SuppliersTable({ data, onSave, onDelete }: SuppliersTableProps) 
             {data.map(supplier => (
               <TableRow key={supplier.id}>
                 <TableCell className="font-medium">{supplier.name}</TableCell>
+                <TableCell>{supplier.cnpj || '-'}</TableCell>
                 <TableCell>{supplier.contactName || '-'}</TableCell>
                 <TableCell>{supplier.phone || '-'}</TableCell>
                 <TableCell>{supplier.email || '-'}</TableCell>

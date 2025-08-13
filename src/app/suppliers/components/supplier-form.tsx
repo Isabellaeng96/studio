@@ -30,6 +30,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const supplierSchema = z.object({
   name: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres.').transform(val => val.toUpperCase()),
+  cnpj: z.string().optional(),
   contactName: z.string().optional(),
   phone: z.string().optional(),
   email: z.string().email('Por favor, insira um e-mail válido.').optional().or(z.literal('')),
@@ -51,6 +52,7 @@ export function SupplierForm({ children, supplier, onSave }: SupplierFormProps) 
     resolver: zodResolver(supplierSchema),
     defaultValues: {
       name: '',
+      cnpj: '',
       contactName: '',
       phone: '',
       email: '',
@@ -62,6 +64,7 @@ export function SupplierForm({ children, supplier, onSave }: SupplierFormProps) 
       if (supplier) {
         form.reset({
           name: supplier.name,
+          cnpj: supplier.cnpj || '',
           contactName: supplier.contactName || '',
           phone: supplier.phone || '',
           email: supplier.email || '',
@@ -69,6 +72,7 @@ export function SupplierForm({ children, supplier, onSave }: SupplierFormProps) 
       } else {
         form.reset({
           name: '',
+          cnpj: '',
           contactName: '',
           phone: '',
           email: '',
@@ -113,6 +117,19 @@ export function SupplierForm({ children, supplier, onSave }: SupplierFormProps) 
                   <FormLabel>Nome do Fornecedor</FormLabel>
                   <FormControl>
                     <Input placeholder="ex: Votorantim" {...field} className="uppercase" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="cnpj"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>CNPJ (Opcional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="00.000.000/0000-00" {...field} value={field.value ?? ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

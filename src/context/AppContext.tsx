@@ -105,8 +105,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ];
         setCostCenters(initialCostCenters);
         const initialSuppliers = [
-          { id: 'sup-1', name: 'VOTORANTIM', contactName: 'Ana Costa', phone: '11 98765-4321', email: 'ana.costa@votorantim.com.br' },
-          { id: 'sup-2', name: 'TIGRE', contactName: 'Carlos Silva', phone: '47 3441-4444', email: 'vendas@tigre.com' },
+          { id: 'sup-1', name: 'VOTORANTIM', cnpj: '01.234.567/0001-89', contactName: 'Ana Costa', phone: '11 98765-4321', email: 'ana.costa@votorantim.com.br' },
+          { id: 'sup-2', name: 'TIGRE', cnpj: '98.765.432/0001-10', contactName: 'Carlos Silva', phone: '47 3441-4444', email: 'vendas@tigre.com' },
         ];
         setSuppliers(initialSuppliers);
     }
