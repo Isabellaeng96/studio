@@ -13,11 +13,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, FileUp, Wand2 } from 'lucide-react';
-import type { TransactionSave } from '@/types';
-import { extractTransactionFromPdf } from '@/ai/flows/extract-transaction-from-pdf';
+import { extractTransactionFromPdf, type TransactionExtractionOutput } from '@/ai/flows/extract-transaction-from-pdf';
 
 interface PdfImporterProps {
-  onDataExtracted: (data: Partial<TransactionSave & { unit?: string; category?: string }>) => void;
+  onDataExtracted: (data: TransactionExtractionOutput) => void;
 }
 
 export function PdfImporter({ onDataExtracted }: PdfImporterProps) {
@@ -64,11 +63,15 @@ export function PdfImporter({ onDataExtracted }: PdfImporterProps) {
         pdfDataUri: dataUri,
       });
 
+      if (!result || !result.materials || result.materials.length === 0) {
+        throw new Error("A IA não conseguiu encontrar materiais no documento.");
+      }
+      
       onDataExtracted(result);
 
       toast({
         title: 'Dados Extraídos com Sucesso!',
-        description: 'O formulário de entrada foi preenchido com os dados do PDF.',
+        description: 'Os materiais do PDF foram processados.',
       });
 
     } catch (err: any) {
@@ -77,7 +80,7 @@ export function PdfImporter({ onDataExtracted }: PdfImporterProps) {
       toast({
         variant: "destructive",
         title: "Falha na Extração",
-        description: "Não foi possível extrair dados do PDF. Verifique o arquivo e tente novamente.",
+        description: `Não foi possível extrair dados do PDF. Verifique o arquivo e tente novamente.`,
       });
     } finally {
       setIsLoading(false);
@@ -95,7 +98,7 @@ export function PdfImporter({ onDataExtracted }: PdfImporterProps) {
            Importar de PDF
         </CardTitle>
         <CardDescription>
-          Faça o upload de uma nota fiscal em PDF para preencher o formulário de entrada automaticamente.
+          Faça o upload de uma nota fiscal em PDF para cadastrar novos materiais em lote.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -109,7 +112,7 @@ export function PdfImporter({ onDataExtracted }: PdfImporterProps) {
           ) : (
             <FileUp className="mr-2 h-4 w-4" />
           )}
-          {isLoading ? 'Analisando PDF...' : 'Extrair Dados do PDF'}
+          {isLoading ? 'Analisando PDF...' : 'Extrair Materiais do PDF'}
         </Button>
       </CardContent>
     </Card>

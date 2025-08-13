@@ -12,6 +12,7 @@ import { TransactionForm, type TransactionFormValues } from './components/transa
 import { TransactionsTable } from './components/transactions-table';
 import { useToast } from '@/hooks/use-toast';
 import type { TransactionSave } from '@/types';
+import type { TransactionExtractionOutput } from '@/ai/flows/extract-transaction-from-pdf';
 
 
 type ExtractedData = Partial<TransactionFormValues & { unit?: string; category?: string }>;
@@ -30,43 +31,57 @@ function TransactionsPageContent() {
   const [formValues, setFormValues] = useState<ExtractedData>({});
   
   const handleSaveTransaction = (transaction: TransactionSave, type: 'entrada' | 'saida') => {
-    return addTransaction(transaction, type);
+    const wasSaved = addTransaction(transaction, type);
+    if (wasSaved) {
+       const current = new URLSearchParams(Array.from(searchParams.entries()));
+       current.delete('showForm');
+       current.delete('materialId');
+       current.delete('tab');
+       const search = current.toString();
+       const query = search ? `?${search}` : '';
+       router.push(`${pathname}${query}`);
+    }
+    return wasSaved;
   };
 
-  const handlePdfDataExtracted = useCallback((data: ExtractedData) => {
-    let materialForTransaction = materials.find(m => m.name === data.materialName);
-
-    // If material doesn't exist, create it
-    if (!materialForTransaction && data.materialName) {
-      const wasSaved = addMaterial({
-        name: data.materialName,
-        category: data.category || 'GERAL',
-        unit: data.unit || 'un',
-        minStock: 0,
-        supplier: data.supplier,
-      });
-
-      if (wasSaved) {
-         toast({
-          title: "Novo Material Cadastrado!",
-          description: `O material "${data.materialName}" foi criado.`,
-        });
-      } else {
-         return; // Stop if material creation failed (e.g., duplicate name)
-      }
-    }
-
-    const updatedData = { ...data };
+  const handlePdfDataExtracted = useCallback((data: TransactionExtractionOutput) => {
+    let newMaterialsCount = 0;
     
-    setFormValues(updatedData);
+    data.materials.forEach(item => {
+      if (item.materialName) {
+        const materialExists = materials.some(m => m.name === item.materialName);
+        if (!materialExists) {
+          const wasSaved = addMaterial({
+            name: item.materialName!,
+            category: item.category || 'GERAL',
+            unit: item.unit || 'un',
+            minStock: 0,
+            supplier: data.supplier,
+          });
+          if (wasSaved) {
+            newMaterialsCount++;
+          }
+        }
+      }
+    });
 
-    const current = new URLSearchParams(Array.from(searchParams.entries()));
-    current.set('tab', 'entrada');
-    current.set('showForm', 'true');
-    const search = current.toString();
-    const query = search ? `?${search}` : '';
-    router.push(`${pathname}${query}`);
-  }, [materials, addMaterial, router, pathname, searchParams, toast]);
+    if (newMaterialsCount > 0) {
+      toast({
+        title: "Novos Materiais Cadastrados!",
+        description: `${newMaterialsCount} novo(s) material(is) foi(ram) adicionado(s) ao catálogo.`,
+      });
+    } else {
+        toast({
+        title: "Nenhum material novo",
+        description: `Todos os materiais do PDF já estavam cadastrados.`,
+      });
+    }
+    
+    // For now, don't pre-fill the form as we have multiple items.
+    // The main benefit is the batch material creation.
+    setFormValues({});
+
+  }, [materials, addMaterial, toast]);
 
 
   return (

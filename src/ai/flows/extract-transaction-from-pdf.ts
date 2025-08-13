@@ -1,8 +1,8 @@
 'use server';
 /**
- * @fileOverview Extrai informações de transação de um documento PDF, incluindo detalhes do material.
+ * @fileOverview Extrai informações de transação de um documento PDF, incluindo detalhes de múltiplos materiais.
  *
- * - extractTransactionFromPdf - Analisa um arquivo PDF para extrair detalhes da transação e do material.
+ * - extractTransactionFromPdf - Analisa um arquivo PDF para extrair detalhes da transação e uma lista de materiais.
  * - TransactionExtractionInput - O tipo de entrada para a função extractTransactionFromPdf.
  * - TransactionExtractionOutput - O tipo de retorno para a função extractTransactionFromPdf.
  */
@@ -15,13 +15,18 @@ const TransactionExtractionInputSchema = z.object({
 });
 export type TransactionExtractionInput = z.infer<typeof TransactionExtractionInputSchema>;
 
+
+const MaterialDetailSchema = z.object({
+    materialName: z.string().optional().describe('O nome do material ou produto principal encontrado.'),
+    quantity: z.number().optional().describe('A quantidade do material.'),
+    unit: z.string().optional().describe('A unidade de medida do material (ex: un, kg, m).'),
+    category: z.string().optional().describe('Uma categoria sugerida para o material com base no seu nome ou tipo.'),
+});
+
 const TransactionExtractionOutputSchema = z.object({
-  materialName: z.string().optional().describe('O nome do material ou produto principal encontrado.'),
-  quantity: z.number().optional().describe('A quantidade do material.'),
   supplier: z.string().optional().describe('O nome do fornecedor ou da empresa que emitiu o documento.'),
   invoice: z.string().optional().describe('O número da nota fiscal ou fatura, se encontrado.'),
-  unit: z.string().optional().describe('A unidade de medida do material (ex: un, kg, m).'),
-  category: z.string().optional().describe('Uma categoria sugerida para o material com base no seu nome ou tipo.'),
+  materials: z.array(MaterialDetailSchema).describe('Uma lista de todos os materiais encontrados no documento.'),
 });
 export type TransactionExtractionOutput = z.infer<typeof TransactionExtractionOutputSchema>;
 
@@ -35,7 +40,9 @@ const prompt = ai.definePrompt({
   input: { schema: z.object({ pdfTextContent: z.string() }) },
   output: { schema: TransactionExtractionOutputSchema },
   prompt: `Você é um assistente de entrada de dados especializado em analisar texto de notas fiscais e faturas.
-Analise o seguinte texto extraído de um PDF e identifique os seguintes campos: nome do material, quantidade, fornecedor, número da nota fiscal, unidade de medida e sugira uma categoria.
+Analise o seguinte texto extraído de um PDF e identifique os seguintes campos gerais: fornecedor e número da nota fiscal.
+
+Além disso, identifique **TODOS** os materiais ou produtos listados no documento e crie uma lista para eles. Para cada item na lista, extraia: nome do material, quantidade, unidade de medida e sugira uma categoria.
 
 Se um campo não for encontrado, deixe-o em branco. Foque em extrair os valores exatos.
 Para o nome do material, procure por uma descrição de produto.
@@ -45,7 +52,7 @@ Para a categoria, sugira uma categoria com base no nome do produto (ex: 'Hidráu
 Texto do PDF:
 {{{pdfTextContent}}}
 
-Retorne os dados extraídos no formato JSON.
+Retorne os dados extraídos no formato JSON, com uma lista de materiais.
 `,
 });
 
@@ -68,8 +75,11 @@ const extractTransactionFlow = ai.defineFlow(
       if (output.supplier) {
         output.supplier = output.supplier.toUpperCase();
       }
-      if (output.materialName) {
-        output.materialName = output.materialName.toUpperCase();
+      if (output.materials) {
+        output.materials = output.materials.map(material => ({
+          ...material,
+          materialName: material.materialName?.toUpperCase()
+        }));
       }
     }
     
