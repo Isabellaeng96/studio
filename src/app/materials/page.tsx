@@ -15,6 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
+import type { MaterialSave } from '@/types';
+import { MaterialPdfImporter } from './components/material-pdf-importer';
 
 function MaterialsPageContent() {
   const { materials, categories, addMaterial, updateMaterial, deleteMaterial, deleteMultipleMaterials, addCategory, addMultipleMaterials } = useAppContext();
@@ -23,10 +25,12 @@ function MaterialsPageContent() {
   const pathname = usePathname();
   const { user } = useAuth();
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [formInitialValues, setFormInitialValues] = useState<Partial<MaterialSave> | undefined>(undefined);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const stockFilter = searchParams.get('filter');
   const categoryFilter = searchParams.get('category');
-  const [searchQuery, setSearchQuery] = useState('');
 
   const filteredMaterials = useMemo(() => {
     let filtered = [...materials];
@@ -67,6 +71,18 @@ function MaterialsPageContent() {
     router.push(`${pathname}${query}`);
   };
 
+  const handlePdfDataExtracted = (data: Partial<MaterialSave>) => {
+    setFormInitialValues(data);
+    setIsFormOpen(true);
+  };
+  
+  const handleFormOpenChange = (open: boolean) => {
+    setIsFormOpen(open);
+    if (!open) {
+      setFormInitialValues(undefined);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -90,7 +106,14 @@ function MaterialsPageContent() {
                 Importar
               </Button>
             </MaterialImporter>
-          <MaterialForm onSave={addMaterial} categories={categories}>
+             <MaterialPdfImporter onDataExtracted={handlePdfDataExtracted} />
+          <MaterialForm 
+             onSave={addMaterial} 
+             categories={categories}
+             initialValues={formInitialValues}
+             open={isFormOpen}
+             onOpenChange={handleFormOpenChange}
+          >
             <Button>
               <PlusCircle className="mr-2 h-4 w-4" />
               Adicionar Material

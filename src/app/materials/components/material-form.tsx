@@ -45,12 +45,26 @@ interface MaterialFormProps {
   material?: Material;
   onSave: (data: MaterialSave & { id?: string }) => boolean;
   categories: string[];
+  initialValues?: Partial<MaterialSave>;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function MaterialForm({ children, material, onSave, categories }: MaterialFormProps) {
-  const [open, setOpen] = useState(false);
+export function MaterialForm({ 
+  children, 
+  material, 
+  onSave, 
+  categories,
+  initialValues,
+  open: controlledOpen,
+  onOpenChange: setControlledOpen 
+}: MaterialFormProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const { toast } = useToast();
   const { materials } = useAppContext();
+  
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = setControlledOpen ?? setInternalOpen;
 
   const form = useForm<MaterialFormValues>({
     resolver: zodResolver(materialSchema),
@@ -64,21 +78,31 @@ export function MaterialForm({ children, material, onSave, categories }: Materia
   });
 
   useEffect(() => {
-    if (material) {
-      form.reset({
-        ...material,
-        supplier: material.supplier || '',
-      });
-    } else {
-      form.reset({
-        name: '',
-        category: '',
-        unit: '',
-        minStock: 0,
-        supplier: '',
-      });
+    if (open) {
+      if (initialValues) {
+        form.reset({
+            name: initialValues.name || '',
+            category: initialValues.category || '',
+            unit: initialValues.unit || '',
+            minStock: initialValues.minStock || 0,
+            supplier: initialValues.supplier || '',
+        });
+      } else if (material) {
+        form.reset({
+          ...material,
+          supplier: material.supplier || '',
+        });
+      } else {
+        form.reset({
+          name: '',
+          category: '',
+          unit: '',
+          minStock: 0,
+          supplier: '',
+        });
+      }
     }
-  }, [material, form, open]);
+  }, [material, form, open, initialValues]);
 
 
   const onSubmit = (data: MaterialFormValues) => {
