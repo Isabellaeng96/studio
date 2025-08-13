@@ -312,26 +312,71 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    const material = materials.find(m => m.id === transaction.materialId);
+    let materialId = transaction.materialId;
+    let materialName = transaction.materialName;
+    
+    // If materialId is missing, it's a new material
+    if (!materialId && transaction.materialName) {
+        const materialToSave: MaterialSave = {
+            name: transaction.materialName,
+            category: transaction.category || 'GERAL',
+            unit: transaction.unit || 'un',
+            minStock: 0,
+            supplier: transaction.supplier,
+        };
+
+        const existingMaterial = materials.find(m => m.name.toUpperCase() === materialToSave.name.toUpperCase());
+        if (existingMaterial) {
+             toast({
+                variant: 'destructive',
+                title: 'Material Duplicado',
+                description: `Um material com o nome "${materialToSave.name}" já existe. Selecione-o na lista.`,
+            });
+            return false;
+        }
+
+        const newMaterial: Material = {
+            ...materialToSave,
+            id: generateId('PRD'),
+            currentStock: 0,
+            deleted: false,
+        };
+        
+        setMaterials(prev => [newMaterial, ...prev]);
+        if (!categories.includes(newMaterial.category)) {
+          addCategory(newMaterial.category);
+        }
+        materialId = newMaterial.id;
+        materialName = newMaterial.name;
+    }
+
+    const material = materials.find(m => m.id === materialId);
     if (!material) {
         toast({ variant: 'destructive', title: 'Erro', description: 'Material não encontrado.' });
         return false;
     }
     
     const newTransaction: Transaction = {
-      ...transaction,
       id: generateId('TRN'),
       type: type,
       date: transaction.date.getTime(),
+      materialId: material.id,
       materialName: material.name,
+      quantity: transaction.quantity,
+      responsible: transaction.responsible,
       supplier: transaction.supplier?.toUpperCase(),
+      invoice: transaction.invoice,
+      osNumber: transaction.osNumber,
+      workFront: transaction.workFront,
+      costCenter: transaction.costCenter,
+      stockLocation: transaction.stockLocation,
     };
 
     setTransactions(prev => [newTransaction, ...prev]);
 
     // Update stock
     setMaterials(prev => prev.map(m => {
-      if (m.id === transaction.materialId) {
+      if (m.id === materialId) {
         const newStock = type === 'entrada'
           ? m.currentStock + transaction.quantity
           : m.currentStock - transaction.quantity;
@@ -339,6 +384,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       return m;
     }));
+    
+    toast({
+        title: 'Transação Registrada',
+        description: `Uma nova transação de ${type} de ${transaction.quantity} unidades foi salva.`,
+    });
+    
     return true; // Indicate success
   };
 

@@ -40,7 +40,8 @@ import { ptBR } from 'date-fns/locale';
 import { useAuth } from '@/context/AuthContext';
 
 const transactionSchema = z.object({
-  materialId: z.string().min(1, 'Por favor, selecione um material.'),
+  materialId: z.string().optional(),
+  materialName: z.string().optional(),
   quantity: z.coerce.number().positive('A quantidade deve ser positiva.'),
   date: z.date({ required_error: 'A data é obrigatória.' }),
   responsible: z.string().min(2, 'O responsável é obrigatório.'),
@@ -50,7 +51,14 @@ const transactionSchema = z.object({
   workFront: z.string().optional(),
   costCenter: z.string().optional(),
   stockLocation: z.string().optional(),
+  // Fields for new material creation from PDF
+  unit: z.string().optional(),
+  category: z.string().optional(),
+}).refine(data => data.materialId || data.materialName, {
+    message: 'Selecione um material ou digite um novo nome.',
+    path: ['materialId'],
 });
+
 
 export type TransactionFormValues = z.infer<typeof transactionSchema>;
 
@@ -77,6 +85,7 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
       responsible: user?.displayName ?? '',
       quantity: 0,
       materialId: defaultMaterialId ?? '',
+      materialName: '',
       supplier: '',
       invoice: '',
       osNumber: '',
@@ -96,17 +105,15 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
 
   useEffect(() => {
     if (initialValues) {
-      if (initialValues.materialName) {
-        const foundMaterial = materials.find(m => m.name.toLowerCase().includes(initialValues.materialName!.toLowerCase()));
-        if (foundMaterial) {
-          initialValues.materialId = foundMaterial.id;
-        }
+      const existingMaterial = materials.find(m => m.name.toUpperCase() === initialValues.materialName?.toUpperCase());
+      if (existingMaterial) {
+          initialValues.materialId = existingMaterial.id;
+          initialValues.materialName = undefined; // Use ID instead if exists
       }
       form.reset({
         date: new Date(),
         responsible: user?.displayName ?? '',
         quantity: 0,
-        materialId: defaultMaterialId ?? '',
         supplier: '',
         invoice: '',
         osNumber: '',
@@ -119,20 +126,19 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
   }, [initialValues, form, materials, defaultMaterialId, user]);
 
   const onSubmit = (data: TransactionFormValues) => {
+    // If materialId is selected, clear materialName to avoid confusion
+    if (data.materialId) {
+      const selectedMaterial = materials.find(m => m.id === data.materialId);
+      data.materialName = selectedMaterial?.name;
+    }
+    
     const wasSaved = onSave(data, type);
-    if (wasSaved) {
-       toast({
-        title: 'Transação Registrada',
-        description: `Uma nova transação de ${type} de ${data.quantity} unidades foi salva.`,
-      });
-      
-      const current = new URLSearchParams(Array.from(searchParams.entries()));
-      current.delete('showForm');
-      current.delete('materialId');
-      current.delete('tab');
-      const search = current.toString();
-      const query = search ? `?${search}` : '';
-      router.push(`${pathname}${query}`);
+    // The onSave function now handles navigation/state clearing on its own
+    // so we don't need to do anything here except maybe form.reset if it wasn't saved.
+    if (!wasSaved) {
+        // an error toast is already shown in the onSave handler
+    } else {
+        form.reset(); // clear form on success
     }
   };
   
@@ -142,6 +148,7 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
       responsible: user?.displayName ?? '',
       quantity: 0,
       materialId: '',
+      materialName: '',
       supplier: '',
       invoice: '',
       osNumber: '',
@@ -149,7 +156,16 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
       costCenter: '',
       stockLocation: '',
     });
+     const current = new URLSearchParams(Array.from(searchParams.entries()));
+      current.delete('showForm');
+      current.delete('materialId');
+      current.delete('tab');
+      const search = current.toString();
+      const query = search ? `?${search}` : '';
+      router.push(`${pathname}${query}`);
   }
+  
+  const selectedMaterialId = form.watch('materialId');
 
   return (
     <Card>
@@ -165,10 +181,10 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Material</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value} disabled={!!form.getValues('materialName')}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione um material" />
+                        <SelectValue placeholder="Selecione um material existente" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -183,6 +199,30 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
                 </FormItem>
               )}
             />
+             
+             {type === 'entrada' && (
+                <>
+                <div className="flex items-center gap-4">
+                    <div className="flex-grow border-t border-gray-300"></div>
+                    <span className="text-xs text-muted-foreground">OU</span>
+                    <div className="flex-grow border-t border-gray-300"></div>
+                </div>
+                 <FormField
+                    control={form.control}
+                    name="materialName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Novo Material</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Digite o nome do novo material" {...field} value={field.value ?? ''} disabled={!!selectedMaterialId}/>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+            )}
+
             <FormField
               control={form.control}
               name="quantity"

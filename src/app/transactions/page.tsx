@@ -18,7 +18,7 @@ import type { TransactionExtractionOutput } from '@/ai/flows/extract-transaction
 type ExtractedData = Partial<TransactionFormValues & { unit?: string; category?: string }>;
 
 function TransactionsPageContent() {
-  const { activeMaterials, materials, transactions, addTransaction, addMaterial, addMultipleMaterials, costCenters } = useAppContext();
+  const { activeMaterials, materials, transactions, addTransaction, addMaterial, costCenters } = useAppContext();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -40,6 +40,7 @@ function TransactionsPageContent() {
        const search = current.toString();
        const query = search ? `?${search}` : '';
        router.push(`${pathname}${query}`);
+       setFormValues({}); // Clear form values after successful save
     }
     return wasSaved;
   };
@@ -53,37 +54,33 @@ function TransactionsPageContent() {
       });
       return;
     }
+    
+    // For now, let's take the first material and pre-fill the form.
+    // This links the material creation to the transaction saving.
+    const firstMaterial = data.materials[0];
 
-    const newMaterialsToSave = data.materials.map(item => ({
-      name: item.materialName || 'N/A',
-      category: item.category || 'GERAL',
-      unit: item.unit || 'un',
-      minStock: 0,
+    // Check if the material already exists to pass the ID
+    const existingMaterial = activeMaterials.find(m => m.name.toUpperCase() === firstMaterial.materialName?.toUpperCase());
+
+    const valuesToSet: ExtractedData = {
+      materialId: existingMaterial?.id,
+      materialName: firstMaterial.materialName,
+      quantity: firstMaterial.quantity,
+      unit: firstMaterial.unit,
+      category: firstMaterial.category,
       supplier: data.supplier,
-    })).filter(item => item.name !== 'N/A');
-
-    const originalCount = newMaterialsToSave.length;
-    addMultipleMaterials(newMaterialsToSave);
-    const finalCount = materials.length;
-    const newMaterialsCount = finalCount - activeMaterials.length;
+      invoice: data.invoice,
+    };
     
-    if (newMaterialsCount > 0) {
-      toast({
-        title: "Novos Materiais Cadastrados!",
-        description: `${newMaterialsCount} novo(s) material(is) foi(ram) adicionado(s) ao catálogo.`,
-      });
-    } else if (originalCount > 0) {
-      toast({
-        title: "Nenhum material novo",
-        description: `Todos os materiais do PDF já estavam cadastrados.`,
-      });
-    }
-    
-    // For now, don't pre-fill the form as we have multiple items.
-    // The main benefit is the batch material creation.
-    setFormValues({});
+    setFormValues(valuesToSet);
 
-  }, [materials, activeMaterials, addMultipleMaterials, toast]);
+    // Navigate to the form view
+    const params = new URLSearchParams();
+    params.set('tab', 'entrada');
+    params.set('showForm', 'true');
+    router.push(`${pathname}?${params.toString()}`);
+
+  }, [activeMaterials, router, pathname, toast]);
 
 
   return (
