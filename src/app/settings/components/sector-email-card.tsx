@@ -8,6 +8,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -22,15 +23,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAppContext } from "@/context/AppContext";
-import { PlusCircle, Trash2, X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { PlusCircle, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
-const emailSchema = z.object({
+const sectorEmailSchema = z.object({
   email: z.string().email("Por favor, insira um e-mail válido."),
+  sector: z.string().min(1, "Por favor, selecione um setor."),
 });
 
-type EmailFormValues = z.infer<typeof emailSchema>;
+type SectorEmailFormValues = z.infer<typeof sectorEmailSchema>;
 
 export function SectorEmailCard() {
   const {
@@ -41,29 +44,30 @@ export function SectorEmailCard() {
   } = useAppContext();
   const { toast } = useToast();
 
-  const form = useForm<EmailFormValues>({
-    resolver: zodResolver(emailSchema),
+  const form = useForm<SectorEmailFormValues>({
+    resolver: zodResolver(sectorEmailSchema),
     defaultValues: {
-      email: ""
-    }
+      email: "",
+      sector: "",
+    },
   });
 
-  const handleAddEmail = (sector: string, data: EmailFormValues) => {
-    addEmailToSector(sector, data.email);
+  const handleAddEmail = (data: SectorEmailFormValues) => {
+    addEmailToSector(data.sector, data.email);
     toast({
       title: "E-mail Adicionado",
-      description: `O e-mail ${data.email} foi adicionado ao setor ${sector}.`
-    })
-    form.reset({ email: "" });
+      description: `O e-mail ${data.email} foi adicionado ao setor ${data.sector}.`,
+    });
+    form.reset({ email: "", sector: "" });
   };
 
   const handleRemoveEmail = (sector: string, email: string) => {
     removeEmailFromSector(sector, email);
     toast({
       title: "E-mail Removido",
-      description: `O e-mail ${email} foi removido do setor ${sector}.`
-    })
-  }
+      description: `O e-mail ${email} foi removido do setor ${sector}.`,
+    });
+  };
 
   return (
     <Card>
@@ -79,53 +83,92 @@ export function SectorEmailCard() {
           <div key={sector} className="flex flex-col gap-3">
             <h3 className="font-semibold">{sector}</h3>
             <div className="flex-1 space-y-2">
-                {sectorEmailConfig[sector]?.length > 0 ? (
-                    sectorEmailConfig[sector].map((email) => (
-                    <div key={email} className="flex items-center justify-between gap-2 rounded-md bg-secondary px-2 py-1">
-                        <span className="text-sm text-secondary-foreground truncate">{email}</span>
-                        <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => handleRemoveEmail(sector, email)}
-                        >
-                        <X className="h-4 w-4" />
-                        </Button>
-                    </div>
-                    ))
-                ) : (
-                    <p className="text-sm text-muted-foreground text-center py-2">Nenhum e-mail configurado.</p>
-                )}
+              {sectorEmailConfig[sector]?.length > 0 ? (
+                sectorEmailConfig[sector].map((email) => (
+                  <div
+                    key={email}
+                    className="flex items-center justify-between gap-2 rounded-md bg-secondary px-2 py-1"
+                  >
+                    <span className="truncate text-sm text-secondary-foreground">
+                      {email}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => handleRemoveEmail(sector, email)}
+                    >
+                      <X className="h-4 w-4" />
+                      <span className="sr-only">Remover e-mail</span>
+                    </Button>
+                  </div>
+                ))
+              ) : (
+                <p className="py-2 text-center text-sm text-muted-foreground">
+                  Nenhum e-mail configurado.
+                </p>
+              )}
             </div>
-
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit((data) => handleAddEmail(sector, data))}
-                className="flex items-start gap-2"
-              >
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                       <FormControl>
-                        <Input
-                          placeholder="novo.email@exemplo.com"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-xs px-1" />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" size="icon" variant="outline">
-                  <PlusCircle className="h-4 w-4" />
-                </Button>
-              </form>
-            </Form>
           </div>
         ))}
       </CardContent>
+      <Separator />
+      <CardFooter className="pt-6">
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleAddEmail)}
+            className="flex w-full flex-wrap items-start gap-4 md:flex-nowrap"
+          >
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem className="w-full flex-1">
+                  <FormLabel>Novo E-mail</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="novo.email@exemplo.com"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage className="px-1 text-xs" />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="sector"
+              render={({ field }) => (
+                <FormItem className="w-full md:w-auto md:min-w-[200px]">
+                  <FormLabel>Setor</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                     <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Selecione o setor" />
+                        </SelectTrigger>
+                     </FormControl>
+                     <SelectContent>
+                        {availableSectors.map((sector) => (
+                            <SelectItem key={sector} value={sector}>
+                                {sector}
+                            </SelectItem>
+                        ))}
+                     </SelectContent>
+                  </Select>
+                  <FormMessage className="px-1 text-xs" />
+                </FormItem>
+              )}
+            />
+            <div className="w-full md:w-auto">
+                <FormLabel className="opacity-0 hidden md:block">Ação</FormLabel>
+                <Button type="submit" className="w-full">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Adicionar
+                </Button>
+            </div>
+          </form>
+        </Form>
+      </CardFooter>
     </Card>
   );
 }
