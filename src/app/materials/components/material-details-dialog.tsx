@@ -28,30 +28,32 @@ export function MaterialDetailsDialog({ open, onOpenChange, material, stockByLoc
   const hasLocations = Object.keys(stockByLocation).length > 0;
   const qrCodeRef = useRef<HTMLDivElement>(null);
 
-  const qrCodeValue = JSON.stringify({
-    id: material.id,
-    name: material.name,
-    category: material.category,
-    unit: material.unit,
-    supplier: material.supplier,
-  });
+  const qrCodeValue = `
+Material: ${material.name}
+Código: ${material.id}
+Categoria: ${material.category}
+Unidade: ${material.unit}
+Fornecedor: ${material.supplier || 'N/A'}
+  `.trim();
   
   const handlePrint = () => {
     const printElement = qrCodeRef.current;
     if (printElement) {
-      const printContent = printElement.outerHTML;
-      const windowUrl = 'about:blank';
-      const printWindow = window.open(windowUrl, 'Print', 'height=600,width=800');
-      if (printWindow) {
-        printWindow.document.write('<html><head><title>QR Code - ' + material.name + '</title>');
-        printWindow.document.write('<style>body { font-family: sans-serif; text-align: center; margin-top: 20px; } .qr-container { display: inline-block; padding: 20px; border: 1px solid #ccc; border-radius: 8px; } h3 { margin-bottom: 10px; } </style>');
-        printWindow.document.write('</head><body>');
-        printWindow.document.write('<div class="qr-container"><h3>' + material.name + '</h3>' + printContent + '<p style="margin-top:10px;">Código: ' + material.id + '</p></div>');
-        printWindow.document.write('</body></html>');
-        printWindow.document.close();
-        printWindow.focus();
-        printWindow.print();
-        printWindow.close();
+      const qrCodeSvg = printElement.querySelector("svg");
+      if (qrCodeSvg) {
+        const svgString = new XMLSerializer().serializeToString(qrCodeSvg);
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          printWindow.document.write('<html><head><title>QR Code - ' + material.name + '</title>');
+          printWindow.document.write('<style>body { font-family: sans-serif; text-align: center; margin-top: 20px; } .qr-container { display: inline-block; padding: 20px; border: 1px solid #ccc; border-radius: 8px; } h3 { margin-bottom: 10px; } </style>');
+          printWindow.document.write('</head><body>');
+          printWindow.document.write('<div class="qr-container"><h3>' + material.name + '</h3>' + svgString + '<p style="margin-top:10px;">Código: ' + material.id + '</p></div>');
+          printWindow.document.write('</body></html>');
+          printWindow.document.close();
+          printWindow.focus();
+          printWindow.print();
+          printWindow.close();
+        }
       }
     }
   };
