@@ -39,6 +39,11 @@ function setInStorage<T>(key: string, value: T): void {
 
 // Helper function to generate a unique product ID
 function generateId(prefix: string): string {
+  if (prefix === 'PRD') {
+    // Ensure an 8-digit random number
+    const randomNumber = Math.floor(10000000 + Math.random() * 90000000);
+    return `${prefix}${randomNumber}`;
+  }
   const randomNumber = Math.floor(100000 + Math.random() * 900000);
   return `${prefix}${Date.now()}${randomNumber}`;
 }
