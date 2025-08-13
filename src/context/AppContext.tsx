@@ -246,6 +246,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const addTransaction = (transaction: TransactionSave, type: 'entrada' | 'saida') => {
+    // Check for duplicate invoice on entry
+    if (type === 'entrada' && transaction.invoice && transaction.supplier) {
+      const isDuplicate = transactions.some(
+        tx => tx.type === 'entrada' &&
+              tx.invoice === transaction.invoice &&
+              tx.supplier?.toUpperCase() === transaction.supplier?.toUpperCase()
+      );
+      if (isDuplicate) {
+        toast({
+          variant: 'destructive',
+          title: 'Transação Duplicada',
+          description: `Esta nota fiscal já foi registrada para o fornecedor "${transaction.supplier}".`,
+        });
+        return; // Stop the function
+      }
+    }
+
     const material = materials.find(m => m.id === transaction.materialId);
     if (!material) return;
     
