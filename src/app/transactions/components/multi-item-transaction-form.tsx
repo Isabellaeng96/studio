@@ -28,7 +28,7 @@ const multiItemTransactionSchema = z.object({
   })).min(1, 'Adicione pelo menos um material à lista.'),
   date: z.date({ required_error: 'A data é obrigatória.' }),
   responsible: z.string().min(2, 'O responsável é obrigatório.'),
-  osNumber: z.string().min(1, 'O número da OS é obrigatório.'),
+  osNumber: z.string().min(1, 'O número da OS é obrigatório.').transform(val => val.toUpperCase()),
   costCenter: z.string().optional(),
 });
 
@@ -84,9 +84,10 @@ export function MultiItemTransactionForm({ materials, costCenters, onSave, defau
       costCenter: '',
     });
      if (shouldResetAll) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete('showForm');
-      router.push(`${pathname}?${params.toString()}`);
+       const params = new URLSearchParams(searchParams.toString());
+       params.delete('showForm');
+       if(params.has('materialId')) params.delete('materialId');
+       router.push(`${pathname}?${params.toString()}`);
     }
   }
 
@@ -161,7 +162,7 @@ export function MultiItemTransactionForm({ materials, costCenters, onSave, defau
                     <FormItem>
                       <FormLabel>Número da OS</FormLabel>
                       <FormControl>
-                        <Input placeholder="OS-98765" {...field} value={field.value ?? ''} />
+                        <Input placeholder="OS-98765" {...field} value={field.value ?? ''} className="uppercase" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
