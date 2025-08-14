@@ -82,7 +82,6 @@ export function MultiItemEntryForm({ materials, categories, onSave, initialItems
   const onSubmit = (data: MultiItemEntryFormValues) => {
     const wasSaved = onSave(data);
     if (wasSaved) {
-      form.reset();
       handleCancel();
     }
   };
@@ -92,6 +91,10 @@ export function MultiItemEntryForm({ materials, categories, onSave, initialItems
       items: [],
       date: new Date(),
       responsible: user?.displayName ?? '',
+      supplier: '',
+      invoice: '',
+      costCenter: '',
+      stockLocation: '',
     });
      const current = new URLSearchParams(Array.from(searchParams.entries()));
       current.delete('showForm');

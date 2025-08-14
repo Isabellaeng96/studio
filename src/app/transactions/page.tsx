@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { Suspense, useState, useCallback, useEffect } from 'react';
@@ -74,31 +75,11 @@ function TransactionsPageContent() {
   }, [toast, router, pathname, searchParams, activeMaterials]);
 
   const handleSaveMultiTransaction = (data: { items: MultiTransactionItemSave[] } & Omit<TransactionSave, 'materialId' | 'quantity'>) => {
-    const success = addMultipleTransactions(data.items, data);
-    if (success) {
-      const current = new URLSearchParams(Array.from(searchParams.entries()));
-      current.delete('showForm');
-      current.delete('materialId');
-      current.delete('tab');
-      const search = current.toString();
-      const query = search ? `?${search}` : '';
-      router.push(`${pathname}${query}`);
-    }
-    return success;
+    return addMultipleTransactions(data.items, data);
   };
 
   const handleSaveMultiEntry = (data: { items: EntryItem[] } & Omit<TransactionSave, 'materialId' | 'quantity' | 'materialName' | 'unit' | 'category'>) => {
-     const success = addMultipleEntries(data.items, data);
-     if (success) {
-        const current = new URLSearchParams(Array.from(searchParams.entries()));
-        current.delete('showForm');
-        current.delete('materialId');
-        current.delete('tab');
-        const search = current.toString();
-        const query = search ? `?${search}` : '';
-        router.push(`${pathname}${query}`);
-     }
-     return success;
+     return addMultipleEntries(data.items, data);
   };
 
 

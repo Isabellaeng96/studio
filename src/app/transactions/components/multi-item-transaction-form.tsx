@@ -73,14 +73,7 @@ export function MultiItemTransactionForm({ materials, costCenters, onSave, defau
   const onSubmit = (data: MultiItemFormValues) => {
     const wasSaved = onSave(data);
     if (wasSaved) {
-      form.reset();
-      const current = new URLSearchParams(Array.from(searchParams.entries()));
-      current.delete('showForm');
-      current.delete('materialId');
-      current.delete('tab');
-      const search = current.toString();
-      const query = search ? `?${search}` : '';
-      router.push(`${pathname}${query}`);
+      handleCancel();
     }
   };
   
