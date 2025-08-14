@@ -25,7 +25,7 @@ interface SupplierImporterProps {
   onImport: (suppliers: SupplierSave[]) => { messages: { variant: "default" | "destructive", title: string, description: string }[] };
 }
 
-const requiredHeaders = ['name', 'cnpj', 'contactName', 'phone', 'email'];
+const requiredHeaders = ['name', 'cnpj', 'contactName', 'phone', 'email', 'address', 'city', 'state', 'website'];
 
 export function SupplierImporter({ children, onImport }: SupplierImporterProps) {
   const [open, setOpen] = useState(false);
@@ -66,6 +66,10 @@ export function SupplierImporter({ children, onImport }: SupplierImporterProps) 
           contactName: row.contactName || undefined,
           phone: row.phone || undefined,
           email: row.email || undefined,
+          address: row.address || undefined,
+          city: row.city || undefined,
+          state: row.state || undefined,
+          website: row.website || undefined,
         }));
         
         setParsedData(suppliers.map(s => ({
@@ -108,7 +112,7 @@ export function SupplierImporter({ children, onImport }: SupplierImporterProps) 
       if (!isOpen) resetState();
     }}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Importar Fornecedores de CSV</DialogTitle>
           <DialogDescription>
@@ -130,6 +134,8 @@ export function SupplierImporter({ children, onImport }: SupplierImporterProps) 
                                     <TableHead>Contato</TableHead>
                                     <TableHead>Telefone</TableHead>
                                     <TableHead>Email</TableHead>
+                                    <TableHead>Endereço</TableHead>
+                                    <TableHead>Website</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -140,6 +146,8 @@ export function SupplierImporter({ children, onImport }: SupplierImporterProps) 
                                         <TableCell>{supplier.contactName}</TableCell>
                                         <TableCell>{supplier.phone}</TableCell>
                                         <TableCell>{supplier.email}</TableCell>
+                                        <TableCell>{`${supplier.address || ''}, ${supplier.city || ''} - ${supplier.state || ''}`}</TableCell>
+                                        <TableCell>{supplier.website}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>

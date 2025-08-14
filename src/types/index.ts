@@ -77,6 +77,10 @@ export type Supplier = {
   contactName?: string;
   phone?: string;
   email?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  website?: string;
 };
 
 export type User = {
