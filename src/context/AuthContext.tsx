@@ -2,7 +2,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onAuthStateChanged, User, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updatePassword, updateProfile } from 'firebase/auth';
+import { onAuthStateChanged, User, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updatePassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { useAppContext } from './AppContext';
@@ -18,6 +18,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   updateUserPassword: (password: string) => Promise<void>;
   updateUserProfile: (name: string) => Promise<void>;
+  loginWithGoogle: () => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -85,6 +86,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(auth.currentUser ? { ...auth.currentUser } : null);
   };
 
+  const loginWithGoogle = () => {
+    const provider = new GoogleAuthProvider();
+    return signInWithPopup(auth, provider);
+  };
+
 
   const value = {
     user,
@@ -96,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
     updateUserPassword,
     updateUserProfile,
+    loginWithGoogle,
   };
 
   // We need to make sure AppContext is loaded before rendering children
