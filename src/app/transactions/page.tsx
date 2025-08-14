@@ -8,18 +8,16 @@ import { useAppContext } from '@/context/AppContext';
 import { TransactionTypeDialog } from './components/transaction-type-dialog';
 import { PlusCircle } from 'lucide-react';
 import { PdfImporter } from './components/pdf-importer';
-import { TransactionForm, type TransactionFormValues } from './components/transaction-form';
+import { MultiItemEntryForm } from './components/multi-item-entry-form';
 import { MultiItemTransactionForm } from './components/multi-item-transaction-form';
 import { TransactionsTable } from './components/transactions-table';
 import { useToast } from '@/hooks/use-toast';
-import type { TransactionSave, MultiTransactionItemSave } from '@/types';
+import type { TransactionSave, MultiTransactionItemSave, EntryItem } from '@/types';
 import type { TransactionExtractionOutput } from '@/ai/flows/extract-transaction-from-pdf';
 
 
-type ExtractedData = Partial<TransactionFormValues & { unit?: string; category?: string }>;
-
 function TransactionsPageContent() {
-  const { activeMaterials, materials, transactions, addTransaction, addMultipleTransactions, costCenters } = useAppContext();
+  const { activeMaterials, materials, transactions, addMultipleEntries, addMultipleTransactions, costCenters, categories } = useAppContext();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -32,7 +30,9 @@ function TransactionsPageContent() {
   const [transactionType, setTransactionType] = useState(getTab());
   const [showForm, setShowForm] = useState(getShowForm());
   const [materialId, setMaterialId] = useState(getMaterialId());
-  const [formValues, setFormValues] = useState<ExtractedData>({});
+  const [initialEntryItems, setInitialEntryItems] = useState<EntryItem[]>([]);
+  const [initialInvoice, setInitialInvoice] = useState<string | undefined>();
+  const [initialSupplier, setInitialSupplier] = useState<string | undefined>();
   
   useEffect(() => {
     setTransactionType(getTab());
@@ -40,10 +40,6 @@ function TransactionsPageContent() {
     setMaterialId(getMaterialId());
   }, [searchParams]);
 
-  const handleSaveTransaction = (transaction: TransactionSave, type: 'entrada' | 'saida') => {
-    return addTransaction(transaction, type);
-  };
-  
   const handlePdfDataExtracted = useCallback((data: TransactionExtractionOutput) => {
     if (!data.materials || data.materials.length === 0) {
       toast({
@@ -54,26 +50,28 @@ function TransactionsPageContent() {
       return;
     }
     
-    // Take the first material and pre-fill the form
-    const firstItem = data.materials[0];
-    const extractedValues: ExtractedData = {
-      materialName: firstItem.materialName,
-      quantity: firstItem.quantity,
-      unit: firstItem.unit,
-      category: firstItem.category,
-      supplier: data.supplier,
-      invoice: data.invoice,
-    };
+    const extractedItems: EntryItem[] = data.materials.map(item => {
+        const existingMaterial = activeMaterials.find(m => m.name.toUpperCase() === item.materialName?.toUpperCase());
+        return {
+            materialId: existingMaterial?.id,
+            materialName: existingMaterial ? existingMaterial.name : (item.materialName || ''),
+            isNew: !existingMaterial,
+            quantity: item.quantity || 0,
+            unit: existingMaterial?.unit || item.unit || 'un',
+            category: existingMaterial?.category || item.category || 'GERAL'
+        };
+    });
     
-    setFormValues(extractedValues);
+    setInitialEntryItems(extractedItems);
+    setInitialInvoice(data.invoice);
+    setInitialSupplier(data.supplier);
 
-    // Switch to the form view
-    const params = new URLSearchParams();
+    const params = new URLSearchParams(searchParams.toString());
     params.set('tab', 'entrada');
     params.set('showForm', 'true');
     router.push(`${pathname}?${params.toString()}`);
 
-  }, [toast, router, pathname]);
+  }, [toast, router, pathname, searchParams, activeMaterials]);
 
   const handleSaveMultiTransaction = (data: { items: MultiTransactionItemSave[] } & Omit<TransactionSave, 'materialId' | 'quantity'>) => {
     const success = addMultipleTransactions(data.items, data);
@@ -87,6 +85,20 @@ function TransactionsPageContent() {
       router.push(`${pathname}${query}`);
     }
     return success;
+  };
+
+  const handleSaveMultiEntry = (data: { items: EntryItem[] } & Omit<TransactionSave, 'materialId' | 'quantity' | 'materialName' | 'unit' | 'category'>) => {
+     const success = addMultipleEntries(data.items, data);
+     if (success) {
+        const current = new URLSearchParams(Array.from(searchParams.entries()));
+        current.delete('showForm');
+        current.delete('materialId');
+        current.delete('tab');
+        const search = current.toString();
+        const query = search ? `?${search}` : '';
+        router.push(`${pathname}${query}`);
+     }
+     return success;
   };
 
 
@@ -113,14 +125,14 @@ function TransactionsPageContent() {
          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
              {transactionType === 'entrada' ? (
-                 <TransactionForm 
-                  type="entrada" 
-                  materials={activeMaterials} 
-                  costCenters={costCenters}
-                  onSave={handleSaveTransaction} 
-                  defaultMaterialId={materialId}
-                  key={`entrada-${JSON.stringify(formValues)}`}
-                  initialValues={formValues} 
+                <MultiItemEntryForm
+                    materials={activeMaterials}
+                    categories={categories}
+                    onSave={handleSaveMultiEntry}
+                    key={`entrada-${JSON.stringify(initialEntryItems)}`}
+                    initialItems={initialEntryItems}
+                    initialInvoice={initialInvoice}
+                    initialSupplier={initialSupplier}
                 />
              ) : (
                 <MultiItemTransactionForm

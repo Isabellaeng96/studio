@@ -41,6 +41,15 @@ export type MultiTransactionItemSave = {
   quantity: number;
 };
 
+export type EntryItem = {
+    materialId?: string; // Will be empty for new materials
+    materialName: string;
+    isNew: boolean;
+    quantity: number;
+    unit: string;
+    category: string;
+}
+
 
 export type StockTurnover = {
   materialId: string;
