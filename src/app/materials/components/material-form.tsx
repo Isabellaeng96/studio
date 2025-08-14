@@ -1,4 +1,3 @@
-
 "use client";
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -43,7 +42,7 @@ type MaterialFormValues = z.infer<typeof materialSchema>;
 interface MaterialFormProps {
   children: React.ReactNode;
   material?: Material;
-  onSave: (data: MaterialSave & { id?: string }) => boolean;
+  onSave: (data: MaterialSave & { id?: string }) => string | null;
   categories: string[];
 }
 
@@ -88,8 +87,8 @@ export function MaterialForm({
 
 
   const onSubmit = (data: MaterialFormValues) => {
-    const isSaved = onSave({ ...data, id: material?.id });
-    if(isSaved) {
+    const newMaterialId = onSave({ ...data, id: material?.id });
+    if(newMaterialId !== null) {
       toast({
         title: `Material ${material ? 'Atualizado' : 'Criado'}`,
         description: `O material "${data.name}" foi salvo com sucesso.`,

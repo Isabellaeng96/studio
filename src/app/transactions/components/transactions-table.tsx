@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -123,7 +122,7 @@ export function TransactionsTable({ data, materials }: TransactionsTableProps) {
                            <div><span className="font-semibold">Quantidade:</span> {tx.quantity}</div>
                            <div><span className="font-semibold">Data:</span> {isClient ? format(new Date(tx.date), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR }) : ''}</div>
                            <div><span className="font-semibold">Responsável:</span> {tx.responsible}</div>
-                           {tx.costCenter && <div><span className="font-semibold">Centro de Custo:</span> {costCenters.find(c => c.id === tx.costCenter)?.name || tx.costCenter}</div>}
+                           {tx.costCenter && <div><span className="font-semibold">Centro de Custo:</span> {costCenters.find(c => c.name === tx.costCenter)?.name || tx.costCenter}</div>}
                            {tx.type === 'entrada' && tx.supplier && <div><span className="font-semibold">Fornecedor:</span> {tx.supplier}</div>}
                            {tx.invoice && <div><span className="font-semibold">Nota Fiscal:</span> {tx.invoice}</div>}
                            {tx.type === 'saida' && tx.osNumber && <div><span className="font-semibold">Nº da OS:</span> {tx.osNumber}</div>}

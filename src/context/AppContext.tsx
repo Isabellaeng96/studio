@@ -1,4 +1,3 @@
-
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react';
@@ -54,8 +53,8 @@ interface AppContextType {
   suppliers: Supplier[];
   activeMaterials: Material[]; // Materials that are not deleted
   addMaterial: (material: MaterialSave) => string | null;
-  addMultipleMaterials: (materials: MaterialSave[]) => { addedCount: number; skippedCount: number; messages: {variant: "default" | "destructive", title: string, description: string}[] };
-  updateMaterial: (material: MaterialSave & { id: string }) => boolean;
+  addMultipleMaterials: (materials: MaterialSave[]) => { messages: {variant: "default" | "destructive", title: string, description: string}[] };
+  updateMaterial: (material: MaterialSave & { id: string }) => string | null;
   deleteMaterial: (materialId: string) => void;
   deleteMultipleMaterials: (materialIds: string[]) => void;
   addCategory: (category: string) => void;
@@ -213,8 +212,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   
   const addMultipleMaterials = useCallback((newMaterials: MaterialSave[]) => {
     const messages: {variant: "default" | "destructive", title: string, description: string}[] = [];
-    let addedCount = 0;
     const newCategories = new Set(categories);
+    let addedCount = 0;
     
     setMaterials(prevMaterials => {
       const updatedMaterials = [...prevMaterials];
@@ -277,10 +276,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
     }
 
-    return { addedCount, skippedCount, messages };
+    return { messages };
   }, [categories]);
 
-  const updateMaterial = useCallback((material: MaterialSave & { id: string }) => {
+  const updateMaterial = useCallback((material: MaterialSave & { id: string }): string | null => {
     const materialNameUpper = material.name.toUpperCase();
     const existingMaterial = materials.find(
       (m) => !m.deleted && m.id !== material.id && m.name.toUpperCase() === materialNameUpper
@@ -292,14 +291,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         title: 'Nome de Material Duplicado',
         description: `Outro material já existe com o nome "${material.name}".`,
       });
-      return false;
+      return null;
     }
 
     setMaterials(prev => prev.map(m => m.id === material.id ? { ...m, ...material, name: materialNameUpper, supplier: material.supplier?.toUpperCase(), deleted: false } : m));
     if (!categories.includes(material.category)) {
       addCategory(material.category);
     }
-    return true;
+    return material.id;
   }, [materials, categories, toast, addCategory]);
   
   const deleteMaterial = useCallback((materialId: string) => {
@@ -361,7 +360,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     let materialId = transaction.materialId;
-    let isNewMaterial = false;
     
     if (!materialId && transaction.materialName && type === 'entrada') {
         const newMaterialId = addMaterial({
@@ -376,22 +374,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
             return false;
         }
         materialId = newMaterialId;
-        isNewMaterial = true;
     }
 
-    const material = materials.find(m => m.id === materialId);
-    if (!material) {
+    if (!materialId) {
         toast({ variant: 'destructive', title: 'Erro', description: 'Material não encontrado.' });
         return false;
     }
     
-    let wasSuccessful = false;
     let updatedMaterial: Material | undefined;
+    let wasSuccessful = false;
 
     setMaterials(prev => {
       const newMaterials = [...prev];
       const index = newMaterials.findIndex(m => m.id === materialId);
-      if (index === -1) return prev;
+      if (index === -1) {
+        wasSuccessful = false;
+        return prev;
+      };
 
       const currentMaterial = newMaterials[index];
       const newStock = type === 'entrada'
@@ -414,35 +413,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return newMaterials;
     });
 
-    if (wasSuccessful && updatedMaterial) {
-        if (!isNewMaterial) {
-            const materialToLog = updatedMaterial;
-            const newTransaction: Transaction = {
-              id: generateId('TRN'),
-              type: type,
-              date: transaction.date.getTime(),
-              materialId: materialToLog.id,
-              materialName: materialToLog.name,
-              quantity: transaction.quantity,
-              responsible: transaction.responsible,
-              supplier: transaction.supplier?.toUpperCase(),
-              invoice: transaction.invoice,
-              osNumber: transaction.osNumber,
-              costCenter: transaction.costCenter,
-              stockLocation: transaction.stockLocation,
-            };
-            setTransactions(prev => [newTransaction, ...prev]);
+    if (wasSuccessful && materialId && updatedMaterial) {
+        const materialToLog = updatedMaterial;
+        const newTransaction: Transaction = {
+          id: generateId('TRN'),
+          type: type,
+          date: transaction.date.getTime(),
+          materialId: materialId,
+          materialName: materialToLog.name,
+          quantity: transaction.quantity,
+          responsible: transaction.responsible,
+          supplier: transaction.supplier?.toUpperCase(),
+          invoice: transaction.invoice,
+          osNumber: transaction.osNumber,
+          costCenter: transaction.costCenter,
+          stockLocation: transaction.stockLocation,
+        };
+        setTransactions(prev => [newTransaction, ...prev]);
 
-            if (type === 'saida') {
-                checkAndSendAlert(materialToLog);
-            }
+        if (type === 'saida') {
+            checkAndSendAlert(materialToLog);
         }
-        
-       toast({
-          title: 'Transação Registrada',
-          description: `Uma nova transação de ${type} de ${transaction.quantity} unidades foi salva.`,
-      });
-      return true;
+        return true;
     }
     
     return false;

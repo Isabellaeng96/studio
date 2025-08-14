@@ -1,4 +1,3 @@
-
 "use client";
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -141,6 +140,10 @@ export function TransactionForm({ type, materials, costCenters, onSave, defaultM
     
     const wasSaved = onSave(data, type);
     if (wasSaved) {
+        toast({
+            title: 'Transação Registrada',
+            description: `Uma nova transação de ${type} de ${data.quantity} unidades foi salva.`,
+        });
         form.reset();
         const current = new URLSearchParams(Array.from(searchParams.entries()));
         current.delete('showForm');

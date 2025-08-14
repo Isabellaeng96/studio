@@ -1,4 +1,3 @@
-
 "use client";
 
 import { MoreHorizontal, Pencil, Trash2, PackageOpen } from 'lucide-react';
@@ -41,7 +40,7 @@ import { useAppContext } from '@/context/AppContext';
 
 interface MaterialsTableProps {
   data: Material[];
-  onSave: (material: MaterialSave & { id?: string }) => boolean;
+  onSave: (material: MaterialSave & { id?: string }) => string | null;
   onDelete: (materialId: string) => void;
   onDeleteMultiple: (materialIds: string[]) => void;
   categories: string[];
@@ -81,7 +80,7 @@ export function MaterialsTable({ data, onSave, onDelete, onDeleteMultiple, categ
   
   const handleSave = (material: MaterialSave & { id?: string }) => {
     const isSaved = onSave(material);
-    if (isSaved) {
+    if (isSaved !== null) {
         setOpenDropdownId(null); 
     }
   };
@@ -221,7 +220,7 @@ export function MaterialsTable({ data, onSave, onDelete, onDeleteMultiple, categ
               ) : (
                   <TableRow>
                     <TableCell colSpan={8} className="h-24 text-center">
-                      Material não cadastrado.
+                      Nenhum material encontrado.
                     </TableCell>
                   </TableRow>
               )}

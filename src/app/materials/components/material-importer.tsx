@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -21,7 +20,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface MaterialImporterProps {
   children: React.ReactNode;
-  onImport: (materials: MaterialSave[]) => { addedCount: number; skippedCount: number };
+  onImport: (materials: MaterialSave[]) => { messages: { variant: "default" | "destructive", title: string, description: string }[] };
 }
 
 const requiredHeaders = ['name', 'category', 'unit', 'minStock', 'supplier'];
@@ -81,21 +80,15 @@ export function MaterialImporter({ children, onImport }: MaterialImporterProps) 
 
   const handleImport = () => {
     if (parsedData.length > 0) {
-      const { addedCount, skippedCount } = onImport(parsedData);
+      const { messages } = onImport(parsedData);
       
-      if (addedCount > 0) {
-        toast({
-          title: 'Importação Concluída',
-          description: `${addedCount} materiais foram importados com sucesso.`,
-        });
-      }
-       if (skippedCount > 0) {
-        toast({
-          variant: 'default',
-          title: 'Materiais Ignorados',
-          description: `${skippedCount} materiais foram ignorados pois já existiam.`,
-        });
-      }
+      messages.forEach(msg => {
+          toast({
+              variant: msg.variant,
+              title: msg.title,
+              description: msg.description,
+          })
+      });
       
       setOpen(false);
       resetState();
