@@ -23,6 +23,17 @@ function GoogleIcon() {
   )
 }
 
+function MicrosoftIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px">
+      <path fill="#f35325" d="M22.5,22.5H6.5V6.5h16V22.5z" />
+      <path fill="#81bc06" d="M41.5,22.5H25.5V6.5h16V22.5z" />
+      <path fill="#05a6f0" d="M22.5,41.5H6.5v-16h16V41.5z" />
+      <path fill="#ffba08" d="M41.5,41.5H25.5v-16h16V41.5z" />
+    </svg>
+  );
+}
+
 
 export default function LoginPage() {
   const [isLoginView, setIsLoginView] = useState(true);
@@ -30,7 +41,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login, signup, loginWithGoogle } = useAuth();
+  const { login, signup, loginWithGoogle, loginWithMicrosoft } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -61,16 +72,20 @@ export default function LoginPage() {
     }
   };
   
-  const handleGoogleSubmit = async () => {
+  const handleSocialSubmit = async (provider: 'google' | 'microsoft') => {
     setIsLoading(true);
     try {
-      await loginWithGoogle();
+      if (provider === 'google') {
+        await loginWithGoogle();
+      } else {
+        await loginWithMicrosoft();
+      }
       router.push('/');
     } catch (error: any) {
       console.error(error);
       toast({
         variant: "destructive",
-        title: "Falha no Login com Google",
+        title: `Falha no Login com ${provider === 'google' ? 'Google' : 'Microsoft'}`,
         description: "Não foi possível fazer o login. Tente novamente.",
       });
     } finally {
@@ -89,16 +104,21 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <Button variant="outline" className="w-full" onClick={handleGoogleSubmit} disabled={isLoading}>
-                <GoogleIcon /> Entrar com Google
-            </Button>
+            <div className="grid grid-cols-2 gap-4">
+              <Button variant="outline" className="w-full" onClick={() => handleSocialSubmit('google')} disabled={isLoading}>
+                  <GoogleIcon /> Entrar com Google
+              </Button>
+               <Button variant="outline" className="w-full" onClick={() => handleSocialSubmit('microsoft')} disabled={isLoading}>
+                  <MicrosoftIcon /> Entrar com Microsoft
+              </Button>
+            </div>
             
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
+                  <span className="bg-card px-2 text-muted-foreground">
                   Ou continue com
                   </span>
               </div>
