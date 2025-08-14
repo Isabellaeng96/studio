@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -15,9 +16,10 @@ import {
 
 interface TransactionTypeDialogProps {
   children: React.ReactNode;
+  onOpen?: () => void;
 }
 
-export function TransactionTypeDialog({ children }: TransactionTypeDialogProps) {
+export function TransactionTypeDialog({ children, onOpen }: TransactionTypeDialogProps) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -29,9 +31,16 @@ export function TransactionTypeDialog({ children }: TransactionTypeDialogProps) 
     router.push(`${pathname}?${params.toString()}`);
     setOpen(false);
   };
+  
+  const handleOpenChange = (isOpen: boolean) => {
+    if (isOpen && onOpen) {
+        onOpen();
+    }
+    setOpen(isOpen);
+  }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

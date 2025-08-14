@@ -46,12 +46,13 @@ interface MultiItemEntryFormProps {
   materials: Material[];
   categories: string[];
   onSave: (data: MultiItemEntryFormValues) => boolean;
+  onCancel: () => void;
   initialItems?: EntryItem[];
   initialInvoice?: string;
   initialSupplier?: string;
 }
 
-export function MultiItemEntryForm({ materials, categories, onSave, initialItems, initialInvoice, initialSupplier }: MultiItemEntryFormProps) {
+export function MultiItemEntryForm({ materials, categories, onSave, onCancel, initialItems, initialInvoice, initialSupplier }: MultiItemEntryFormProps) {
   const { user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -87,6 +88,7 @@ export function MultiItemEntryForm({ materials, categories, onSave, initialItems
   };
   
   const handleCancel = () => {
+    onCancel();
     form.reset({
       items: [],
       date: new Date(),

@@ -82,6 +82,16 @@ function TransactionsPageContent() {
      return addMultipleEntries(data.items, data);
   };
 
+  const resetInitialState = useCallback(() => {
+    setInitialEntryItems([]);
+    setInitialInvoice(undefined);
+    setInitialSupplier(undefined);
+  }, []);
+
+  const handleNewTransactionClick = () => {
+    resetInitialState();
+  };
+
 
   return (
     <div className="flex flex-col gap-8">
@@ -93,7 +103,7 @@ function TransactionsPageContent() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-           <TransactionTypeDialog>
+           <TransactionTypeDialog onOpen={handleNewTransactionClick}>
               <Button>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Nova Transação
@@ -110,6 +120,7 @@ function TransactionsPageContent() {
                     materials={activeMaterials}
                     categories={categories}
                     onSave={handleSaveMultiEntry}
+                    onCancel={resetInitialState}
                     key={`entrada-${JSON.stringify(initialEntryItems)}`}
                     initialItems={initialEntryItems}
                     initialInvoice={initialInvoice}
