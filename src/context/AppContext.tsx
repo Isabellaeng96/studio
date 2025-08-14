@@ -421,69 +421,71 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return allSucceeded;
   }, [materials, toast, checkAndSendAlert]);
   
-  const addMultipleEntries = useCallback((items: EntryItem[], commonData: Omit<TransactionSave, 'materialId' | 'quantity' | 'materialName' | 'unit' | 'category'>) => {
+ const addMultipleEntries = useCallback((items: EntryItem[], commonData: Omit<TransactionSave, 'materialId' | 'quantity' | 'materialName' | 'unit' | 'category'>) => {
     let allSucceeded = true;
     let successfulCount = 0;
     let newMaterialCount = 0;
-    
+
     const newTransactions: Transaction[] = [];
     let updatedMaterials = [...materials];
     const newCategories = new Set(categories);
+    const existingTransactions = [...transactions];
 
     if (commonData.invoice && commonData.supplier) {
-      const newInvoice = commonData.invoice.trim().toUpperCase();
-      const newSupplier = commonData.supplier.trim().toUpperCase();
+        const newInvoice = commonData.invoice.trim().toUpperCase();
+        const newSupplier = commonData.supplier.trim().toUpperCase();
 
-      const isDuplicate = transactions.some(tx => 
-        tx.type === 'entrada' &&
-        tx.invoice?.trim().toUpperCase() === newInvoice &&
-        tx.supplier?.trim().toUpperCase() === newSupplier
-      );
+        const isDuplicate = existingTransactions.some(tx =>
+            tx.type === 'entrada' &&
+            tx.invoice?.trim().toUpperCase() === newInvoice &&
+            tx.supplier?.trim().toUpperCase() === newSupplier
+        );
 
-      if (isDuplicate) {
-        toast({
-          variant: 'destructive',
-          title: 'Transação Duplicada',
-          description: `Esta nota fiscal já foi registrada para o fornecedor "${commonData.supplier}".`,
-        });
-        return false;
-      }
+        if (isDuplicate) {
+            toast({
+                variant: 'destructive',
+                title: 'Transação Duplicada',
+                description: `Esta nota fiscal já foi registrada para o fornecedor "${commonData.supplier}".`,
+            });
+            return false;
+        }
     }
-
 
     for (const item of items) {
         let materialId = item.materialId;
+        const materialNameUpper = item.materialName.toUpperCase();
+        let materialToUpdate: Material | undefined = updatedMaterials.find(m => m.id === materialId);
 
-        if (item.isNew || !materialId) {
-            const newMaterialId = addMaterial({
-                name: item.materialName,
+        if (item.isNew || !materialToUpdate) {
+            const existingMaterial = updatedMaterials.find(m => !m.deleted && m.name.toUpperCase() === materialNameUpper);
+            if (existingMaterial) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Material Duplicado',
+                    description: `Um material com o nome "${item.materialName}" já existe.`,
+                });
+                allSucceeded = false;
+                continue;
+            }
+            
+            const newMaterial: Material = {
+                name: materialNameUpper,
+                id: generateId('PRD'),
+                currentStock: 0,
+                deleted: false,
                 category: item.category || 'GERAL',
                 unit: item.unit || 'un',
                 minStock: 0,
                 supplier: commonData.supplier,
-            });
-
-            if (!newMaterialId) {
-                allSucceeded = false;
-                continue;
-            }
-            materialId = newMaterialId;
+            };
+            
+            updatedMaterials = [newMaterial, ...updatedMaterials];
+            materialToUpdate = newMaterial;
             newMaterialCount++;
-            if (item.category) newCategories.add(item.category);
-            // Refresh materials array to include the newly added one for subsequent stock updates
-            updatedMaterials = [
-                {id: materialId, name: item.materialName.toUpperCase(), currentStock: 0, minStock: 0, category: item.category || 'GERAL', unit: item.unit || 'un', supplier: commonData.supplier},
-                ...updatedMaterials
-            ];
+            if (newMaterial.category) newCategories.add(newMaterial.category);
         }
 
-        const materialIndex = updatedMaterials.findIndex(m => m.id === materialId);
-        if (materialIndex === -1) {
-            toast({ variant: 'destructive', title: 'Erro', description: `Material com ID ${materialId} não pôde ser processado.` });
-            allSucceeded = false;
-            continue;
-        }
-
+        const materialIndex = updatedMaterials.findIndex(m => m.id === materialToUpdate!.id);
         const currentMaterial = updatedMaterials[materialIndex];
         const newStock = currentMaterial.currentStock + item.quantity;
         updatedMaterials[materialIndex] = { ...currentMaterial, currentStock: newStock };
@@ -492,7 +494,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             id: generateId('TRN'),
             type: 'entrada',
             date: commonData.date.getTime(),
-            materialId: materialId,
+            materialId: materialToUpdate!.id,
             materialName: currentMaterial.name,
             quantity: item.quantity,
             responsible: commonData.responsible,
@@ -518,7 +520,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     
     return allSucceeded;
-  }, [materials, transactions, categories, toast, addMaterial]);
+}, [materials, transactions, categories, toast]);
 
 
   const addCostCenter = useCallback((costCenter: Omit<CostCenter, 'id'>) => {
