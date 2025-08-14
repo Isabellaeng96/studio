@@ -45,7 +45,7 @@ interface MultiItemEntryFormProps {
   materials: Material[];
   categories: string[];
   onSave: (data: MultiItemEntryFormValues) => boolean;
-  onCancel: () => void;
+  onCancel: (shouldReset: boolean) => void;
   initialItems?: EntryItem[];
   initialInvoice?: string;
   initialSupplier?: string;
@@ -85,7 +85,7 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
   
   const handleCancel = (shouldResetAll: boolean = false) => {
     if (shouldResetAll) {
-       onCancel();
+       onCancel(true);
     }
     form.reset({
       items: [],
@@ -139,7 +139,7 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div>
-              <h3 className="text-lg font-medium mb-2">Itens da Nota</h3>
+              <h3 className="text-lg font-medium mb-2">Itens de entrada</h3>
               <div className="space-y-4 rounded-md border p-4">
                 {fields.map((field, index) => (
                   <div key={field.id} className="space-y-3 p-3 rounded-md border bg-muted/50">
