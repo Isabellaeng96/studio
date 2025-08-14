@@ -146,6 +146,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const activeMaterials = useMemo(() => materials.filter(m => !m.deleted), [materials]);
 
+  const addCategory = useCallback((category: string) => {
+    setCategories(prev => {
+      if (prev.includes(category)) return prev;
+      const newCategories = new Set([...prev, category]);
+      return Array.from(newCategories).sort();
+    });
+  }, []);
+
   const addMaterial = useCallback((material: MaterialSave): string | null => {
     const materialNameUpper = material.name.toUpperCase();
     
@@ -201,9 +209,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addCategory(material.category);
     }
     return materialId;
-  }, [materials, categories, toast]);
+  }, [materials, categories, toast, addCategory]);
   
-  const addMultipleMaterials = (newMaterials: MaterialSave[]) => {
+  const addMultipleMaterials = useCallback((newMaterials: MaterialSave[]) => {
     const messages: {variant: "default" | "destructive", title: string, description: string}[] = [];
     let addedCount = 0;
     const newCategories = new Set(categories);
@@ -270,9 +278,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     return { addedCount, skippedCount, messages };
-  };
+  }, [categories]);
 
-  const updateMaterial = (material: MaterialSave & { id: string }) => {
+  const updateMaterial = useCallback((material: MaterialSave & { id: string }) => {
     const materialNameUpper = material.name.toUpperCase();
     const existingMaterial = materials.find(
       (m) => !m.deleted && m.id !== material.id && m.name.toUpperCase() === materialNameUpper
@@ -292,25 +300,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addCategory(material.category);
     }
     return true;
-  };
+  }, [materials, categories, toast, addCategory]);
   
-  const deleteMaterial = (materialId: string) => {
+  const deleteMaterial = useCallback((materialId: string) => {
     setMaterials(prev => prev.map(m => m.id === materialId ? { ...m, deleted: true } : m));
-  };
+  }, []);
 
-  const deleteMultipleMaterials = (materialIds: string[]) => {
+  const deleteMultipleMaterials = useCallback((materialIds: string[]) => {
     setMaterials(prev => prev.map(m => materialIds.includes(m.id) ? { ...m, deleted: true } : m));
-  };
+  }, []);
 
-  const addCategory = (category: string) => {
-    setCategories(prev => {
-      if (prev.includes(category)) return prev;
-      const newCategories = new Set([...prev, category]);
-      return Array.from(newCategories).sort();
-    });
-  };
-
-  const checkAndSendAlert = (material: Material) => {
+  const checkAndSendAlert = useCallback((material: Material) => {
     if (material.currentStock < material.minStock) {
       const setting = alertSettings.find(s => s.materialId === material.id);
       if (!setting || setting.sectors.length === 0) return;
@@ -337,9 +337,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         })
       }
     }
-  };
+  }, [alertSettings, sectorEmailConfig, toast]);
 
-  const addTransaction = (transaction: TransactionSave, type: 'entrada' | 'saida'): boolean => {
+  const addTransaction = useCallback((transaction: TransactionSave, type: 'entrada' | 'saida'): boolean => {
     if (type === 'entrada' && transaction.invoice && transaction.supplier) {
       const newInvoice = transaction.invoice.trim().toUpperCase();
       const newSupplier = transaction.supplier.trim().toUpperCase();
@@ -414,9 +414,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return newMaterials;
     });
 
-    if (wasSuccessful) {
+    if (wasSuccessful && updatedMaterial) {
         if (!isNewMaterial) {
-            const materialToLog = updatedMaterial || material;
+            const materialToLog = updatedMaterial;
             const newTransaction: Transaction = {
               id: generateId('TRN'),
               type: type,
@@ -446,23 +446,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     
     return false;
-  };
+  }, [materials, transactions, toast, addMaterial, checkAndSendAlert]);
 
-  const addCostCenter = (costCenter: Omit<CostCenter, 'id'>) => {
+  const addCostCenter = useCallback((costCenter: Omit<CostCenter, 'id'>) => {
     const newCostCenter: CostCenter = {
       ...costCenter,
       id: generateId('CC'),
     };
     setCostCenters(prev => [newCostCenter, ...prev]);
-  };
+  }, []);
 
-  const updateCostCenter = (costCenter: CostCenter) => {
+  const updateCostCenter = useCallback((costCenter: CostCenter) => {
     setCostCenters(prev => prev.map(cc => cc.id === costCenter.id ? costCenter : cc));
-  };
+  }, []);
 
-  const deleteCostCenter = (costCenterId: string) => {
+  const deleteCostCenter = useCallback((costCenterId: string) => {
     setCostCenters(prev => prev.filter(cc => cc.id !== costCenterId));
-  };
+  }, []);
   
   const getStockByLocation = useCallback((materialId: string): Record<string, number> => {
     const stockMap: Record<string, number> = {};
@@ -489,24 +489,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return stockMap;
   }, [transactions]);
 
-  const addSupplier = (supplier: Omit<Supplier, 'id'>) => {
+  const addSupplier = useCallback((supplier: Omit<Supplier, 'id'>) => {
     const newSupplier: Supplier = {
       ...supplier,
       name: supplier.name.toUpperCase(),
       id: generateId('SUP'),
     };
     setSuppliers(prev => [newSupplier, ...prev]);
-  };
+  }, []);
 
-  const updateSupplier = (supplier: Supplier) => {
+  const updateSupplier = useCallback((supplier: Supplier) => {
     setSuppliers(prev => prev.map(s => s.id === supplier.id ? { ...supplier, name: supplier.name.toUpperCase() } : s));
-  };
+  }, []);
 
-  const deleteSupplier = (supplierId: string) => {
+  const deleteSupplier = useCallback((supplierId: string) => {
     setSuppliers(prev => prev.filter(s => s.id !== supplierId));
-  };
+  }, []);
   
-  const updateAlertSetting = (materialId: string, sectors: string[]) => {
+  const updateAlertSetting = useCallback((materialId: string, sectors: string[]) => {
     setAlertSettings(prev => {
       const existingSettingIndex = prev.findIndex(s => s.materialId === materialId);
       const newSettings = [...prev];
@@ -526,9 +526,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       
       return newSettings;
     });
-  };
+  }, []);
 
-  const addEmailToSector = (sector: string, email: string) => {
+  const addEmailToSector = useCallback((sector: string, email: string) => {
     setSectorEmailConfig(prev => {
         const currentEmails = prev[sector] || [];
         if (currentEmails.includes(email)) {
@@ -544,9 +544,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
             [sector]: [...currentEmails, email]
         };
     });
-  };
+  }, [toast]);
 
-  const removeEmailFromSector = (sector: string, emailToRemove: string) => {
+  const removeEmailFromSector = useCallback((sector: string, emailToRemove: string) => {
     setSectorEmailConfig(prev => {
         const currentEmails = prev[sector] || [];
         return {
@@ -554,7 +554,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             [sector]: currentEmails.filter(email => email !== emailToRemove)
         };
     });
-  };
+  }, []);
 
 
   const value = {
