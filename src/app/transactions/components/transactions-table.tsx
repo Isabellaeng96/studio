@@ -3,7 +3,6 @@
 import {
   ArrowDownCircle,
   ArrowUpCircle,
-  FileText,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -26,11 +25,10 @@ import {
 import { cn } from '@/lib/utils';
 import type { Material, Transaction, CostCenter } from '@/types';
 import { useEffect, useState, useMemo } from 'react';
-import { TransactionExporter } from './transaction-exporter';
-import { useAuth } from '@/context/AuthContext';
 import { useAppContext } from '@/context/AppContext';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface TransactionsTableProps {
   data: Transaction[];
@@ -39,32 +37,26 @@ interface TransactionsTableProps {
 
 export function TransactionsTable({ data, materials }: TransactionsTableProps) {
   const [isClient, setIsClient] = useState(false);
-  const { user } = useAuth();
   const { costCenters } = useAppContext();
 
   useEffect(() => {
     setIsClient(true);
   }, []);
-  
-  const recentTransactions = useMemo(() => {
-    return [...data]
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 15);
-  }, [data]);
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <CardTitle>Histórico de Transações Recentes</CardTitle>
-            <CardDescription>Visualize e exporte o histórico das últimas 15 movimentações.</CardDescription>
-          </div>
-          <TransactionExporter transactions={data} materials={materials} user={user} />
+        <div>
+          <CardTitle>Histórico de Transações</CardTitle>
+          <CardDescription>
+            {data.length > 0
+              ? `Exibindo ${data.length} transaç${data.length === 1 ? 'ão' : 'ões'} encontrad${data.length === 1 ? 'a' : 'as'}.`
+              : 'Nenhuma transação encontrada para os filtros aplicados.'}
+          </CardDescription>
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="max-h-[600px] overflow-y-auto">
+         <ScrollArea className="h-[60vh] w-full">
           <Table>
             <TableHeader className="sticky top-0 bg-card z-10">
               <TableRow>
@@ -77,7 +69,7 @@ export function TransactionsTable({ data, materials }: TransactionsTableProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {recentTransactions.map(tx => (
+              {data.map(tx => (
                 <Dialog key={tx.id}>
                   <DialogTrigger asChild>
                     <TableRow className="cursor-pointer">
@@ -132,9 +124,16 @@ export function TransactionsTable({ data, materials }: TransactionsTableProps) {
                   </DialogContent>
                 </Dialog>
               ))}
+              {data.length === 0 && (
+                <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center">
+                        Nenhuma transação encontrada.
+                    </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
-        </div>
+        </ScrollArea>
       </CardContent>
     </Card>
   );
