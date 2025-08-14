@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Suspense, useState, useCallback, useEffect } from 'react';
@@ -8,16 +9,17 @@ import { TransactionTypeDialog } from './components/transaction-type-dialog';
 import { PlusCircle } from 'lucide-react';
 import { PdfImporter } from './components/pdf-importer';
 import { TransactionForm, type TransactionFormValues } from './components/transaction-form';
+import { MultiItemTransactionForm } from './components/multi-item-transaction-form';
 import { TransactionsTable } from './components/transactions-table';
 import { useToast } from '@/hooks/use-toast';
-import type { TransactionSave } from '@/types';
+import type { TransactionSave, MultiTransactionItemSave } from '@/types';
 import type { TransactionExtractionOutput } from '@/ai/flows/extract-transaction-from-pdf';
 
 
 type ExtractedData = Partial<TransactionFormValues & { unit?: string; category?: string }>;
 
 function TransactionsPageContent() {
-  const { activeMaterials, materials, transactions, addTransaction, costCenters } = useAppContext();
+  const { activeMaterials, materials, transactions, addTransaction, addMultipleTransactions, costCenters } = useAppContext();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -73,6 +75,20 @@ function TransactionsPageContent() {
 
   }, [toast, router, pathname]);
 
+  const handleSaveMultiTransaction = (data: { items: MultiTransactionItemSave[] } & Omit<TransactionSave, 'materialId' | 'quantity'>) => {
+    const success = addMultipleTransactions(data.items, data);
+    if (success) {
+      const current = new URLSearchParams(Array.from(searchParams.entries()));
+      current.delete('showForm');
+      current.delete('materialId');
+      current.delete('tab');
+      const search = current.toString();
+      const query = search ? `?${search}` : '';
+      router.push(`${pathname}${query}`);
+    }
+    return success;
+  };
+
 
   return (
     <div className="flex flex-col gap-8">
@@ -107,12 +123,11 @@ function TransactionsPageContent() {
                   initialValues={formValues} 
                 />
              ) : (
-                <TransactionForm 
-                  type="saida" 
+                <MultiItemTransactionForm
                   materials={activeMaterials} 
                   costCenters={costCenters}
-                  onSave={handleSaveTransaction}
-                  defaultMaterialId={materialId} 
+                  onSave={handleSaveMultiTransaction}
+                  defaultMaterialId={materialId}
                   key={`saida-${materialId}`}
                 />
              )}

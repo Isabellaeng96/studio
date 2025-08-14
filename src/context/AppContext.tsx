@@ -1,8 +1,9 @@
 
+
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react';
-import type { Material, Transaction, TransactionSave, MaterialSave, CostCenter, Supplier, AlertSetting, SectorEmailConfig } from '@/types';
+import type { Material, Transaction, TransactionSave, MaterialSave, CostCenter, Supplier, AlertSetting, SectorEmailConfig, MultiTransactionItemSave } from '@/types';
 import { materials as initialMaterials, transactions as initialTransactions } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 
@@ -60,6 +61,7 @@ interface AppContextType {
   deleteMultipleMaterials: (materialIds: string[]) => void;
   addCategory: (category: string) => void;
   addTransaction: (transaction: TransactionSave, type: 'entrada' | 'saida') => boolean;
+  addMultipleTransactions: (items: MultiTransactionItemSave[], commonData: Omit<TransactionSave, 'materialId' | 'quantity'>) => boolean;
   addCostCenter: (costCenter: Omit<CostCenter, 'id'>) => void;
   updateCostCenter: (costCenter: CostCenter) => void;
   deleteCostCenter: (costCenterId: string) => void;
@@ -468,6 +470,69 @@ export function AppProvider({ children }: { children: ReactNode }) {
     
     return false;
   }, [materials, transactions, toast, addMaterial, checkAndSendAlert]);
+  
+  const addMultipleTransactions = useCallback((items: MultiTransactionItemSave[], commonData: Omit<TransactionSave, 'materialId' | 'quantity'>) => {
+    let allSucceeded = true;
+    let successfulCount = 0;
+    
+    const newTransactions: Transaction[] = [];
+    const updatedMaterials = [...materials];
+    const materialsToAlert: Material[] = [];
+
+    for (const item of items) {
+        const materialIndex = updatedMaterials.findIndex(m => m.id === item.materialId);
+        if (materialIndex === -1) {
+            toast({ variant: 'destructive', title: 'Erro', description: `Material com ID ${item.materialId} não encontrado.` });
+            allSucceeded = false;
+            continue;
+        }
+
+        const currentMaterial = updatedMaterials[materialIndex];
+        const newStock = currentMaterial.currentStock - item.quantity;
+
+        if (newStock < 0) {
+            toast({
+                variant: 'destructive',
+                title: 'Estoque Insuficiente',
+                description: `Não há estoque suficiente de "${currentMaterial.name}" para esta saída.`,
+            });
+            allSucceeded = false;
+            continue; 
+        }
+
+        const updatedMaterial = { ...currentMaterial, currentStock: newStock };
+        updatedMaterials[materialIndex] = updatedMaterial;
+        materialsToAlert.push(updatedMaterial);
+
+        const newTransaction: Transaction = {
+            id: generateId('TRN'),
+            type: 'saida',
+            date: commonData.date.getTime(),
+            materialId: item.materialId,
+            materialName: currentMaterial.name,
+            quantity: item.quantity,
+            responsible: commonData.responsible,
+            osNumber: commonData.osNumber,
+            costCenter: commonData.costCenter,
+            stockLocation: commonData.stockLocation,
+        };
+        newTransactions.push(newTransaction);
+        successfulCount++;
+    }
+
+    if (newTransactions.length > 0) {
+        setMaterials(updatedMaterials);
+        setTransactions(prev => [...newTransactions, ...prev]);
+        toast({
+            title: 'Transações Registradas',
+            description: `${successfulCount} retiradas foram salvas com sucesso.`,
+        });
+        materialsToAlert.forEach(checkAndSendAlert);
+    }
+    
+    return allSucceeded;
+  }, [materials, toast, checkAndSendAlert]);
+
 
   const addCostCenter = useCallback((costCenter: Omit<CostCenter, 'id'>) => {
     const newCostCenter: CostCenter = {
@@ -592,6 +657,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     deleteMultipleMaterials,
     addCategory,
     addTransaction,
+    addMultipleTransactions,
     addCostCenter,
     updateCostCenter,
     deleteCostCenter,

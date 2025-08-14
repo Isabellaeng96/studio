@@ -1,4 +1,5 @@
 
+
 export type Material = {
   id: string;
   name: string;
@@ -33,6 +34,11 @@ export type TransactionSave = Omit<Transaction, 'id' | 'type' | 'date' | 'materi
   // Fields for new material creation
   unit?: string;
   category?: string;
+};
+
+export type MultiTransactionItemSave = {
+  materialId: string;
+  quantity: number;
 };
 
 
