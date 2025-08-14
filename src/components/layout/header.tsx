@@ -1,4 +1,4 @@
-// src/components/layout/header.tsx
+
 "use client";
 
 import { Menu } from 'lucide-react';
@@ -47,7 +47,7 @@ export function Header() {
 
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background/95 px-4 backdrop-blur sm:px-6">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 backdrop-blur sm:px-6">
       <div className="lg:hidden">
         <Sheet>
           <SheetTrigger asChild>

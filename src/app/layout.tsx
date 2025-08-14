@@ -1,16 +1,18 @@
-// src/app/layout.tsx
+
 "use client";
 
 import './globals.css';
 import { Inter } from 'next/font/google';
+import Link from 'next/link';
 import { Toaster } from '@/components/ui/toaster';
-import { AppSidebar } from '@/components/layout/sidebar';
+import { AppSidebarNav } from '@/components/layout/sidebar-nav';
 import { Header } from '@/components/layout/header';
 import { AppProvider } from '@/context/AppContext';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { usePathname } from 'next/navigation';
 import { ReactNode } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Logo } from '@/components/logo';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -41,11 +43,22 @@ function AppContent({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
-      <AppSidebar />
+     <div className="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
+      <aside className="hidden border-r bg-card lg:block">
+        <div className="flex h-full max-h-screen flex-col gap-2">
+          <div className="flex h-14 items-center border-b px-6">
+            <Link href="/" className="flex items-center gap-2 font-semibold">
+              <Logo />
+            </Link>
+          </div>
+          <div className="flex-1 overflow-y-auto py-2">
+            <AppSidebarNav />
+          </div>
+        </div>
+      </aside>
       <div className="flex flex-1 flex-col">
         <Header />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6 lg:p-8">
           {children}
         </main>
       </div>
