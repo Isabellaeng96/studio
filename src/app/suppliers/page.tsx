@@ -1,13 +1,14 @@
 "use client";
 
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppContext } from '@/context/AppContext';
 import { SuppliersTable } from './components/suppliers-table';
 import { SupplierForm } from './components/supplier-form';
+import { SupplierImporter } from './components/supplier-importer';
 
 export default function SuppliersPage() {
-  const { suppliers, addSupplier, updateSupplier, deleteSupplier } = useAppContext();
+  const { suppliers, addSupplier, updateSupplier, deleteSupplier, addMultipleSuppliers } = useAppContext();
 
   return (
     <div className="flex flex-col gap-8">
@@ -19,6 +20,12 @@ export default function SuppliersPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+           <SupplierImporter onImport={addMultipleSuppliers}>
+              <Button variant="outline">
+                <Upload className="mr-2 h-4 w-4" />
+                Importar
+              </Button>
+            </SupplierImporter>
           <SupplierForm onSave={addSupplier}>
             <Button>
               <PlusCircle className="mr-2 h-4 w-4" />

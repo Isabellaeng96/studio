@@ -69,6 +69,7 @@ interface AppContextType {
   addSupplier: (supplier: Omit<Supplier, 'id'>) => void;
   updateSupplier: (supplier: Supplier) => void;
   deleteSupplier: (supplierId: string) => void;
+  addMultipleSuppliers: (suppliers: Omit<Supplier, 'id'>[]) => { messages: { variant: "default" | "destructive", title: string, description: string }[] };
   // Alert Settings
   alertSettings: AlertSetting[];
   availableSectors: string[];
@@ -573,6 +574,51 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSuppliers(prev => [newSupplier, ...prev]);
   }, []);
 
+  const addMultipleSuppliers = useCallback((newSuppliers: Omit<Supplier, 'id'>[]) => {
+    const messages: { variant: "default" | "destructive", title: string, description: string }[] = [];
+    let addedCount = 0;
+
+    setSuppliers(prevSuppliers => {
+        const updatedSuppliers = [...prevSuppliers];
+        
+        newSuppliers.forEach(supplier => {
+            const nameUpper = supplier.name.toUpperCase();
+            const existing = updatedSuppliers.some(s => s.name.toUpperCase() === nameUpper || (supplier.cnpj && s.cnpj === supplier.cnpj));
+
+            if (!existing) {
+                updatedSuppliers.unshift({
+                    ...supplier,
+                    id: generateId('SUP'),
+                    name: nameUpper,
+                });
+                addedCount++;
+            }
+        });
+
+        return updatedSuppliers;
+    });
+
+    const skippedCount = newSuppliers.length - addedCount;
+
+    if (addedCount > 0) {
+        messages.push({
+            variant: "default",
+            title: 'Importação Concluída',
+            description: `${addedCount} fornecedores foram importados com sucesso.`,
+        });
+    }
+    if (skippedCount > 0) {
+        messages.push({
+            variant: "default",
+            title: 'Fornecedores Ignorados',
+            description: `${skippedCount} fornecedores foram ignorados pois já existiam (mesmo nome ou CNPJ).`,
+        });
+    }
+
+    return { messages };
+  }, []);
+
+
   const updateSupplier = useCallback((supplier: Supplier) => {
     setSuppliers(prev => prev.map(s => s.id === supplier.id ? { ...supplier, name: supplier.name.toUpperCase() } : s));
   }, []);
@@ -652,6 +698,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     deleteCostCenter,
     getStockByLocation,
     addSupplier,
+    addMultipleSuppliers,
     updateSupplier,
     deleteSupplier,
     alertSettings,
