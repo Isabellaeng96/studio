@@ -19,6 +19,7 @@ import type { Material, CostCenter, MultiTransactionItemSave } from '@/types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuth } from '@/context/AuthContext';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 const multiItemTransactionSchema = z.object({
   items: z.array(z.object({
@@ -27,7 +28,7 @@ const multiItemTransactionSchema = z.object({
   })).min(1, 'Adicione pelo menos um material à lista.'),
   date: z.date({ required_error: 'A data é obrigatória.' }),
   responsible: z.string().min(2, 'O responsável é obrigatório.'),
-  osNumber: z.string().optional(),
+  osNumber: z.string().min(1, 'O número da OS é obrigatório.'),
   costCenter: z.string().optional(),
 });
 
@@ -42,6 +43,9 @@ interface MultiItemTransactionFormProps {
 
 export function MultiItemTransactionForm({ materials, costCenters, onSave, defaultMaterialId }: MultiItemTransactionFormProps) {
   const { user } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const form = useForm<MultiItemFormValues>({
     resolver: zodResolver(multiItemTransactionSchema),
@@ -67,11 +71,11 @@ export function MultiItemTransactionForm({ materials, costCenters, onSave, defau
   const onSubmit = (data: MultiItemFormValues) => {
     const wasSaved = onSave(data);
     if (wasSaved) {
-      handleCancel();
+      handleCancel(true);
     }
   };
   
-  const handleCancel = () => {
+  const handleCancel = (shouldResetAll: boolean = false) => {
     form.reset({
       items: [],
       date: new Date(),
@@ -79,6 +83,11 @@ export function MultiItemTransactionForm({ materials, costCenters, onSave, defau
       osNumber: '',
       costCenter: '',
     });
+     if (shouldResetAll) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('showForm');
+      router.push(`${pathname}?${params.toString()}`);
+    }
   }
 
   return (
@@ -150,7 +159,7 @@ export function MultiItemTransactionForm({ materials, costCenters, onSave, defau
                   name="osNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Número da OS (Opcional)</FormLabel>
+                      <FormLabel>Número da OS</FormLabel>
                       <FormControl>
                         <Input placeholder="OS-98765" {...field} value={field.value ?? ''} />
                       </FormControl>
@@ -224,7 +233,7 @@ export function MultiItemTransactionForm({ materials, costCenters, onSave, defau
             </div>
             
             <CardFooter className="flex justify-end gap-2 p-0 pt-4">
-                <Button type="button" variant="ghost" onClick={handleCancel}>
+                <Button type="button" variant="ghost" onClick={() => handleCancel(true)}>
                     Cancelar
                 </Button>
                 <Button type="submit">
