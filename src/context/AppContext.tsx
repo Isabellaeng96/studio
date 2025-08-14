@@ -1,3 +1,4 @@
+
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react';
@@ -90,48 +91,66 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   const availableSectors = useMemo(() => ['Engenharia', 'Manutenção', 'Compras'], []);
-
-  useEffect(() => {
-    // Load from storage only once
+  
+  const loadStateFromStorage = useCallback(() => {
     const storedMaterials = getFromStorage<Material[]>('materials', []);
     if (storedMaterials.length > 0) {
-        setMaterials(storedMaterials);
-        setTransactions(getFromStorage<Transaction[]>('transactions', []));
-        setCategories(getFromStorage<string[]>('categories', []));
-        setCostCenters(getFromStorage<CostCenter[]>('costCenters', []));
-        setSuppliers(getFromStorage<Supplier[]>('suppliers', []));
-        setAlertSettings(getFromStorage<AlertSetting[]>('alertSettings', []));
-        setSectorEmailConfig(getFromStorage<SectorEmailConfig>('sectorEmailConfig', {}));
+      setMaterials(storedMaterials);
+      setTransactions(getFromStorage<Transaction[]>('transactions', []));
+      setCategories(getFromStorage<string[]>('categories', []));
+      setCostCenters(getFromStorage<CostCenter[]>('costCenters', []));
+      setSuppliers(getFromStorage<Supplier[]>('suppliers', []));
+      setAlertSettings(getFromStorage<AlertSetting[]>('alertSettings', []));
+      setSectorEmailConfig(getFromStorage<SectorEmailConfig>('sectorEmailConfig', {}));
     } else {
-        // LocalStorage is empty, load mock data
-        setMaterials(initialMaterials);
-        setTransactions(initialTransactions);
-        const uniqueCategories = new Set(initialMaterials.map(m => m.category).filter(c => c && c.trim() !== ''));
-        const initialCats = Array.from(uniqueCategories);
-        setCategories(initialCats);
-        const initialCostCenters = [
-            { id: 'cc-1', name: 'Projeto A', description: 'Desenvolvimento do novo loteamento' },
-            { id: 'cc-2', name: 'Manutenção Geral', description: 'Custos de manutenção de rotina' },
-        ];
-        setCostCenters(initialCostCenters);
-        const initialSuppliers = [
-          { id: 'sup-1', name: 'VOTORANTIM', cnpj: '01.234.567/0001-89', contactName: 'Ana Costa', phone: '11 98765-4321', email: 'ana.costa@votorantim.com.br' },
-          { id: 'sup-2', name: 'TIGRE', cnpj: '98.765.432/0001-10', contactName: 'Carlos Silva', phone: '47 3441-4444', email: 'vendas@tigre.com' },
-        ];
-        setSuppliers(initialSuppliers);
+      // LocalStorage is empty, load mock data
+      setMaterials(initialMaterials);
+      setTransactions(initialTransactions);
+      const uniqueCategories = new Set(initialMaterials.map(m => m.category).filter(c => c && c.trim() !== ''));
+      const initialCats = Array.from(uniqueCategories);
+      setCategories(initialCats);
+      const initialCostCenters = [
+        { id: 'cc-1', name: 'Projeto A', description: 'Desenvolvimento do novo loteamento' },
+        { id: 'cc-2', name: 'Manutenção Geral', description: 'Custos de manutenção de rotina' },
+      ];
+      setCostCenters(initialCostCenters);
+      const initialSuppliers = [
+        { id: 'sup-1', name: 'VOTORANTIM', cnpj: '01.234.567/0001-89', contactName: 'Ana Costa', phone: '11 98765-4321', email: 'ana.costa@votorantim.com.br' },
+        { id: 'sup-2', name: 'TIGRE', cnpj: '98.765.432/0001-10', contactName: 'Carlos Silva', phone: '47 3441-4444', email: 'vendas@tigre.com' },
+      ];
+      setSuppliers(initialSuppliers);
 
-        // Default alert settings: notify Engineering for all low-stock items
-        const initialAlertSettings = initialMaterials
-          .map(m => ({ materialId: m.id, sectors: ['Engenharia'] }));
-        setAlertSettings(initialAlertSettings);
-        setSectorEmailConfig({
-          'Engenharia': ['tec08@geoblue.com.br'],
-          'Manutenção': ['tec08@geoblue.com.br'],
-          'Compras': ['compras@geoblue.com.br'],
-        });
+      // Default alert settings: notify Engineering for all low-stock items
+      const initialAlertSettings = initialMaterials
+        .map(m => ({ materialId: m.id, sectors: ['Engenharia'] }));
+      setAlertSettings(initialAlertSettings);
+      setSectorEmailConfig({
+        'Engenharia': ['tec08@geoblue.com.br'],
+        'Manutenção': ['tec08@geoblue.com.br'],
+        'Compras': ['compras@geoblue.com.br'],
+      });
     }
-    setIsLoaded(true);
   }, []);
+
+  useEffect(() => {
+    // Load from storage only once on initial load
+    loadStateFromStorage();
+    setIsLoaded(true);
+    
+    // Add event listener for storage changes from other tabs
+    const handleStorageChange = () => {
+      console.log("Storage changed in another tab. Reloading state.");
+      loadStateFromStorage();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Cleanup listener on unmount
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+
+  }, [loadStateFromStorage]);
 
 
   useEffect(() => { if (isLoaded) setInStorage('materials', materials); }, [materials, isLoaded]);
@@ -381,8 +400,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return false;
     }
     
-    let updatedMaterial: Material | undefined;
     let wasSuccessful = false;
+    let materialForAlert: Material | undefined;
 
     setMaterials(prev => {
       const newMaterials = [...prev];
@@ -407,20 +426,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
           return prev;
       }
       
-      updatedMaterial = { ...currentMaterial, currentStock: newStock };
+      const updatedMaterial = { ...currentMaterial, currentStock: newStock };
       newMaterials[index] = updatedMaterial;
       wasSuccessful = true;
+      if(type === 'saida') {
+        materialForAlert = updatedMaterial;
+      }
       return newMaterials;
     });
 
-    if (wasSuccessful && materialId && updatedMaterial) {
-        const materialToLog = updatedMaterial;
+    if (wasSuccessful && materialId) {
+        const materialName = materials.find(m => m.id === materialId)?.name || transaction.materialName;
+        if (!materialName) return false;
+
         const newTransaction: Transaction = {
           id: generateId('TRN'),
           type: type,
           date: transaction.date.getTime(),
           materialId: materialId,
-          materialName: materialToLog.name,
+          materialName: materialName,
           quantity: transaction.quantity,
           responsible: transaction.responsible,
           supplier: transaction.supplier?.toUpperCase(),
@@ -431,8 +455,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         };
         setTransactions(prev => [newTransaction, ...prev]);
 
-        if (type === 'saida') {
-            checkAndSendAlert(materialToLog);
+        toast({
+            title: 'Transação Registrada',
+            description: `Uma nova transação de ${type} de ${transaction.quantity} unidades foi salva.`,
+        });
+
+        if (materialForAlert) {
+            checkAndSendAlert(materialForAlert);
         }
         return true;
     }
