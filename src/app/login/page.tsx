@@ -83,10 +83,18 @@ export default function LoginPage() {
       router.push('/');
     } catch (error: any) {
       console.error(error);
+      const providerName = provider === 'google' ? 'Google' : 'Microsoft';
+      let description = `Não foi possível fazer o login com ${providerName}. Tente novamente.`;
+      if (error.code === 'auth/account-exists-with-different-credential') {
+        description = `Já existe uma conta com o mesmo e-mail associado a outro método de login.`;
+      } else if (error.code) {
+        description = `Ocorreu um erro: ${error.code}. Verifique a configuração do provedor no Firebase.`;
+      }
+      
       toast({
         variant: "destructive",
-        title: `Falha no Login com ${provider === 'google' ? 'Google' : 'Microsoft'}`,
-        description: "Não foi possível fazer o login. Tente novamente.",
+        title: `Falha no Login com ${providerName}`,
+        description,
       });
     } finally {
       setIsLoading(false);
