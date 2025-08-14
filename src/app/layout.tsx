@@ -61,7 +61,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <head>
-          <title>WellFlow Inventory</title>
+          <title>Geostoque</title>
           <meta name="description" content="Gestão de estoque para materiais geológicos e de construção." />
           <link rel="icon" href="/favicon.svg" />
       </head>
