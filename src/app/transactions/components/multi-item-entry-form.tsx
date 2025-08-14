@@ -6,7 +6,6 @@ import { CalendarIcon, Plus, Trash2 } from 'lucide-react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useEffect } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -16,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import type { Material, EntryItem, CostCenter } from '@/types';
+import type { Material, EntryItem } from '@/types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuth } from '@/context/AuthContext';
@@ -54,9 +53,6 @@ interface MultiItemEntryFormProps {
 
 export function MultiItemEntryForm({ materials, categories, onSave, onCancel, initialItems, initialInvoice, initialSupplier }: MultiItemEntryFormProps) {
   const { user } = useAuth();
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   const form = useForm<MultiItemEntryFormValues>({
     resolver: zodResolver(multiItemEntrySchema),
@@ -83,12 +79,14 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
   const onSubmit = (data: MultiItemEntryFormValues) => {
     const wasSaved = onSave(data);
     if (wasSaved) {
-      handleCancel();
+      handleCancel(true);
     }
   };
   
-  const handleCancel = () => {
-    onCancel();
+  const handleCancel = (shouldResetAll: boolean = false) => {
+    if (shouldResetAll) {
+       onCancel();
+    }
     form.reset({
       items: [],
       date: new Date(),
@@ -98,13 +96,6 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
       costCenter: '',
       stockLocation: '',
     });
-     const current = new URLSearchParams(Array.from(searchParams.entries()));
-      current.delete('showForm');
-      current.delete('materialId');
-      current.delete('tab');
-      const search = current.toString();
-      const query = search ? `?${search}` : '';
-      router.push(`${pathname}${query}`);
   }
 
   const handleMaterialSelection = (index: number, materialId: string) => {
@@ -328,7 +319,7 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
             </div>
             
             <CardFooter className="flex justify-end gap-2 p-0 pt-4">
-                <Button type="button" variant="ghost" onClick={handleCancel}>
+                <Button type="button" variant="ghost" onClick={() => handleCancel()}>
                     Cancelar
                 </Button>
                 <Button type="submit">

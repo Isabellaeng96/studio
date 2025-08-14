@@ -36,10 +36,14 @@ function TransactionsPageContent() {
   const [initialSupplier, setInitialSupplier] = useState<string | undefined>();
   
   useEffect(() => {
+    const shouldShowForm = getShowForm();
+    if (showForm && !shouldShowForm) {
+       resetInitialState();
+    }
+    setShowForm(shouldShowForm);
     setTransactionType(getTab());
-    setShowForm(getShowForm());
     setMaterialId(getMaterialId());
-  }, [searchParams]);
+  }, [searchParams, showForm]);
 
   const handlePdfDataExtracted = useCallback((data: TransactionExtractionOutput) => {
     if (!data.materials || data.materials.length === 0) {
@@ -86,10 +90,15 @@ function TransactionsPageContent() {
     setInitialEntryItems([]);
     setInitialInvoice(undefined);
     setInitialSupplier(undefined);
-  }, []);
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('showForm');
+    router.push(`${pathname}?${params.toString()}`);
+  }, [searchParams, pathname, router]);
 
   const handleNewTransactionClick = () => {
-    resetInitialState();
+    setInitialEntryItems([]);
+    setInitialInvoice(undefined);
+    setInitialSupplier(undefined);
   };
 
 

@@ -2,11 +2,10 @@
 "use client";
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CalendarIcon, Plus, Trash2, X } from 'lucide-react';
+import { CalendarIcon, Plus, Trash2 } from 'lucide-react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useEffect } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -15,13 +14,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { Material, CostCenter, MultiTransactionItemSave } from '@/types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuth } from '@/context/AuthContext';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const multiItemTransactionSchema = z.object({
   items: z.array(z.object({
@@ -45,9 +42,6 @@ interface MultiItemTransactionFormProps {
 
 export function MultiItemTransactionForm({ materials, costCenters, onSave, defaultMaterialId }: MultiItemTransactionFormProps) {
   const { user } = useAuth();
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   const form = useForm<MultiItemFormValues>({
     resolver: zodResolver(multiItemTransactionSchema),
@@ -85,13 +79,6 @@ export function MultiItemTransactionForm({ materials, costCenters, onSave, defau
       osNumber: '',
       costCenter: '',
     });
-     const current = new URLSearchParams(Array.from(searchParams.entries()));
-      current.delete('showForm');
-      current.delete('materialId');
-      current.delete('tab');
-      const search = current.toString();
-      const query = search ? `?${search}` : '';
-      router.push(`${pathname}${query}`);
   }
 
   return (
@@ -152,7 +139,7 @@ export function MultiItemTransactionForm({ materials, costCenters, onSave, defau
                     Adicionar Item
                 </Button>
                 {form.formState.errors.items && (
-                    <p className="text-sm font-medium text-destructive">{form.formState.errors.items.message}</p>
+                    <p className="text-sm font-medium text-destructive">{form.formState.errors.items.message || form.formState.errors.items.root?.message}</p>
                 )}
               </div>
             </div>
