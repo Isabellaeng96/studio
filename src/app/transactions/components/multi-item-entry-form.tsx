@@ -131,7 +131,8 @@ export function MultiItemEntryForm({ materials, categories, onSave, initialItems
         })
     }
   }
-
+  
+  const validCategories = categories.filter(c => c && c.trim() !== '');
 
   return (
     <Card>
@@ -233,7 +234,7 @@ export function MultiItemEntryForm({ materials, categories, onSave, initialItems
                                 <Select onValueChange={field.onChange} value={field.value} disabled={!field.value && !form.getValues(`items.${index}.isNew`)} >
                                     <FormControl><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger></FormControl>
                                     <SelectContent>
-                                        {categories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                                        {validCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                                 <FormMessage />

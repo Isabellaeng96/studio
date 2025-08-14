@@ -66,6 +66,8 @@ function MaterialsPageContent() {
     router.push(`${pathname}${query}`);
   };
 
+  const validCategories = categories.filter(cat => cat && cat.trim() !== '');
+
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -120,7 +122,7 @@ function MaterialsPageContent() {
                 </SelectTrigger>
                 <SelectContent>
                     <SelectItem value="all">Todas as Categorias</SelectItem>
-                    {categories.filter(cat => cat && cat.trim() !== '').map(cat => (
+                    {validCategories.map(cat => (
                         <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                     ))}
                 </SelectContent>
