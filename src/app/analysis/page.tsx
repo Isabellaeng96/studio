@@ -66,11 +66,16 @@ export default function AnalysisPage() {
   }, [filteredTransactions, date]);
   
   const stockTurnoverData = useMemo(() => {
-    return activeMaterials.map(material => {
+    return activeMaterials
+      .map(material => {
         const totalExits = filteredTransactions
-            .filter(t => t.materialId === material.id && t.type === 'saida')
-            .reduce((sum, t) => sum + t.quantity, 0);
-        
+          .filter(t => t.materialId === material.id && t.type === 'saida')
+          .reduce((sum, t) => sum + t.quantity, 0);
+
+        if (totalExits === 0) {
+          return { name: material.name, turnover: 0 };
+        }
+
         const startStock = material.currentStock - filteredTransactions
           .filter(t => t.materialId === material.id)
           .reduce((sum, t) => sum + (t.type === 'entrada' ? -t.quantity : t.quantity), 0);
@@ -83,7 +88,8 @@ export default function AnalysisPage() {
             name: material.name,
             turnover: avgStock > 0 ? parseFloat((totalExits / avgStock).toFixed(2)) : 0
         };
-    });
+      })
+      .filter(item => item.turnover > 0);
   }, [activeMaterials, filteredTransactions]);
   
    const handleExport = () => {
