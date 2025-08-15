@@ -25,7 +25,6 @@ export default function AnalysisPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('charts');
   const [isLoading, setIsLoading] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
   
   const [date, setDate] = useState<DateRange | undefined>({
     from: subDays(new Date(), 29),
@@ -149,63 +148,44 @@ export default function AnalysisPage() {
 
   const handleExport = async () => {
     setIsLoading(true);
-    setIsExporting(true);
-    
-    await new Promise(resolve => setTimeout(resolve, 100));
-
     const chartsContainer = chartsRef.current;
     if (!chartsContainer) {
-      setIsLoading(false);
-      setIsExporting(false);
-      return;
+        setIsLoading(false);
+        return;
     }
-  
+
     try {
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const margin = 15;
-      const yMargin = 20;
-      let yPosition = yMargin;
-  
-      pdf.setFontSize(18);
-      pdf.text('Relatório de Análise Gráfica', margin, yPosition);
-      yPosition += 8;
-      pdf.setFontSize(11);
-      const period = `Período: ${date?.from ? format(date.from, 'dd/MM/yyyy') : 'N/A'} a ${date?.to ? format(date.to, 'dd/MM/yyyy') : 'N/A'}`;
-      pdf.text(period, margin, yPosition);
-      yPosition += 12;
-  
-      const chartCards = Array.from(chartsContainer.querySelectorAll('.chart-card')) as HTMLElement[];
-  
-      for (const [index, card] of chartCards.entries()) {
-        const canvas = await html2canvas(card, { scale: 2, backgroundColor: '#ffffff' });
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const yMargin = 20;
+
+        let yPosition = yMargin;
+
+        pdf.setFontSize(18);
+        pdf.text('Relatório de Análise Gráfica', 15, yPosition);
+        yPosition += 8;
+        pdf.setFontSize(11);
+        const period = `Período: ${date?.from ? format(date.from, 'dd/MM/yyyy') : 'N/A'} a ${date?.to ? format(date.to, 'dd/MM/yyyy') : 'N/A'}`;
+        pdf.text(period, 15, yPosition);
+        yPosition += 12;
+
+        const canvas = await html2canvas(chartsContainer, {
+            scale: 2,
+            backgroundColor: '#ffffff'
+        });
+
         const imgData = canvas.toDataURL('image/jpeg', 0.9);
-        const imgWidth = pdfWidth - margin * 2;
+        const imgWidth = pdfWidth - 30; // 15mm margin on each side
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
-  
-        if (yPosition + imgHeight > pdfHeight - yMargin && index > 0) {
-          pdf.addPage();
-          yPosition = yMargin;
-          pdf.setFontSize(18);
-          pdf.text('Relatório de Análise Gráfica', margin, yPosition);
-          yPosition += 8;
-          pdf.setFontSize(11);
-          pdf.text(period, margin, yPosition);
-          yPosition += 12;
-        }
-  
-        pdf.addImage(imgData, 'JPEG', margin, yPosition, imgWidth, imgHeight);
-        yPosition += imgHeight + 10;
-      }
-  
-      addFooterToAllPages(pdf);
-      pdf.save(`relatorio_graficos_${format(new Date(), 'yyyyMMdd')}.pdf`);
+        
+        pdf.addImage(imgData, 'JPEG', 15, yPosition, imgWidth, imgHeight);
+        
+        addFooterToAllPages(pdf);
+        pdf.save(`relatorio_graficos_${format(new Date(), 'yyyyMMdd')}.pdf`);
     } catch (error) {
-      console.error(error);
+        console.error(error);
     } finally {
-      setIsLoading(false);
-      setIsExporting(false);
+        setIsLoading(false);
     }
   };
 
@@ -269,7 +249,6 @@ export default function AnalysisPage() {
                 exitTrendData={exitTrendData}
                 stockTurnoverData={stockTurnoverData}
                 lowStockMaterialsData={lowStockMaterialsData}
-                isExporting={isExporting}
               />
             </div>
         </TabsContent>
