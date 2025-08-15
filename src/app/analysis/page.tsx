@@ -45,22 +45,44 @@ export default function AnalysisPage() {
     });
   }, [transactions, date]);
 
-  const transactionTrendData = useMemo(() => {
+  const entryTrendData = useMemo(() => {
     if (!date?.from || !date?.to) return [];
 
     const intervalDays = eachDayOfInterval({ start: date.from, end: date.to });
     const data = intervalDays.map(day => ({
         date: format(day, "MMM dd"),
-        entrada: 0,
-        saida: 0,
+        value: 0,
     }));
 
     filteredTransactions.forEach(tx => {
-      const dateStr = format(new Date(tx.date), "MMM dd");
-      const entry = data.find(d => d.date === dateStr);
-      if (entry) {
-        if (tx.type === "entrada") entry.entrada += tx.quantity;
-        else entry.saida += tx.quantity;
+      if (tx.type === "entrada") {
+        const dateStr = format(new Date(tx.date), "MMM dd");
+        const entry = data.find(d => d.date === dateStr);
+        if (entry) {
+          entry.value += tx.quantity;
+        }
+      }
+    });
+
+    return data;
+  }, [filteredTransactions, date]);
+  
+  const exitTrendData = useMemo(() => {
+    if (!date?.from || !date?.to) return [];
+
+    const intervalDays = eachDayOfInterval({ start: date.from, end: date.to });
+    const data = intervalDays.map(day => ({
+        date: format(day, "MMM dd"),
+        value: 0,
+    }));
+
+    filteredTransactions.forEach(tx => {
+      if (tx.type === "saida") {
+        const dateStr = format(new Date(tx.date), "MMM dd");
+        const entry = data.find(d => d.date === dateStr);
+        if (entry) {
+          entry.value += tx.quantity;
+        }
       }
     });
 
@@ -192,7 +214,8 @@ export default function AnalysisPage() {
             </div>
             <div ref={chartsRef}>
               <ChartsView 
-                transactionTrendData={transactionTrendData}
+                entryTrendData={entryTrendData}
+                exitTrendData={exitTrendData}
                 stockTurnoverData={stockTurnoverData}
               />
             </div>

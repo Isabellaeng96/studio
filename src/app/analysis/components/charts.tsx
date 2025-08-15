@@ -4,31 +4,49 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
-import type { Material } from "@/types";
 
 interface ChartsViewProps {
-  transactionTrendData: { date: string; entrada: number; saida: number; }[];
+  entryTrendData: { date: string; value: number; }[];
+  exitTrendData: { date: string; value: number; }[];
   stockTurnoverData: { name: string; turnover: number; }[];
 }
 
-export function ChartsView({ transactionTrendData, stockTurnoverData }: ChartsViewProps) {
+export function ChartsView({ entryTrendData, exitTrendData, stockTurnoverData }: ChartsViewProps) {
   return (
     <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-1">
-      <Card>
+       <Card>
         <CardHeader>
-          <CardTitle>Entrada e Saída</CardTitle>
-          <CardDescription>Acompanha o fluxo de materiais ao longo do tempo para o período selecionado.</CardDescription>
+          <CardTitle>Fluxo de Entradas</CardTitle>
+          <CardDescription>Acompanha o volume de materiais que entraram no estoque para o período selecionado.</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer config={{}} className="h-80 w-full">
              <ResponsiveContainer>
-              <BarChart data={transactionTrendData} margin={{ top: 20, right: 20, left: -10, bottom: 0 }}>
+              <BarChart data={entryTrendData} margin={{ top: 20, right: 20, left: -10, bottom: 0 }}>
                 <CartesianGrid vertical={false}/>
                 <XAxis dataKey="date" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
                 <YAxis />
                 <Tooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="entrada" name="Entradas" fill="var(--color-chart-1)" radius={4} />
-                <Bar dataKey="saida" name="Saídas" fill="var(--color-chart-2)" radius={4} />
+                <Bar dataKey="value" name="Entradas" fill="var(--color-chart-1)" radius={4} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Fluxo de Saídas</CardTitle>
+          <CardDescription>Acompanha o volume de materiais que saíram do estoque para o período selecionado.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer config={{}} className="h-80 w-full">
+             <ResponsiveContainer>
+              <BarChart data={exitTrendData} margin={{ top: 20, right: 20, left: -10, bottom: 0 }}>
+                <CartesianGrid vertical={false}/>
+                <XAxis dataKey="date" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
+                <YAxis />
+                <Tooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="value" name="Saídas" fill="var(--color-chart-2)" radius={4} />
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
