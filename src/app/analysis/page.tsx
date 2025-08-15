@@ -136,21 +136,23 @@ export default function AnalysisPage() {
       
       const imgWidth = pdfWidth - 20; // 10mm margin on each side
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 40; // Initial top margin
-
+      
       // Header
       pdf.setFontSize(18);
       pdf.text('Relatório de Análise Gráfica', 14, 22);
       pdf.setFontSize(11);
       const period = `Período: ${date?.from ? format(date.from, 'dd/MM/yyyy') : 'N/A'} a ${date?.to ? format(date.to, 'dd/MM/yyyy') : 'N/A'}`;
       pdf.text(period, 14, 30);
-
+      
+      // Image content
+      let heightLeft = imgHeight;
+      let position = 40; // Initial top margin
+      
       pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
       heightLeft -= (pdfHeight - position - 15); // subtract used space
 
       while (heightLeft > 0) {
-        position = -heightLeft;
+        position = heightLeft - imgHeight; // Recalculate position for the new page
         pdf.addPage();
         pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
         heightLeft -= (pdfHeight - 15); // subtract page height, leave footer margin
