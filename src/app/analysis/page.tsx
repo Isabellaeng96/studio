@@ -151,7 +151,6 @@ export default function AnalysisPage() {
     setIsLoading(true);
     setIsExporting(true);
     
-    // Allow the DOM to update with the new export-friendly layout
     await new Promise(resolve => setTimeout(resolve, 100));
 
     const chartsContainer = chartsRef.current;
@@ -169,7 +168,6 @@ export default function AnalysisPage() {
       const yMargin = 20;
       let yPosition = yMargin;
   
-      // Add general header
       pdf.setFontSize(18);
       pdf.text('Relatório de Análise Gráfica', margin, yPosition);
       yPosition += 8;
@@ -186,11 +184,9 @@ export default function AnalysisPage() {
         const imgWidth = pdfWidth - margin * 2;
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
   
-        // Check if there's enough space for the current chart
         if (yPosition + imgHeight > pdfHeight - yMargin && index > 0) {
           pdf.addPage();
           yPosition = yMargin;
-           // Add header again on the new page
           pdf.setFontSize(18);
           pdf.text('Relatório de Análise Gráfica', margin, yPosition);
           yPosition += 8;
@@ -200,7 +196,7 @@ export default function AnalysisPage() {
         }
   
         pdf.addImage(imgData, 'JPEG', margin, yPosition, imgWidth, imgHeight);
-        yPosition += imgHeight + 10; // Add some space after the chart
+        yPosition += imgHeight + 10;
       }
   
       addFooterToAllPages(pdf);
@@ -284,3 +280,5 @@ export default function AnalysisPage() {
     </div>
   );
 }
+
+    
