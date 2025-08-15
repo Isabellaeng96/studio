@@ -157,9 +157,9 @@ export default function AnalysisPage() {
     try {
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
         const yMargin = 20;
         const xMargin = 15;
-
         let yPosition = yMargin;
 
         pdf.setFontSize(18);
@@ -176,11 +176,26 @@ export default function AnalysisPage() {
         });
 
         const imgData = canvas.toDataURL('image/jpeg', 0.9);
-        const imgWidth = pdfWidth - xMargin * 2; 
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        const imgWidth = pdfWidth - xMargin * 2;
+        let imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
         
-        pdf.addImage(imgData, 'JPEG', xMargin, yPosition, imgWidth, imgHeight);
-        
+        let position = yPosition;
+
+        if (position + imgHeight > pdfHeight - yMargin) {
+          // If the first image itself is too tall, it will be added and potentially split
+        }
+
+        pdf.addImage(imgData, 'JPEG', xMargin, position, imgWidth, imgHeight);
+        heightLeft -= (pdfHeight - position - yMargin);
+
+        while (heightLeft > 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'JPEG', xMargin, position, imgWidth, imgHeight);
+            heightLeft -= pdfHeight;
+        }
+
         addFooterToAllPages(pdf);
         pdf.save(`relatorio_graficos_${format(new Date(), 'yyyyMMdd')}.pdf`);
     } catch (error) {
@@ -260,7 +275,3 @@ export default function AnalysisPage() {
     </div>
   );
 }
-
-    
-
-    
