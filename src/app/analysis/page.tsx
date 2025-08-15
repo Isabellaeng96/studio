@@ -116,53 +116,11 @@ export default function AnalysisPage() {
       .filter(item => item.turnover > 0);
   }, [activeMaterials, filteredTransactions]);
   
-   const handleExport = async () => {
-    setIsLoading(true);
-    if (!chartsRef.current) {
-      setIsLoading(false);
-      return;
-    }
+  const addFooterToAllPages = (pdf: jsPDF) => {
+    const pageCount = (pdf as any).internal.getNumberOfPages();
+    const generationDate = new Date();
 
-    try {
-      const canvas = await html2canvas(chartsRef.current, {
-        scale: 2,
-        backgroundColor: '#ffffff'
-      });
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.9);
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      
-      const imgWidth = pdfWidth - 20; // 10mm margin on each side
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      // Header
-      pdf.setFontSize(18);
-      pdf.text('Relatório de Análise Gráfica', 14, 22);
-      pdf.setFontSize(11);
-      const period = `Período: ${date?.from ? format(date.from, 'dd/MM/yyyy') : 'N/A'} a ${date?.to ? format(date.to, 'dd/MM/yyyy') : 'N/A'}`;
-      pdf.text(period, 14, 30);
-      
-      // Image content
-      let heightLeft = imgHeight;
-      let position = 40; // Initial top margin
-      
-      pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
-      heightLeft -= (pdfHeight - position - 15); // subtract used space
-
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight; // Recalculate position for the new page
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
-        heightLeft -= (pdfHeight - 15); // subtract page height, leave footer margin
-      }
-      
-      // Footer
-      const pageCount = (pdf as any).internal.getNumberOfPages();
-      const generationDate = new Date();
-      
-      for(let i = 1; i <= pageCount; i++) {
+    for (let i = 1; i <= pageCount; i++) {
         pdf.setPage(i);
         pdf.setFontSize(8);
         const userText = `Gerado por: ${user?.displayName || 'N/A'}`;
@@ -175,9 +133,59 @@ export default function AnalysisPage() {
         pdf.text(userText, 14, pageHeight - 10);
         pdf.text(pageText, pageWidth / 2, pageHeight - 10, { align: 'center' });
         pdf.text(dateText, pageWidth - 14, pageHeight - 10, { align: 'right' });
+    }
+  };
+
+   const handleExport = async () => {
+    setIsLoading(true);
+    const chartsContainer = chartsRef.current;
+    if (!chartsContainer) {
+      setIsLoading(false);
+      return;
+    }
+    
+    const chartCards = Array.from(chartsContainer.querySelectorAll('.recharts-responsive-container + .recharts-responsive-container ~ div, .recharts-responsive-container'))
+        .map(el => el.closest('.lucide, .recharts-surface, .text-2xl, button, .flex, .grid, .h-80, .h-\[60vh\], .sticky, .h-full, .h-20, .h-14, .h-24, .h-96, .h-48, .h-72, .h-9, .h-6, .h-12, .h-4, .w-full, .w-20, .w-64, .w-\[200px\], .w-\[280px\], .w-auto, .w-48, .w-12, .w-\[50px\], .w-96, .w-6, .w-4, body, .grid-cols-1, .grid-cols-2, .grid-cols-5, .md\:grid-cols-3, .md\:col-span-1, .md\:col-span-2, .lg\:grid-cols-\[280px_1fr\], .lg\:grid-cols-1, .lg\:grid-cols-3, .lg\:col-span-2, .sm\:grid-cols-1, .sm\:grid-cols-2, .sm\:max-w-4xl, .sm\:max-w-md, .sm\:max-w-\[425px\], card'))
+        .filter((card, index, self) => card && self.indexOf(card) === index) as HTMLElement[];
+
+    if(chartCards.length === 0) {
+        // Fallback to the original method if no cards are found
+        chartCards.push(chartsContainer);
+    }
+    
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const margin = 15;
+      let yPosition = margin + 25; // Initial Y position for the first chart
+
+      // Header
+      pdf.setFontSize(18);
+      pdf.text('Relatório de Análise Gráfica', margin, 22);
+      pdf.setFontSize(11);
+      const period = `Período: ${date?.from ? format(date.from, 'dd/MM/yyyy') : 'N/A'} a ${date?.to ? format(date.to, 'dd/MM/yyyy') : 'N/A'}`;
+      pdf.text(period, margin, 30);
+      
+      for (const [index, chartCard] of chartCards.entries()) {
+        const canvas = await html2canvas(chartCard, {
+            scale: 2,
+            backgroundColor: '#ffffff'
+        });
+        const imgData = canvas.toDataURL('image/jpeg', 0.9);
+        const imgWidth = pdfWidth - (margin * 2);
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        if (yPosition + imgHeight > pdfHeight - margin) {
+          pdf.addPage();
+          yPosition = margin; // Reset Y position for new page
+        }
+
+        pdf.addImage(imgData, 'JPEG', margin, yPosition, imgWidth, imgHeight);
+        yPosition += imgHeight + 10; // Add some space between charts
       }
 
-
+      addFooterToAllPages(pdf);
       pdf.save(`relatorio_graficos_${format(new Date(), 'yyyyMMdd')}.pdf`);
     } catch (error) {
       console.error(error);
@@ -255,3 +263,4 @@ export default function AnalysisPage() {
     </div>
   );
 }
+
