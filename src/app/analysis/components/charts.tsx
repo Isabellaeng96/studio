@@ -13,12 +13,6 @@ interface ChartsViewProps {
 }
 
 export function ChartsView({ materials, transactions }: ChartsViewProps) {
-  const stockLevelData = materials.map(m => ({
-    name: m.name,
-    currentStock: m.currentStock,
-    minStock: m.minStock,
-  }));
-
   const transactionTrendData = useMemo(() => {
     const data = Array.from({ length: 30 }, (_, i) => {
       const date = subDays(new Date(), 29 - i);
@@ -54,27 +48,7 @@ export function ChartsView({ materials, transactions }: ChartsViewProps) {
 
 
   return (
-    <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
-      <Card>
-        <CardHeader>
-          <CardTitle>Níveis de Estoque Atuais</CardTitle>
-          <CardDescription>Destaca materiais abaixo do estoque mínimo.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ChartContainer config={{}} className="h-80 w-full">
-            <ResponsiveContainer>
-              <BarChart data={stockLevelData} margin={{ top: 20, right: 20, left: -10, bottom: 0 }}>
-                <CartesianGrid vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
-                <YAxis />
-                <Tooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="currentStock" name="Estoque Atual" fill="var(--color-chart-1)" radius={4} />
-                <Bar dataKey="minStock" name="Estoque Mínimo" fill="var(--color-chart-2)" radius={4} />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-        </CardContent>
-      </Card>
+    <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-1">
       <Card>
         <CardHeader>
           <CardTitle>Entradas vs. Saídas (Últimos 30 dias)</CardTitle>
@@ -95,7 +69,7 @@ export function ChartsView({ materials, transactions }: ChartsViewProps) {
           </ChartContainer>
         </CardContent>
       </Card>
-       <Card className="lg:col-span-2">
+       <Card>
         <CardHeader>
           <CardTitle>Giro de Estoque</CardTitle>
           <CardDescription>Mede a frequência com que o estoque é vendido e reposto durante um período.</CardDescription>
