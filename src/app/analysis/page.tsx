@@ -178,9 +178,8 @@ export default function AnalysisPage() {
         const imgData = canvas.toDataURL('image/jpeg', 0.9);
         const imgWidth = pdfWidth - xMargin * 2; 
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        const xPosition = (pdfWidth - imgWidth) / 2;
         
-        pdf.addImage(imgData, 'JPEG', xPosition, yPosition, imgWidth, imgHeight);
+        pdf.addImage(imgData, 'JPEG', xMargin, yPosition, imgWidth, imgHeight);
         
         addFooterToAllPages(pdf);
         pdf.save(`relatorio_graficos_${format(new Date(), 'yyyyMMdd')}.pdf`);
@@ -261,5 +260,7 @@ export default function AnalysisPage() {
     </div>
   );
 }
+
+    
 
     
