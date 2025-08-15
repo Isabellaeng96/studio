@@ -1,58 +1,23 @@
+
 "use client";
 
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import type { Material, Transaction } from "@/types";
-import { useMemo } from "react";
-import { format, subDays } from "date-fns";
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
+import type { Material } from "@/types";
 
 interface ChartsViewProps {
-  materials: Material[];
-  transactions: Transaction[];
+  transactionTrendData: { date: string; entrada: number; saida: number; }[];
+  stockTurnoverData: { name: string; turnover: number; }[];
 }
 
-export function ChartsView({ materials, transactions }: ChartsViewProps) {
-  const transactionTrendData = useMemo(() => {
-    const data = Array.from({ length: 30 }, (_, i) => {
-      const date = subDays(new Date(), 29 - i);
-      return {
-        date: format(date, "MMM dd"),
-        entrada: 0,
-        saida: 0,
-      };
-    });
-
-    transactions.forEach(tx => {
-      const dateStr = format(new Date(tx.date), "MMM dd");
-      const entry = data.find(d => d.date === dateStr);
-      if (entry) {
-        if (tx.type === "entrada") entry.entrada += tx.quantity;
-        else entry.saida += tx.quantity;
-      }
-    });
-
-    return data;
-  }, [transactions]);
-  
-  const stockTurnoverData = materials.map(material => {
-      const totalExits = transactions
-          .filter(t => t.materialId === material.id && t.type === 'saida')
-          .reduce((sum, t) => sum + t.quantity, 0);
-      const avgStock = (material.currentStock + (material.currentStock - totalExits)) / 2; // Simplified avg
-      return {
-          name: material.name,
-          turnover: avgStock > 0 ? parseFloat((totalExits / avgStock).toFixed(2)) : 0
-      };
-  });
-
-
+export function ChartsView({ transactionTrendData, stockTurnoverData }: ChartsViewProps) {
   return (
     <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-1">
       <Card>
         <CardHeader>
-          <CardTitle>Entradas vs. Saídas (Últimos 30 dias)</CardTitle>
-          <CardDescription>Acompanha o fluxo de materiais ao longo do tempo.</CardDescription>
+          <CardTitle>Entrada e Saída</CardTitle>
+          <CardDescription>Acompanha o fluxo de materiais ao longo do tempo para o período selecionado.</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer config={{}} className="h-80 w-full">
