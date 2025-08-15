@@ -76,7 +76,7 @@ export function ChartsView({ entryTrendData, exitTrendData, stockTurnoverData, l
           <ChartContainer config={{
               currentStock: { label: "Estoque Atual", color: "hsl(var(--destructive))" },
               minStock: { label: "Estoque Mínimo", color: "hsl(var(--muted-foreground))" },
-          }} className="h-96 w-full">
+          }} className="h-[500px] w-full">
             <ResponsiveContainer>
               <BarChart data={lowStockMaterialsData} layout="vertical" margin={{ top: 20, right: 50, left: 100, bottom: 0 }}>
                 <CartesianGrid horizontal={false} />
