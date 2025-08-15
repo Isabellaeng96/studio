@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, LabelList } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 
@@ -27,12 +27,14 @@ export function ChartsView({ entryTrendData, exitTrendData, stockTurnoverData }:
             }
           }} className="h-80 w-full">
              <ResponsiveContainer>
-              <BarChart data={entryTrendData} margin={{ top: 20, right: 20, left: -10, bottom: 0 }}>
+              <BarChart data={entryTrendData} margin={{ top: 30, right: 20, left: -10, bottom: 0 }}>
                 <CartesianGrid vertical={false}/>
                 <XAxis dataKey="date" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
                 <YAxis />
                 <Tooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="value" name="Entradas" fill="hsl(var(--primary))" radius={4} />
+                <Bar dataKey="value" name="Entradas" fill="hsl(var(--primary))" radius={4}>
+                   <LabelList dataKey="value" position="top" offset={8} fontSize={12} />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
@@ -51,12 +53,14 @@ export function ChartsView({ entryTrendData, exitTrendData, stockTurnoverData }:
             }
           }} className="h-80 w-full">
              <ResponsiveContainer>
-              <BarChart data={exitTrendData} margin={{ top: 20, right: 20, left: -10, bottom: 0 }}>
+              <BarChart data={exitTrendData} margin={{ top: 30, right: 20, left: -10, bottom: 0 }}>
                 <CartesianGrid vertical={false}/>
                 <XAxis dataKey="date" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
                 <YAxis />
                 <Tooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="value" name="Saídas" fill="hsl(var(--destructive))" radius={4} />
+                <Bar dataKey="value" name="Saídas" fill="hsl(var(--destructive))" radius={4}>
+                  <LabelList dataKey="value" position="top" offset={8} fontSize={12} />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
@@ -70,12 +74,14 @@ export function ChartsView({ entryTrendData, exitTrendData, stockTurnoverData }:
         <CardContent>
           <ChartContainer config={{}} className="h-80 w-full">
             <ResponsiveContainer>
-              <BarChart data={stockTurnoverData} layout="vertical" margin={{ top: 20, right: 20, left: 50, bottom: 0 }}>
+              <BarChart data={stockTurnoverData} layout="vertical" margin={{ top: 20, right: 50, left: 50, bottom: 0 }}>
                 <CartesianGrid horizontal={false} />
                 <XAxis type="number" />
                 <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} width={120} />
                 <Tooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="turnover" name="Giro de Estoque" fill="hsl(var(--primary))" radius={4} />
+                <Bar dataKey="turnover" name="Giro de Estoque" fill="hsl(var(--primary))" radius={4}>
+                   <LabelList dataKey="turnover" position="right" offset={8} fontSize={12} />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
