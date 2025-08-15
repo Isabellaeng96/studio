@@ -23,7 +23,7 @@ export function ChartsView({ entryTrendData, exitTrendData, stockTurnoverData }:
           <ChartContainer config={{
             value: {
               label: "Entradas",
-              color: "hsl(var(--chart-1))",
+              color: "hsl(var(--primary))",
             }
           }} className="h-80 w-full">
              <ResponsiveContainer>
@@ -75,7 +75,7 @@ export function ChartsView({ entryTrendData, exitTrendData, stockTurnoverData }:
                 <XAxis type="number" />
                 <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} width={120} />
                 <Tooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="turnover" name="Giro de Estoque" fill="var(--color-chart-3)" radius={4} />
+                <Bar dataKey="turnover" name="Giro de Estoque" fill="hsl(var(--primary))" radius={4} />
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
