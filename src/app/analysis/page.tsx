@@ -115,6 +115,16 @@ export default function AnalysisPage() {
       })
       .filter(item => item.turnover > 0);
   }, [activeMaterials, filteredTransactions]);
+
+  const lowStockMaterialsData = useMemo(() => {
+    return activeMaterials
+      .filter(material => material.currentStock <= material.minStock)
+      .map(material => ({
+        name: material.name,
+        currentStock: material.currentStock,
+        minStock: material.minStock,
+      }));
+  }, [activeMaterials]);
   
   const addFooterToAllPages = (pdf: jsPDF) => {
     const pageCount = (pdf as any).internal.getNumberOfPages();
@@ -269,6 +279,7 @@ export default function AnalysisPage() {
                 entryTrendData={entryTrendData}
                 exitTrendData={exitTrendData}
                 stockTurnoverData={stockTurnoverData}
+                lowStockMaterialsData={lowStockMaterialsData}
               />
             </div>
         </TabsContent>
