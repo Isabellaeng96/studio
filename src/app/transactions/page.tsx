@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TransactionExporter } from './components/transaction-exporter';
 import { useAuth } from '@/context/AuthContext';
+import { WithdrawalImporter } from './components/withdrawal-importer';
 
 
 function TransactionsPageContent() {
@@ -42,7 +43,10 @@ function TransactionsPageContent() {
   const [transactionType, setTransactionType] = useState(getTab());
   const [showForm, setShowForm] = useState(getShowForm());
   const [materialId, setMaterialId] = useState(getMaterialId());
+  
+  // State for form initial data
   const [initialEntryItems, setInitialEntryItems] = useState<EntryItem[]>([]);
+  const [initialWithdrawalItems, setInitialWithdrawalItems] = useState<MultiTransactionItemSave[]>([]);
   const [initialInvoice, setInitialInvoice] = useState<string | undefined>();
   const [initialSupplier, setInitialSupplier] = useState<string | undefined>();
   
@@ -88,6 +92,14 @@ function TransactionsPageContent() {
     router.push(`${pathname}?${params.toString()}`);
 
   }, [toast, router, pathname, searchParams, activeMaterials]);
+  
+  const handleCsvDataExtracted = useCallback((data: MultiTransactionItemSave[]) => {
+    setInitialWithdrawalItems(data);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', 'saida');
+    params.set('showForm', 'true');
+    router.push(`${pathname}?${params.toString()}`);
+  }, [router, pathname, searchParams]);
 
   const handleSaveMultiTransaction = (data: { items: MultiTransactionItemSave[] } & Omit<TransactionSave, 'materialId' | 'quantity'>) => {
     return addMultipleTransactions(data.items, data);
@@ -99,6 +111,7 @@ function TransactionsPageContent() {
 
   const resetInitialState = useCallback(() => {
     setInitialEntryItems([]);
+    setInitialWithdrawalItems([]);
     setInitialInvoice(undefined);
     setInitialSupplier(undefined);
     const params = new URLSearchParams(searchParams.toString());
@@ -108,6 +121,7 @@ function TransactionsPageContent() {
 
   const handleNewTransactionClick = () => {
     setInitialEntryItems([]);
+    setInitialWithdrawalItems([]);
     setInitialInvoice(undefined);
     setInitialSupplier(undefined);
   };
@@ -181,15 +195,18 @@ function TransactionsPageContent() {
                   costCenters={costCenters}
                   onSave={handleSaveMultiTransaction}
                   defaultMaterialId={materialId}
-                  key={`saida-${materialId}`}
+                  initialItems={initialWithdrawalItems}
+                  key={`saida-${materialId}-${JSON.stringify(initialWithdrawalItems)}`}
                 />
              )}
           </div>
-            {transactionType === 'entrada' && (
-              <div className="lg:col-span-1">
-                <PdfImporter onDataExtracted={handlePdfDataExtracted} />
-              </div>
-            )}
+            <div className="lg:col-span-1">
+                {transactionType === 'entrada' ? (
+                    <PdfImporter onDataExtracted={handlePdfDataExtracted} />
+                ) : (
+                    <WithdrawalImporter onDataExtracted={handleCsvDataExtracted} materials={materials} />
+                )}
+            </div>
         </div>
       ) : (
          <div className="space-y-6">

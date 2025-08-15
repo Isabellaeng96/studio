@@ -39,18 +39,21 @@ interface MultiItemTransactionFormProps {
   costCenters: CostCenter[];
   onSave: (data: { items: MultiTransactionItemSave[] } & Omit<MultiTransactionItemSave, 'materialId' | 'quantity'>) => boolean;
   defaultMaterialId?: string | null;
+  initialItems?: MultiTransactionItemSave[];
 }
 
-export function MultiItemTransactionForm({ materials, costCenters, onSave, defaultMaterialId }: MultiItemTransactionFormProps) {
+export function MultiItemTransactionForm({ materials, costCenters, onSave, defaultMaterialId, initialItems = [] }: MultiItemTransactionFormProps) {
   const { user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  
+  const defaultItems = defaultMaterialId ? [{ materialId: defaultMaterialId, quantity: 0 }] : [];
 
   const form = useForm<MultiItemFormValues>({
     resolver: zodResolver(multiItemTransactionSchema),
     defaultValues: {
-      items: defaultMaterialId ? [{ materialId: defaultMaterialId, quantity: 0 }] : [],
+      items: initialItems.length > 0 ? initialItems : defaultItems,
       date: new Date(),
       responsible: user?.displayName ?? '',
       osNumber: '',
