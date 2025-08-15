@@ -144,38 +144,38 @@ export default function AnalysisPage() {
       return;
     }
     
-    const chartCards = Array.from(chartsContainer.querySelectorAll('.card')) as HTMLElement[];
-    
     try {
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const margin = 15;
-      let yPosition = margin + 25; // Initial Y position for the first chart
-
-      // Header
+      
       pdf.setFontSize(18);
       pdf.text('Relatório de Análise Gráfica', margin, 22);
       pdf.setFontSize(11);
       const period = `Período: ${date?.from ? format(date.from, 'dd/MM/yyyy') : 'N/A'} a ${date?.to ? format(date.to, 'dd/MM/yyyy') : 'N/A'}`;
       pdf.text(period, margin, 30);
       
-      for (const chartCard of chartCards) {
-        const canvas = await html2canvas(chartCard, {
-            scale: 2,
-            backgroundColor: '#ffffff'
-        });
-        const imgData = canvas.toDataURL('image/jpeg', 0.9);
-        const imgWidth = pdfWidth - (margin * 2);
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        
-        if (yPosition + imgHeight > pdfHeight - margin) {
-          pdf.addPage();
-          yPosition = margin; // Reset Y position for new page
-        }
+      const canvas = await html2canvas(chartsContainer, {
+          scale: 2,
+          backgroundColor: '#ffffff'
+      });
 
+      const imgData = canvas.toDataURL('image/jpeg', 0.9);
+      const imgWidth = pdfWidth - (margin * 2);
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      let heightLeft = imgHeight;
+      let yPosition = 40; // Start position for the first page
+      
+      pdf.addImage(imgData, 'JPEG', margin, yPosition, imgWidth, imgHeight);
+      heightLeft -= (pdfHeight - yPosition - margin);
+
+      while (heightLeft > 0) {
+        pdf.addPage();
+        yPosition = -heightLeft + margin;
         pdf.addImage(imgData, 'JPEG', margin, yPosition, imgWidth, imgHeight);
-        yPosition += imgHeight + 10; // Add some space between charts
+        heightLeft -= (pdfHeight - margin * 2);
       }
 
       addFooterToAllPages(pdf);
