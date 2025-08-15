@@ -158,15 +158,16 @@ export default function AnalysisPage() {
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const yMargin = 20;
+        const xMargin = 15;
 
         let yPosition = yMargin;
 
         pdf.setFontSize(18);
-        pdf.text('Relatório de Análise Gráfica', 15, yPosition);
+        pdf.text('Relatório de Análise Gráfica', xMargin, yPosition);
         yPosition += 8;
         pdf.setFontSize(11);
         const period = `Período: ${date?.from ? format(date.from, 'dd/MM/yyyy') : 'N/A'} a ${date?.to ? format(date.to, 'dd/MM/yyyy') : 'N/A'}`;
-        pdf.text(period, 15, yPosition);
+        pdf.text(period, xMargin, yPosition);
         yPosition += 12;
 
         const canvas = await html2canvas(chartsContainer, {
@@ -175,10 +176,11 @@ export default function AnalysisPage() {
         });
 
         const imgData = canvas.toDataURL('image/jpeg', 0.9);
-        const imgWidth = pdfWidth - 30; // 15mm margin on each side
+        const imgWidth = pdfWidth - xMargin * 2; 
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        const xPosition = (pdfWidth - imgWidth) / 2;
         
-        pdf.addImage(imgData, 'JPEG', 15, yPosition, imgWidth, imgHeight);
+        pdf.addImage(imgData, 'JPEG', xPosition, yPosition, imgWidth, imgHeight);
         
         addFooterToAllPages(pdf);
         pdf.save(`relatorio_graficos_${format(new Date(), 'yyyyMMdd')}.pdf`);
