@@ -125,60 +125,58 @@ export default function AnalysisPage() {
 
     try {
       const canvas = await html2canvas(chartsRef.current, {
-        scale: 2, // Increase scale for better resolution
-        windowWidth: chartsRef.current.scrollWidth,
-        windowHeight: chartsRef.current.scrollHeight,
-        backgroundColor: '#ffffff' // Set a white background
+        scale: 2,
+        backgroundColor: '#ffffff'
       });
 
       const imgData = canvas.toDataURL('image/jpeg', 0.9);
-      const imgWidth = 190;
-      const pageHeight = 295;
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      const imgWidth = pdfWidth - 20; // 10mm margin on each side
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       let heightLeft = imgHeight;
-
-      const doc = new jsPDF('p', 'mm', 'a4');
-      let position = 40; // Initial position with margin for header
+      let position = 40; // Initial top margin
 
       // Header
-      doc.setFontSize(18);
-      doc.text('Relatório de Análise Gráfica', 14, 22);
-      doc.setFontSize(11);
+      pdf.setFontSize(18);
+      pdf.text('Relatório de Análise Gráfica', 14, 22);
+      pdf.setFontSize(11);
       const period = `Período: ${date?.from ? format(date.from, 'dd/MM/yyyy') : 'N/A'} a ${date?.to ? format(date.to, 'dd/MM/yyyy') : 'N/A'}`;
-      doc.text(period, 14, 30);
+      pdf.text(period, 14, 30);
 
+      pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
+      heightLeft -= (pdfHeight - position - 15); // subtract used space
 
-      doc.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        doc.addPage();
-        doc.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+      while (heightLeft > 0) {
+        position = -heightLeft;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
+        heightLeft -= (pdfHeight - 15); // subtract page height, leave footer margin
       }
       
       // Footer
-      const pageCount = (doc as any).internal.getNumberOfPages();
+      const pageCount = (pdf as any).internal.getNumberOfPages();
       const generationDate = new Date();
       
       for(let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
+        pdf.setPage(i);
+        pdf.setFontSize(8);
         const userText = `Gerado por: ${user?.displayName || 'N/A'}`;
         const dateText = `Data: ${format(generationDate, 'dd/MM/yyyy HH:mm:ss')}`;
         const pageText = `Página ${i} de ${pageCount}`;
 
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const pageHeight = doc.internal.pageSize.getHeight();
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
         
-        doc.text(userText, 14, pageHeight - 10);
-        doc.text(pageText, pageWidth / 2, pageHeight - 10, { align: 'center' });
-        doc.text(dateText, pageWidth - 14, pageHeight - 10, { align: 'right' });
+        pdf.text(userText, 14, pageHeight - 10);
+        pdf.text(pageText, pageWidth / 2, pageHeight - 10, { align: 'center' });
+        pdf.text(dateText, pageWidth - 14, pageHeight - 10, { align: 'right' });
       }
 
 
-      doc.save(`relatorio_graficos_${format(new Date(), 'yyyyMMdd')}.pdf`);
+      pdf.save(`relatorio_graficos_${format(new Date(), 'yyyyMMdd')}.pdf`);
     } catch (error) {
       console.error(error);
     } finally {
