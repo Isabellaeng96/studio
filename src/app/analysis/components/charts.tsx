@@ -78,13 +78,15 @@ export function ChartsView({ entryTrendData, exitTrendData, stockTurnoverData, l
               minStock: { label: "Estoque Mínimo", color: "hsl(var(--muted-foreground))" },
           }} className="h-[500px] w-full">
             <ResponsiveContainer>
-              <BarChart data={lowStockMaterialsData} layout="vertical" margin={{ top: 20, right: 50, left: 100, bottom: 0 }}>
+              <BarChart data={lowStockMaterialsData} layout="vertical" margin={{ top: 20, right: 50, left: 120, bottom: 0 }}>
                 <CartesianGrid horizontal={false} />
                 <XAxis type="number" />
-                <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} width={120} />
+                <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} width={150} />
                 <Tooltip content={<ChartTooltipContent />} />
                 <Legend />
-                <Bar dataKey="minStock" name="Estoque Mínimo" fill="hsl(var(--muted-foreground))" radius={4} />
+                <Bar dataKey="minStock" name="Estoque Mínimo" fill="hsl(var(--muted-foreground))" radius={4}>
+                   <LabelList dataKey="minStock" position="right" offset={8} fontSize={12} />
+                </Bar>
                 <Bar dataKey="currentStock" name="Estoque Atual" fill="hsl(var(--destructive))" radius={4}>
                    <LabelList dataKey="currentStock" position="right" offset={8} fontSize={12} />
                 </Bar>
