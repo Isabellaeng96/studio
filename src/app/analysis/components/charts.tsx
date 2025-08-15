@@ -15,7 +15,7 @@ interface ChartsViewProps {
 export function ChartsView({ entryTrendData, exitTrendData, stockTurnoverData, lowStockMaterialsData }: ChartsViewProps) {
   return (
     <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-1">
-       <Card className="chart-card">
+       <Card id="entry-chart" className="chart-card">
         <CardHeader>
           <CardTitle>Fluxo de Entradas</CardTitle>
           <CardDescription>Acompanha o volume de materiais que entraram no estoque para o período selecionado.</CardDescription>
@@ -41,7 +41,7 @@ export function ChartsView({ entryTrendData, exitTrendData, stockTurnoverData, l
           </ChartContainer>
         </CardContent>
       </Card>
-      <Card className="chart-card">
+      <Card id="exit-chart" className="chart-card">
         <CardHeader>
           <CardTitle>Fluxo de Saídas</CardTitle>
           <CardDescription>Acompanha o volume de materiais que saíram do estoque para o período selecionado.</CardDescription>
@@ -67,7 +67,7 @@ export function ChartsView({ entryTrendData, exitTrendData, stockTurnoverData, l
           </ChartContainer>
         </CardContent>
       </Card>
-      <Card className="chart-card">
+      <Card id="low-stock-chart" className="chart-card">
         <CardHeader>
           <CardTitle>Materiais com Estoque Baixo</CardTitle>
           <CardDescription>Materiais com estoque atual igual ou inferior ao mínimo definido.</CardDescription>
@@ -85,7 +85,7 @@ export function ChartsView({ entryTrendData, exitTrendData, stockTurnoverData, l
               >
                 <CartesianGrid horizontal={false} />
                 <XAxis type="number" />
-                <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} width={150} />
+                <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} width={120} />
                 <Tooltip content={<ChartTooltipContent />} />
                 <Legend />
                 <Bar dataKey="minStock" name="Estoque Mínimo" fill="hsl(var(--muted-foreground))" radius={4}>
@@ -99,7 +99,7 @@ export function ChartsView({ entryTrendData, exitTrendData, stockTurnoverData, l
           </ChartContainer>
         </CardContent>
       </Card>
-       <Card className="chart-card">
+       <Card id="turnover-chart" className="chart-card">
         <CardHeader>
           <CardTitle>Giro de Estoque</CardTitle>
           <CardDescription>Mede a frequência com que o estoque é vendido e reposto durante um período.</CardDescription>

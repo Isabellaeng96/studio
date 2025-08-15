@@ -153,47 +153,49 @@ export default function AnalysisPage() {
         setIsLoading(false);
         return;
     }
+    
+    // Select all chart cards except the low stock one
+    const chartElements = Array.from(
+      chartsContainer.querySelectorAll('.chart-card:not(#low-stock-chart)')
+    ) as HTMLElement[];
+
+    if (chartElements.length === 0) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
-        const yMargin = 20;
-        const xMargin = 15;
-        let yPosition = yMargin;
-
+        const margin = 15;
+        let yPosition = margin;
+        
         pdf.setFontSize(18);
-        pdf.text('Relatório de Análise Gráfica', xMargin, yPosition);
+        pdf.text('Relatório de Análise Gráfica', margin, yPosition);
         yPosition += 8;
         pdf.setFontSize(11);
         const period = `Período: ${date?.from ? format(date.from, 'dd/MM/yyyy') : 'N/A'} a ${date?.to ? format(date.to, 'dd/MM/yyyy') : 'N/A'}`;
-        pdf.text(period, xMargin, yPosition);
+        pdf.text(period, margin, yPosition);
         yPosition += 12;
 
-        const canvas = await html2canvas(chartsContainer, {
-            scale: 2,
-            backgroundColor: '#ffffff'
-        });
+        for (const chartElement of chartElements) {
+            const canvas = await html2canvas(chartElement, {
+                scale: 2,
+                backgroundColor: '#ffffff'
+            });
 
-        const imgData = canvas.toDataURL('image/jpeg', 0.9);
-        const imgWidth = pdfWidth - xMargin * 2;
-        let imgHeight = (canvas.height * imgWidth) / canvas.width;
-        let heightLeft = imgHeight;
-        
-        let position = yPosition;
+            const imgData = canvas.toDataURL('image/jpeg', 0.9);
+            const imgWidth = pdfWidth - margin * 2;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-        if (position + imgHeight > pdfHeight - yMargin) {
-          // If the first image itself is too tall, it will be added and potentially split
-        }
+            if (yPosition + imgHeight > pdfHeight - margin) {
+                pdf.addPage();
+                yPosition = margin;
+            }
 
-        pdf.addImage(imgData, 'JPEG', xMargin, position, imgWidth, imgHeight);
-        heightLeft -= (pdfHeight - position - yMargin);
-
-        while (heightLeft > 0) {
-            position = heightLeft - imgHeight;
-            pdf.addPage();
-            pdf.addImage(imgData, 'JPEG', xMargin, position, imgWidth, imgHeight);
-            heightLeft -= pdfHeight;
+            pdf.addImage(imgData, 'JPEG', margin, yPosition, imgWidth, imgHeight);
+            yPosition += imgHeight + 10;
         }
 
         addFooterToAllPages(pdf);
