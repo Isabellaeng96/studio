@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import type { Material } from "@/types";
@@ -22,14 +22,14 @@ export function ChartsView({ transactionTrendData, stockTurnoverData }: ChartsVi
         <CardContent>
           <ChartContainer config={{}} className="h-80 w-full">
              <ResponsiveContainer>
-              <LineChart data={transactionTrendData} margin={{ top: 20, right: 20, left: -10, bottom: 0 }}>
+              <BarChart data={transactionTrendData} margin={{ top: 20, right: 20, left: -10, bottom: 0 }}>
                 <CartesianGrid vertical={false}/>
                 <XAxis dataKey="date" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
                 <YAxis />
                 <Tooltip content={<ChartTooltipContent />} />
-                <Line type="monotone" dataKey="entrada" name="Entradas" stroke="var(--color-chart-1)" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="saida" name="Saídas" stroke="var(--color-chart-2)" strokeWidth={2} dot={false} />
-              </LineChart>
+                <Bar dataKey="entrada" name="Entradas" fill="var(--color-chart-1)" radius={4} />
+                <Bar dataKey="saida" name="Saídas" fill="var(--color-chart-2)" radius={4} />
+              </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
         </CardContent>
