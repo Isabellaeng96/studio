@@ -144,9 +144,7 @@ export default function AnalysisPage() {
       return;
     }
     
-    const chartCards = Array.from(chartsContainer.querySelectorAll('.recharts-responsive-container + .recharts-responsive-container ~ div, .recharts-responsive-container'))
-        .map(el => el.closest('.lucide, .recharts-surface, .text-2xl, button, .flex, .grid, .h-80, .h-\[60vh\], .sticky, .h-full, .h-20, .h-14, .h-24, .h-96, .h-48, .h-72, .h-9, .h-6, .h-12, .h-4, .w-full, .w-20, .w-64, .w-\[200px\], .w-\[280px\], .w-auto, .w-48, .w-12, .w-\[50px\], .w-96, .w-6, .w-4, body, .grid-cols-1, .grid-cols-2, .grid-cols-5, .md\:grid-cols-3, .md\:col-span-1, .md\:col-span-2, .lg\:grid-cols-\[280px_1fr\], .lg\:grid-cols-1, .lg\:grid-cols-3, .lg\:col-span-2, .sm\:grid-cols-1, .sm\:grid-cols-2, .sm\:max-w-4xl, .sm\:max-w-md, .sm\:max-w-\[425px\], card'))
-        .filter((card, index, self) => card && self.indexOf(card) === index) as HTMLElement[];
+    const chartCards = Array.from(chartsContainer.querySelectorAll('.card')) as HTMLElement[];
 
     if(chartCards.length === 0) {
         // Fallback to the original method if no cards are found
