@@ -119,44 +119,72 @@ export default function AnalysisPage() {
    const handleExport = async () => {
     setIsLoading(true);
     if (!chartsRef.current) {
-        setIsLoading(false);
-        return;
+      setIsLoading(false);
+      return;
     }
-    
+
     try {
-      const canvas = await html2canvas(chartsRef.current, { 
-        backgroundColor: null, // Use a transparent background
-        scale: 2 // Increase scale for better resolution
+      const canvas = await html2canvas(chartsRef.current, {
+        scale: 2, // Increase scale for better resolution
+        windowWidth: chartsRef.current.scrollWidth,
+        windowHeight: chartsRef.current.scrollHeight,
+        backgroundColor: '#ffffff' // Set a white background
       });
-      const imgData = canvas.toDataURL('image/png');
 
-      const doc = new jsPDF({
-        orientation: 'p',
-        unit: 'px',
-        format: [canvas.width, canvas.height]
-      });
-      
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      
-      const docTitle = 'Relatório de Análise Gráfica';
+      const imgData = canvas.toDataURL('image/jpeg', 0.9);
+      const imgWidth = 190;
+      const pageHeight = 295;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+
+      const doc = new jsPDF('p', 'mm', 'a4');
+      let position = 40; // Initial position with margin for header
+
+      // Header
+      doc.setFontSize(18);
+      doc.text('Relatório de Análise Gráfica', 14, 22);
+      doc.setFontSize(11);
       const period = `Período: ${date?.from ? format(date.from, 'dd/MM/yyyy') : 'N/A'} a ${date?.to ? format(date.to, 'dd/MM/yyyy') : 'N/A'}`;
+      doc.text(period, 14, 30);
+
+
+      doc.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        doc.addPage();
+        doc.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
       
-      const tempDoc = new jsPDF(); // Use a temporary doc to calculate text width
-      const titleWidth = tempDoc.getTextWidth(docTitle) * (18 / tempDoc.getFontSize());
-      const periodWidth = tempDoc.getTextWidth(period) * (11 / tempDoc.getFontSize());
+      // Footer
+      const pageCount = (doc as any).internal.getNumberOfPages();
+      const generationDate = new Date();
+      
+      for(let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        const userText = `Gerado por: ${user?.displayName || 'N/A'}`;
+        const dateText = `Data: ${format(generationDate, 'dd/MM/yyyy HH:mm:ss')}`;
+        const pageText = `Página ${i} de ${pageCount}`;
 
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        
+        doc.text(userText, 14, pageHeight - 10);
+        doc.text(pageText, pageWidth / 2, pageHeight - 10, { align: 'center' });
+        doc.text(dateText, pageWidth - 14, pageHeight - 10, { align: 'right' });
+      }
 
-      doc.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
 
       doc.save(`relatorio_graficos_${format(new Date(), 'yyyyMMdd')}.pdf`);
-
     } catch (error) {
       console.error(error);
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
 
   return (
