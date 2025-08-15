@@ -149,6 +149,7 @@ export default function AnalysisPage() {
     try {
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
       const margin = 15;
       let yPosition = margin + 25; // Initial Y position for the first chart
 
@@ -168,7 +169,7 @@ export default function AnalysisPage() {
         const imgWidth = pdfWidth - (margin * 2);
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
         
-        if (yPosition + imgHeight > pdf.internal.pageSize.getHeight() - margin) {
+        if (yPosition + imgHeight > pdfHeight - margin) {
           pdf.addPage();
           yPosition = margin; // Reset Y position for new page
         }
