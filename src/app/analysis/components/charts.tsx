@@ -14,7 +14,7 @@ interface ChartsViewProps {
 export function ChartsView({ entryTrendData, exitTrendData, stockTurnoverData }: ChartsViewProps) {
   return (
     <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-1">
-       <Card>
+       <Card className="chart-card">
         <CardHeader>
           <CardTitle>Fluxo de Entradas</CardTitle>
           <CardDescription>Acompanha o volume de materiais que entraram no estoque para o período selecionado.</CardDescription>
@@ -40,7 +40,7 @@ export function ChartsView({ entryTrendData, exitTrendData, stockTurnoverData }:
           </ChartContainer>
         </CardContent>
       </Card>
-      <Card>
+      <Card className="chart-card">
         <CardHeader>
           <CardTitle>Fluxo de Saídas</CardTitle>
           <CardDescription>Acompanha o volume de materiais que saíram do estoque para o período selecionado.</CardDescription>
@@ -66,7 +66,7 @@ export function ChartsView({ entryTrendData, exitTrendData, stockTurnoverData }:
           </ChartContainer>
         </CardContent>
       </Card>
-       <Card>
+       <Card className="chart-card">
         <CardHeader>
           <CardTitle>Giro de Estoque</CardTitle>
           <CardDescription>Mede a frequência com que o estoque é vendido e reposto durante um período.</CardDescription>

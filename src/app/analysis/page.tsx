@@ -136,48 +136,71 @@ export default function AnalysisPage() {
     }
   };
 
-   const handleExport = async () => {
+  const handleExport = async () => {
     setIsLoading(true);
     const chartsContainer = chartsRef.current;
     if (!chartsContainer) {
       setIsLoading(false);
       return;
     }
-    
+  
     try {
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const margin = 15;
-      
+      const yMargin = 20;
+      let yPosition = yMargin;
+  
+      // Add general header
       pdf.setFontSize(18);
-      pdf.text('Relatório de Análise Gráfica', margin, 22);
+      pdf.text('Relatório de Análise Gráfica', margin, yPosition);
+      yPosition += 8;
       pdf.setFontSize(11);
       const period = `Período: ${date?.from ? format(date.from, 'dd/MM/yyyy') : 'N/A'} a ${date?.to ? format(date.to, 'dd/MM/yyyy') : 'N/A'}`;
-      pdf.text(period, margin, 30);
-      
-      const canvas = await html2canvas(chartsContainer, {
-          scale: 2,
-          backgroundColor: '#ffffff'
-      });
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.9);
-      const imgWidth = pdfWidth - (margin * 2);
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      let heightLeft = imgHeight;
-      let yPosition = 40; // Start position for the first page
-      
-      pdf.addImage(imgData, 'JPEG', margin, yPosition, imgWidth, imgHeight);
-      heightLeft -= (pdfHeight - yPosition - margin);
-
-      while (heightLeft > 0) {
-        pdf.addPage();
-        yPosition = -heightLeft + margin;
+      pdf.text(period, margin, yPosition);
+      yPosition += 12;
+  
+      const chartCards = Array.from(chartsContainer.querySelectorAll('.chart-card')) as HTMLElement[];
+  
+      for (const [index, card] of chartCards.entries()) {
+        const canvas = await html2canvas(card, { scale: 2, backgroundColor: '#ffffff' });
+        const imgData = canvas.toDataURL('image/jpeg', 0.9);
+        const imgWidth = pdfWidth - margin * 2;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+  
+        // Force new page for the third chart (Giro de Estoque)
+        if (index === 2) {
+          pdf.addPage();
+          yPosition = yMargin;
+          // Add header again on the new page
+          pdf.setFontSize(18);
+          pdf.text('Relatório de Análise Gráfica', margin, yPosition);
+          yPosition += 8;
+          pdf.setFontSize(11);
+          pdf.text(period, margin, yPosition);
+          yPosition += 12;
+        }
+  
+        // Check if there's enough space for the current chart
+        if (yPosition + imgHeight > pdfHeight - yMargin) {
+          if (index > 0) { // Don't add a page before the first item
+            pdf.addPage();
+            yPosition = yMargin;
+             // Add header again on the new page
+            pdf.setFontSize(18);
+            pdf.text('Relatório de Análise Gráfica', margin, yPosition);
+            yPosition += 8;
+            pdf.setFontSize(11);
+            pdf.text(period, margin, yPosition);
+            yPosition += 12;
+          }
+        }
+  
         pdf.addImage(imgData, 'JPEG', margin, yPosition, imgWidth, imgHeight);
-        heightLeft -= (pdfHeight - margin * 2);
+        yPosition += imgHeight + 10; // Add some space after the chart
       }
-
+  
       addFooterToAllPages(pdf);
       pdf.save(`relatorio_graficos_${format(new Date(), 'yyyyMMdd')}.pdf`);
     } catch (error) {
