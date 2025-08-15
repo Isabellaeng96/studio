@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
+import { Calendar } from '@/components/ui/calendar';
 
 
 export default function AnalysisPage() {
