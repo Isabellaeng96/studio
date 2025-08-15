@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -24,15 +25,26 @@ const navItems = [
   { href: '/settings', label: 'Configurações', icon: Settings },
 ];
 
-export function AppSidebarNav({ isMobile = false }: { isMobile?: boolean }) {
+interface AppSidebarNavProps {
+  isMobile?: boolean;
+  onLinkClick?: () => void;
+}
+
+export function AppSidebarNav({ isMobile = false, onLinkClick }: AppSidebarNavProps) {
   const pathname = usePathname();
+
+  const handleClick = () => {
+    if (onLinkClick) {
+      onLinkClick();
+    }
+  };
 
   return (
     <nav className={cn("grid items-start gap-1 px-4 text-sm font-medium", isMobile && "p-0")}>
       {navItems.map(({ href, label, icon: Icon }) => {
         const isActive = pathname === href || (href.length > 1 && pathname.startsWith(href));
         return (
-          <Link key={href} href={href}>
+          <Link key={href} href={href} onClick={handleClick}>
             <Button
               variant={isActive ? 'default' : 'ghost'}
               className="w-full justify-start gap-2"

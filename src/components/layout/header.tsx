@@ -20,10 +20,13 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Logo } from '../logo';
 import { Badge } from '../ui/badge';
+import { useState } from 'react';
 
 export function Header() {
   const { logout, user, role, sector } = useAuth();
   const router = useRouter();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
 
   const getInitials = (name?: string | null, email?: string | null) => {
     if (name) {
@@ -49,7 +52,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 backdrop-blur sm:px-6">
       <div className="lg:hidden">
-        <Sheet>
+        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetTrigger asChild>
             <Button size="icon" variant="outline">
               <Menu className="h-5 w-5" />
@@ -65,7 +68,7 @@ export function Header() {
                 </Link>
               </div>
               <div className="flex-1 overflow-y-auto pt-4">
-                <AppSidebarNav isMobile={true} />
+                <AppSidebarNav isMobile={true} onLinkClick={() => setMobileMenuOpen(false)} />
               </div>
             </div>
           </SheetContent>
