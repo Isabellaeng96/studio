@@ -145,11 +145,6 @@ export default function AnalysisPage() {
     }
     
     const chartCards = Array.from(chartsContainer.querySelectorAll('.card')) as HTMLElement[];
-
-    if(chartCards.length === 0) {
-        // Fallback to the original method if no cards are found
-        chartCards.push(chartsContainer);
-    }
     
     try {
       const pdf = new jsPDF('p', 'mm', 'a4');
@@ -165,7 +160,7 @@ export default function AnalysisPage() {
       const period = `Período: ${date?.from ? format(date.from, 'dd/MM/yyyy') : 'N/A'} a ${date?.to ? format(date.to, 'dd/MM/yyyy') : 'N/A'}`;
       pdf.text(period, margin, 30);
       
-      for (const [index, chartCard] of chartCards.entries()) {
+      for (const chartCard of chartCards) {
         const canvas = await html2canvas(chartCard, {
             scale: 2,
             backgroundColor: '#ffffff'
@@ -261,4 +256,3 @@ export default function AnalysisPage() {
     </div>
   );
 }
-
