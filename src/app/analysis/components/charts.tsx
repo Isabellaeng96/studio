@@ -81,7 +81,7 @@ export function ChartsView({ entryTrendData, exitTrendData, stockTurnoverData, l
               <BarChart data={lowStockMaterialsData} layout="vertical" margin={{ top: 20, right: 50, left: 100, bottom: 0 }}>
                 <CartesianGrid horizontal={false} />
                 <XAxis type="number" />
-                <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} width={150} interval={0} textAnchor="end" />
+                <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} width={120} />
                 <Tooltip content={<ChartTooltipContent />} />
                 <Legend />
                 <Bar dataKey="minStock" name="Estoque Mínimo" fill="hsl(var(--muted-foreground))" radius={4} />
