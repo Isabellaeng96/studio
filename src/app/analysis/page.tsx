@@ -1,13 +1,13 @@
 
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { DateRange } from 'react-day-picker';
 import { addDays, eachDayOfInterval, format, isAfter, isBefore, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar as CalendarIcon, FileText, Loader2 } from 'lucide-react';
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import html2canvas from 'html2canvas';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChartsView } from "./components/charts";
@@ -30,6 +30,8 @@ export default function AnalysisPage() {
     from: subDays(new Date(), 29),
     to: new Date(),
   });
+  
+  const chartsRef = useRef<HTMLDivElement>(null);
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter(tx => {
@@ -92,35 +94,41 @@ export default function AnalysisPage() {
       .filter(item => item.turnover > 0);
   }, [activeMaterials, filteredTransactions]);
   
-   const handleExport = () => {
+   const handleExport = async () => {
     setIsLoading(true);
+    if (!chartsRef.current) {
+        setIsLoading(false);
+        return;
+    }
+    
     try {
-      const doc = new jsPDF();
-      const generationDate = new Date();
-      
-      doc.setFontSize(18);
-      doc.text('Relatório de Análise - Entradas e Saídas', 14, 22);
-      doc.setFontSize(11);
-      const period = `Período: ${date?.from ? format(date.from, 'dd/MM/yyyy') : 'N/A'} a ${date?.to ? format(date.to, 'dd/MM/yyyy') : 'N/A'}`;
-      doc.text(period, 14, 30);
+      const canvas = await html2canvas(chartsRef.current, { 
+        backgroundColor: null, // Use a transparent background
+        scale: 2 // Increase scale for better resolution
+      });
+      const imgData = canvas.toDataURL('image/png');
 
-      autoTable(doc, {
-        startY: 40,
-        head: [['Data', 'Entradas', 'Saídas']],
-        body: transactionTrendData.map(d => [d.date, d.entrada, d.saida]),
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: '#3b82f6' },
-        didDrawPage: (data) => {
-            const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
-            const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
-            doc.setFontSize(8);
-            doc.text(`Gerado por: ${user?.displayName || 'N/A'}`, data.settings.margin.left, pageHeight - 10);
-            doc.text(`Página ${data.pageNumber}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
-            doc.text(`Data: ${format(generationDate, 'dd/MM/yyyy HH:mm:ss')}`, pageWidth - data.settings.margin.right, pageHeight - 10, { align: 'right' });
-        }
+      const doc = new jsPDF({
+        orientation: 'p',
+        unit: 'px',
+        format: [canvas.width, canvas.height]
       });
       
-      doc.save(`relatorio_entrada_saida_${format(new Date(), 'yyyyMMdd')}.pdf`);
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      
+      const docTitle = 'Relatório de Análise Gráfica';
+      const period = `Período: ${date?.from ? format(date.from, 'dd/MM/yyyy') : 'N/A'} a ${date?.to ? format(date.to, 'dd/MM/yyyy') : 'N/A'}`;
+      
+      const tempDoc = new jsPDF(); // Use a temporary doc to calculate text width
+      const titleWidth = tempDoc.getTextWidth(docTitle) * (18 / tempDoc.getFontSize());
+      const periodWidth = tempDoc.getTextWidth(period) * (11 / tempDoc.getFontSize());
+
+
+      doc.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
+
+      doc.save(`relatorio_graficos_${format(new Date(), 'yyyyMMdd')}.pdf`);
+
     } catch (error) {
       console.error(error);
     } finally {
@@ -182,10 +190,12 @@ export default function AnalysisPage() {
                 Exportar PDF
               </Button>
             </div>
-          <ChartsView 
-            transactionTrendData={transactionTrendData}
-            stockTurnoverData={stockTurnoverData}
-          />
+            <div ref={chartsRef}>
+              <ChartsView 
+                transactionTrendData={transactionTrendData}
+                stockTurnoverData={stockTurnoverData}
+              />
+            </div>
         </TabsContent>
         <TabsContent value="predictive" className="mt-6">
           <PredictiveAnalysis materials={activeMaterials} transactions={transactions}/>
@@ -194,3 +204,4 @@ export default function AnalysisPage() {
     </div>
   );
 }
+
