@@ -26,7 +26,7 @@
     --radius: 0.5rem;
     --chart-1: 221.2 83.2% 53.3%; /* Blue */
     --chart-2: 210 40% 85%; /* Lighter Blue */
-    --chart-3: 160 70% 40%; /* A complementary teal/green */
+    --chart-3: 210 40% 96.1%; /* Secondary Blue */
     --chart-4: 340 80% 60%; /* A complementary pink/red */
     --chart-5: 50 90% 55%; /* A complementary yellow/gold */
   }
@@ -53,7 +53,7 @@
     --ring: 217.2 91.2% 59.8%;
     --chart-1: 217.2 91.2% 59.8%;
     --chart-2: 217.2 91.2% 79.8%;
-    --chart-3: 160 60% 50%;
+    --chart-3: 217.2 32.6% 17.5%;
     --chart-4: 340 80% 70%;
     --chart-5: 50 90% 65%;
   }
