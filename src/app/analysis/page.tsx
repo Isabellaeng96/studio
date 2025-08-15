@@ -25,6 +25,7 @@ export default function AnalysisPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('charts');
   const [isLoading, setIsLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   
   const [date, setDate] = useState<DateRange | undefined>({
     from: subDays(new Date(), 29),
@@ -148,9 +149,15 @@ export default function AnalysisPage() {
 
   const handleExport = async () => {
     setIsLoading(true);
+    setIsExporting(true);
+    
+    // Allow the DOM to update with the new export-friendly layout
+    await new Promise(resolve => setTimeout(resolve, 100));
+
     const chartsContainer = chartsRef.current;
     if (!chartsContainer) {
       setIsLoading(false);
+      setIsExporting(false);
       return;
     }
   
@@ -179,32 +186,17 @@ export default function AnalysisPage() {
         const imgWidth = pdfWidth - margin * 2;
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
   
-        // Force new page for the third chart (Giro de Estoque)
-        if (index === 2) {
+        // Check if there's enough space for the current chart
+        if (yPosition + imgHeight > pdfHeight - yMargin && index > 0) {
           pdf.addPage();
           yPosition = yMargin;
-          // Add header again on the new page
+           // Add header again on the new page
           pdf.setFontSize(18);
           pdf.text('Relatório de Análise Gráfica', margin, yPosition);
           yPosition += 8;
           pdf.setFontSize(11);
           pdf.text(period, margin, yPosition);
           yPosition += 12;
-        }
-  
-        // Check if there's enough space for the current chart
-        if (yPosition + imgHeight > pdfHeight - yMargin) {
-          if (index > 0) { // Don't add a page before the first item
-            pdf.addPage();
-            yPosition = yMargin;
-             // Add header again on the new page
-            pdf.setFontSize(18);
-            pdf.text('Relatório de Análise Gráfica', margin, yPosition);
-            yPosition += 8;
-            pdf.setFontSize(11);
-            pdf.text(period, margin, yPosition);
-            yPosition += 12;
-          }
         }
   
         pdf.addImage(imgData, 'JPEG', margin, yPosition, imgWidth, imgHeight);
@@ -217,6 +209,7 @@ export default function AnalysisPage() {
       console.error(error);
     } finally {
       setIsLoading(false);
+      setIsExporting(false);
     }
   };
 
@@ -280,6 +273,7 @@ export default function AnalysisPage() {
                 exitTrendData={exitTrendData}
                 stockTurnoverData={stockTurnoverData}
                 lowStockMaterialsData={lowStockMaterialsData}
+                isExporting={isExporting}
               />
             </div>
         </TabsContent>

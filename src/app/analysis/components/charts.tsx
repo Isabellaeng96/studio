@@ -10,9 +10,10 @@ interface ChartsViewProps {
   exitTrendData: { date: string; value: number; }[];
   stockTurnoverData: { name: string; turnover: number; }[];
   lowStockMaterialsData: { name: string; currentStock: number; minStock: number; }[];
+  isExporting?: boolean;
 }
 
-export function ChartsView({ entryTrendData, exitTrendData, stockTurnoverData, lowStockMaterialsData }: ChartsViewProps) {
+export function ChartsView({ entryTrendData, exitTrendData, stockTurnoverData, lowStockMaterialsData, isExporting = false }: ChartsViewProps) {
   return (
     <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-1">
        <Card className="chart-card">
@@ -78,10 +79,14 @@ export function ChartsView({ entryTrendData, exitTrendData, stockTurnoverData, l
               minStock: { label: "Estoque Mínimo", color: "hsl(var(--muted-foreground))" },
           }} className="h-[500px] w-full">
             <ResponsiveContainer>
-              <BarChart data={lowStockMaterialsData} layout="vertical" margin={{ top: 20, right: 50, left: 120, bottom: 0 }}>
+              <BarChart 
+                data={lowStockMaterialsData} 
+                layout="vertical" 
+                margin={{ top: 20, right: 50, left: isExporting ? 200 : 120, bottom: 0 }}
+              >
                 <CartesianGrid horizontal={false} />
                 <XAxis type="number" />
-                <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} width={150} />
+                <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} width={isExporting ? 220 : 150} />
                 <Tooltip content={<ChartTooltipContent />} />
                 <Legend />
                 <Bar dataKey="minStock" name="Estoque Mínimo" fill="hsl(var(--muted-foreground))" radius={4}>
