@@ -19,6 +19,8 @@ import type { Material, MultiTransactionItemSave } from '@/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Upload } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
 
 interface WithdrawalImporterProps {
   onDataExtracted: (data: MultiTransactionItemSave[]) => void;
