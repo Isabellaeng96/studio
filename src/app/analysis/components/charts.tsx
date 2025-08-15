@@ -101,7 +101,7 @@ export function ChartsView({ entryTrendData, exitTrendData, stockTurnoverData, l
         <CardContent>
           <ChartContainer config={{}} className="h-80 w-full">
             <ResponsiveContainer>
-              <BarChart data={stockTurnoverData} layout="vertical" margin={{ top: 20, right: 50, left: 50, bottom: 0 }}>
+              <BarChart data={stockTurnoverData} layout="vertical" margin={{ top: 20, right: 50, left: 120, bottom: 0 }}>
                 <CartesianGrid horizontal={false} />
                 <XAxis type="number" />
                 <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} width={120} />
