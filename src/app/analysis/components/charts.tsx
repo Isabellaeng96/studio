@@ -44,14 +44,19 @@ export function ChartsView({ entryTrendData, exitTrendData, stockTurnoverData }:
           <CardDescription>Acompanha o volume de materiais que saíram do estoque para o período selecionado.</CardDescription>
         </CardHeader>
         <CardContent>
-          <ChartContainer config={{}} className="h-80 w-full">
+          <ChartContainer config={{
+            value: {
+              label: "Saídas",
+              color: "hsl(var(--destructive))",
+            }
+          }} className="h-80 w-full">
              <ResponsiveContainer>
               <BarChart data={exitTrendData} margin={{ top: 20, right: 20, left: -10, bottom: 0 }}>
                 <CartesianGrid vertical={false}/>
                 <XAxis dataKey="date" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
                 <YAxis />
                 <Tooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="value" name="Saídas" fill="var(--color-chart-2)" radius={4} />
+                <Bar dataKey="value" name="Saídas" fill="hsl(var(--destructive))" radius={4} />
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
