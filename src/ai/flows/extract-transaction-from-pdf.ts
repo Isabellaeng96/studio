@@ -18,7 +18,7 @@ export type TransactionExtractionInput = z.infer<typeof TransactionExtractionInp
 
 const MaterialDetailSchema = z.object({
     materialName: z.string().optional().describe('O nome do material ou produto principal encontrado.'),
-    quantity: z.number().optional().describe('A quantidade do material.'),
+    quantity: z.number().optional().describe('A quantidade do material. Deve ser apenas o valor numérico.'),
     unit: z.string().optional().describe('A unidade de medida do material (ex: un, kg, m).'),
     category: z.string().optional().describe('Uma categoria sugerida para o material com base no seu nome ou tipo.'),
 });
@@ -46,6 +46,7 @@ Além disso, identifique **TODOS** os materiais ou produtos listados no document
 
 Se um campo não for encontrado, deixe-o em branco. Foque em extrair os valores exatos.
 Para o nome do material, procure por uma descrição de produto.
+Para a quantidade, extraia **apenas o valor numérico**, ignorando qualquer texto ou unidade que possa acompanhá-lo. O resultado deve ser um número.
 Para a unidade, procure por abreviações como 'un', 'pc', 'kg', 'm', 'm2', 'm3', 'sc'.
 Para a categoria, sugira uma categoria com base no nome do produto (ex: 'Hidráulica', 'Elétrica', 'Ferramenta', 'Agregado', 'Estrutura').
 
