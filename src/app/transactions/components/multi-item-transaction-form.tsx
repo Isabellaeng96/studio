@@ -73,13 +73,8 @@ export function MultiItemTransactionForm({ materials, costCenters, onSave, defau
       osNumber: '',
       costCenter: '',
     });
-  }, [initialItems, defaultMaterialId, form]);
+  }, [initialItems, defaultMaterialId, form, user]);
 
-  const watchedItems = form.watch('items');
-
-  useEffect(() => {
-    onItemsChange(watchedItems);
-  }, [watchedItems, onItemsChange]);
 
   const onSubmit = (data: MultiItemFormValues) => {
     const wasSaved = onSave(data);

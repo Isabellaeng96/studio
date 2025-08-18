@@ -32,9 +32,9 @@ function TransactionsPageContent() {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const getTab = () => searchParams.get('tab') === 'saida' ? 'saida' : 'entrada';
-  const getShowForm = () => searchParams.has('showForm');
-  const getMaterialId = () => searchParams.get('materialId');
+  const getTab = useCallback(() => searchParams.get('tab') === 'saida' ? 'saida' : 'entrada', [searchParams]);
+  const getShowForm = useCallback(() => searchParams.has('showForm'), [searchParams]);
+  const getMaterialId = useCallback(() => searchParams.get('materialId'), [searchParams]);
 
   // Filter states
   const typeFilter = searchParams.get('type') || 'all';
@@ -52,15 +52,38 @@ function TransactionsPageContent() {
   const [initialInvoice, setInitialInvoice] = useState<string | undefined>();
   const [initialSupplier, setInitialSupplier] = useState<string | undefined>();
   
+  const resetInitialState = useCallback(() => {
+    setInitialEntryItems([]);
+    setInitialWithdrawalItems([]);
+    setInitialInvoice(undefined);
+    setInitialSupplier(undefined);
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('showForm');
+    if(params.has('materialId')) params.delete('materialId');
+    router.push(`${pathname}?${params.toString()}`);
+  }, [searchParams, pathname, router]);
+
   useEffect(() => {
-    const shouldShowForm = getShowForm();
-    if (showForm && !shouldShowForm) {
-       resetInitialState();
+    const newShowForm = getShowForm();
+    if (showForm && !newShowForm) {
+        resetInitialState();
     }
-    setShowForm(shouldShowForm);
+    setShowForm(newShowForm);
     setTransactionType(getTab());
-    setMaterialId(getMaterialId());
-  }, [searchParams, showForm]);
+
+    const newMaterialId = getMaterialId();
+    setMaterialId(newMaterialId);
+    if (newMaterialId) {
+        // If there's a materialId in the URL, initialize the withdrawal items with it.
+        // This ensures scanning or clicking a material works as expected.
+        setInitialWithdrawalItems([{ materialId: newMaterialId, quantity: 1 }]);
+    } else if (!newShowForm) {
+        // Clear items only if the form is being hidden and no material is selected
+        setInitialWithdrawalItems([]);
+    }
+
+  }, [searchParams, showForm, getTab, getShowForm, getMaterialId, resetInitialState]);
+
 
   const handlePdfDataExtracted = useCallback((data: TransactionExtractionOutput) => {
     if (!data.materials || data.materials.length === 0) {
@@ -111,16 +134,6 @@ function TransactionsPageContent() {
   const handleSaveMultiEntry = (data: { items: EntryItem[] } & Omit<TransactionSave, 'materialId' | 'quantity' | 'materialName' | 'unit' | 'category'>) => {
      return addMultipleEntries(data.items, data);
   };
-
-  const resetInitialState = useCallback(() => {
-    setInitialEntryItems([]);
-    setInitialWithdrawalItems([]);
-    setInitialInvoice(undefined);
-    setInitialSupplier(undefined);
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete('showForm');
-    router.push(`${pathname}?${params.toString()}`);
-  }, [searchParams, pathname, router]);
 
   const handleNewTransactionClick = () => {
     setInitialEntryItems([]);
