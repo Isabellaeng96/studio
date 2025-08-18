@@ -4,7 +4,6 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react';
 import type { Material, Transaction, TransactionSave, MaterialSave, CostCenter, Supplier, AlertSetting, SectorEmailConfig, MultiTransactionItemSave, EntryItem } from '@/types';
-import { materials as initialMaterials, transactions as initialTransactions } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 
 // Helper function to get item from localStorage safely
