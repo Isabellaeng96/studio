@@ -96,43 +96,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const availableSectors = useMemo(() => ['Engenharia', 'Manutenção', 'Compras'], []);
   
   const loadStateFromStorage = useCallback(() => {
-    const storedMaterials = getFromStorage<Material[]>('materials', []);
-    if (storedMaterials.length > 0) {
-      setMaterials(storedMaterials);
-      setTransactions(getFromStorage<Transaction[]>('transactions', []));
-      setCategories(getFromStorage<string[]>('categories', []));
-      setCostCenters(getFromStorage<CostCenter[]>('costCenters', []));
-      setSuppliers(getFromStorage<Supplier[]>('suppliers', []));
-      setAlertSettings(getFromStorage<AlertSetting[]>('alertSettings', []));
-      setSectorEmailConfig(getFromStorage<SectorEmailConfig>('sectorEmailConfig', {}));
-    } else {
-      // LocalStorage is empty, load mock data
-      setMaterials(initialMaterials);
-      setTransactions(initialTransactions);
-      const uniqueCategories = new Set(initialMaterials.map(m => m.category).filter(c => c && c.trim() !== ''));
-      const initialCats = Array.from(uniqueCategories);
-      setCategories(initialCats);
-      const initialCostCenters = [
-        { id: 'cc-1', name: 'Projeto A', description: 'Desenvolvimento do novo loteamento' },
-        { id: 'cc-2', name: 'Manutenção Geral', description: 'Custos de manutenção de rotina' },
-      ];
-      setCostCenters(initialCostCenters);
-      const initialSuppliers = [
-        { id: 'sup-1', name: 'VOTORANTIM', cnpj: '01.234.567/0001-89', contactName: 'Ana Costa', phone: '11 98765-4321', email: 'ana.costa@votorantim.com.br' },
-        { id: 'sup-2', name: 'TIGRE', cnpj: '98.765.432/0001-10', contactName: 'Carlos Silva', phone: '47 3441-4444', email: 'vendas@tigre.com' },
-      ];
-      setSuppliers(initialSuppliers);
-
-      // Default alert settings: notify Engineering for all low-stock items
-      const initialAlertSettings = initialMaterials
-        .map(m => ({ materialId: m.id, sectors: ['Engenharia'] }));
-      setAlertSettings(initialAlertSettings);
-      setSectorEmailConfig({
-        'Engenharia': ['tec08@geoblue.com.br'],
-        'Manutenção': ['tec08@geoblue.com.br'],
-        'Compras': ['compras@geoblue.com.br'],
-      });
-    }
+    // Always load from storage. If it's the very first run, it will load empty arrays.
+    // The mock data is no longer loaded automatically.
+    setMaterials(getFromStorage<Material[]>('materials', []));
+    setTransactions(getFromStorage<Transaction[]>('transactions', []));
+    setCategories(getFromStorage<string[]>('categories', []));
+    setCostCenters(getFromStorage<CostCenter[]>('costCenters', []));
+    setSuppliers(getFromStorage<Supplier[]>('suppliers', []));
+    setAlertSettings(getFromStorage<AlertSetting[]>('alertSettings', []));
+    setSectorEmailConfig(getFromStorage<SectorEmailConfig>('sectorEmailConfig', {}));
   }, []);
 
   useEffect(() => {
@@ -141,9 +113,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setIsLoaded(true);
     
     // Add event listener for storage changes from other tabs
-    const handleStorageChange = () => {
-      console.log("Storage changed in another tab. Reloading state.");
-      loadStateFromStorage();
+    const handleStorageChange = (event: StorageEvent) => {
+      // Check if the change is relevant to this app's data
+      const appKeys = ['materials', 'transactions', 'categories', 'costCenters', 'suppliers', 'alertSettings', 'sectorEmailConfig'];
+      if (event.key && appKeys.includes(event.key)) {
+         console.log(`Storage changed in another tab for key: ${event.key}. Reloading state.`);
+         loadStateFromStorage();
+      }
     };
     
     window.addEventListener('storage', handleStorageChange);
