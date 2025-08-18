@@ -455,15 +455,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     for (const item of items) {
         let materialId = item.materialId;
         const materialNameUpper = item.materialName.toUpperCase();
-        let materialToUpdate: Material | undefined = updatedMaterials.find(m => m.id === materialId);
-
-        if (item.isNew || !materialToUpdate) {
+        let materialToUpdate: Material | undefined;
+        
+        if (item.isNew) {
             const existingMaterial = updatedMaterials.find(m => !m.deleted && m.name.toUpperCase() === materialNameUpper);
             if (existingMaterial) {
                 toast({
                     variant: 'destructive',
                     title: 'Material Duplicado',
-                    description: `Um material com o nome "${item.materialName}" já existe.`,
+                    description: `Um novo material com o nome "${item.materialName}" não pode ser criado pois ele já existe.`,
                 });
                 allSucceeded = false;
                 continue;
@@ -484,7 +484,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
             materialToUpdate = newMaterial;
             newMaterialCount++;
             if (newMaterial.category) newCategories.add(newMaterial.category);
+        } else {
+            materialToUpdate = updatedMaterials.find(m => m.id === materialId);
+            if (!materialToUpdate) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Material não encontrado',
+                    description: `O material selecionado não foi encontrado.`,
+                });
+                allSucceeded = false;
+                continue;
+            }
         }
+
 
         const materialIndex = updatedMaterials.findIndex(m => m.id === materialToUpdate!.id);
         const currentMaterial = updatedMaterials[materialIndex];
@@ -497,6 +509,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             date: commonData.date.getTime(),
             materialId: materialToUpdate!.id,
             materialName: currentMaterial.name,
+            invoiceName: item.invoiceName,
             quantity: item.quantity,
             responsible: commonData.responsible,
             supplier: commonData.supplier?.toUpperCase(),

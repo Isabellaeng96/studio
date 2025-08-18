@@ -22,6 +22,7 @@ export type Transaction = {
   quantity: number;
   supplier?: string;
   invoice?: string;
+  invoiceName?: string; // Nome do item conforme a nota fiscal
   osNumber?: string;
   responsible: string;
   costCenter?: string;
@@ -44,6 +45,7 @@ export type MultiTransactionItemSave = {
 export type EntryItem = {
     materialId?: string; // Will be empty for new materials
     materialName: string;
+    invoiceName?: string; // Opcional, nome na nota fiscal
     isNew: boolean;
     quantity: number;
     unit: string;

@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -201,7 +202,8 @@ export default function DashboardPage() {
                       </DialogHeader>
                       <div className="grid gap-4 py-4 text-sm">
                         <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                           <div><span className="font-semibold">Material:</span> {tx.materialName}</div>
+                           <div><span className="font-semibold">Material Padrão:</span> {tx.materialName}</div>
+                           {tx.type === 'entrada' && tx.invoiceName && <div><span className="font-semibold">Nome na Nota:</span> {tx.invoiceName}</div>}
                            <div><span className="font-semibold">Tipo:</span> <span className={cn(tx.type === 'entrada' ? 'text-emerald-600' : 'text-amber-600')}>{tx.type === 'entrada' ? 'Entrada' : 'Saída'}</span></div>
                            <div><span className="font-semibold">Quantidade:</span> {tx.quantity}</div>
                            <div><span className="font-semibold">Data:</span> {isClient ? format(new Date(tx.date), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR }) : ''}</div>

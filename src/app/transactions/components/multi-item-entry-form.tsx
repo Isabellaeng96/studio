@@ -26,6 +26,7 @@ const multiItemEntrySchema = z.object({
   items: z.array(z.object({
     materialId: z.string().optional(),
     materialName: z.string().min(1, "O nome do material é obrigatório."),
+    invoiceName: z.string().optional(),
     isNew: z.boolean(),
     quantity: z.coerce.number().positive('A quantidade deve ser positiva.'),
     unit: z.string().min(1, "A unidade é obrigatória."),
@@ -75,6 +76,19 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
   useEffect(() => {
     form.setValue('responsible', user?.displayName ?? '');
   }, [form, user]);
+  
+  useEffect(() => {
+    // For existing items, set the invoiceName to the material's name by default
+    fields.forEach((field, index) => {
+        if (!field.isNew && field.materialId && !field.invoiceName) {
+            const material = materials.find(m => m.id === field.materialId);
+            if (material) {
+                update(index, { ...field, invoiceName: material.name });
+            }
+        }
+    });
+  }, [fields, materials, update]);
+
 
   const onSubmit = (data: MultiItemEntryFormValues) => {
     const wasSaved = onSave(data);
@@ -105,6 +119,7 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
         ...fields[index],
         materialId: selectedMaterial.id,
         materialName: selectedMaterial.name,
+        invoiceName: selectedMaterial.name, // Default invoice name to material name
         unit: selectedMaterial.unit,
         category: selectedMaterial.category,
         isNew: false,
@@ -117,6 +132,8 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
         update(index, {
             ...fields[index],
             materialId: undefined,
+            materialName: '',
+            invoiceName: '',
             isNew: true,
         })
     } else {
@@ -129,6 +146,7 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
   }
   
   const validCategories = categories.filter(c => c && c.trim() !== '');
+  const defaultNewItem = { materialId: '', materialName: '', invoiceName: '', isNew: true, quantity: 0, unit: 'un', category: 'GERAL' };
 
   return (
     <Card>
@@ -142,47 +160,50 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
               <h3 className="text-lg font-medium mb-2">Itens de entrada</h3>
               <div className="space-y-4 rounded-md border p-4">
                 {fields.map((field, index) => (
-                  <div key={field.id} className="space-y-3 p-3 rounded-md border bg-muted/50">
-                    <div className="flex justify-between items-center">
+                  <div key={field.id} className="space-y-3 p-3 rounded-md border bg-muted/50 relative">
+                     <div className="absolute top-2 right-2 flex items-center gap-2">
                         <FormField
                           control={form.control}
                           name={`items.${index}.isNew`}
                           render={({ field }) => (
                             <FormItem className="flex items-center gap-2 space-y-0">
+                               <FormLabel className="text-xs">Novo?</FormLabel>
                               <FormControl>
                                 <Switch checked={field.value} onCheckedChange={(checked) => {
                                     field.onChange(checked);
                                     handleIsNewToggle(index, checked);
                                 }} />
                               </FormControl>
-                              <FormLabel>Novo Material?</FormLabel>
                             </FormItem>
                           )}
                         />
-                        <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="hover:bg-destructive/20">
+                        <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="h-6 w-6 hover:bg-destructive/20">
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                     </div>
 
                     {field.isNew ? (
-                        <FormField
-                          control={form.control}
-                          name={`items.${index}.materialName`}
-                          render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Nome do Novo Material</FormLabel>
-                                <FormControl><Input {...field} placeholder="Ex: CIMENTO ABC" className="uppercase"/></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        <>
+                           <FormField
+                                control={form.control}
+                                name={`items.${index}.materialName`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Nome do Novo Material (Padrão do Sistema)</FormLabel>
+                                        <FormControl><Input {...field} placeholder="Ex: TUBO PVC 100MM" className="uppercase"/></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </>
                     ) : (
+                       <div className="grid md:grid-cols-2 gap-4">
                         <FormField
                             control={form.control}
                             name={`items.${index}.materialId`}
                             render={({ field: selectField }) => (
                                 <FormItem>
-                                <FormLabel>Material Existente</FormLabel>
+                                <FormLabel>Material (Padrão do Sistema)</FormLabel>
                                 <Select onValueChange={(value) => {
                                     selectField.onChange(value);
                                     handleMaterialSelection(index, value);
@@ -194,7 +215,7 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
                                     </FormControl>
                                     <SelectContent>
                                     {materials.map(m => (
-                                        <SelectItem key={m.id} value={m.id}>
+                                        <SelectItem key={m.id} value={m.id} disabled={m.deleted}>
                                         {m.name}
                                         </SelectItem>
                                     ))}
@@ -204,6 +225,18 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
                                 </FormItem>
                             )}
                         />
+                         <FormField
+                            control={form.control}
+                            name={`items.${index}.invoiceName`}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Nome na Nota Fiscal (Opcional)</FormLabel>
+                                    <FormControl><Input {...field} placeholder="Nome como veio na nota" className="uppercase"/></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                       </div>
                     )}
 
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -218,7 +251,7 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
                             control={form.control}
                             name={`items.${index}.unit`}
                             render={({ field }) => (
-                                <FormItem><FormLabel>Unidade</FormLabel><FormControl><Input placeholder="Ex: un, kg, m" {...field} disabled={!field.value && !form.getValues(`items.${index}.isNew`)} /></FormControl><FormMessage /></FormItem>
+                                <FormItem><FormLabel>Unidade</FormLabel><FormControl><Input placeholder="Ex: un, kg, m" {...field} disabled={!form.getValues(`items.${index}.isNew`)} /></FormControl><FormMessage /></FormItem>
                             )}
                         />
                          <FormField
@@ -227,7 +260,7 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
                             render={({ field }) => (
                                 <FormItem className="col-span-2 md:col-span-1">
                                 <FormLabel>Categoria</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value} disabled={!field.value && !form.getValues(`items.${index}.isNew`)} >
+                                <Select onValueChange={field.onChange} value={field.value} disabled={!form.getValues(`items.${index}.isNew`)} >
                                     <FormControl><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger></FormControl>
                                     <SelectContent>
                                         {validCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
@@ -240,7 +273,7 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
                     </div>
                   </div>
                 ))}
-                 <Button type="button" variant="outline" size="sm" onClick={() => append({ materialId: '', materialName: '', isNew: true, quantity: 0, unit: 'un', category: 'GERAL' })}>
+                 <Button type="button" variant="outline" size="sm" onClick={() => append(defaultNewItem)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Adicionar Item
                 </Button>
