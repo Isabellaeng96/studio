@@ -130,17 +130,19 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
   
   const handleIsNewToggle = (index: number, isNew: boolean) => {
     if (isNew) {
+        // When toggling to a NEW item, use the invoiceName as the default materialName
         update(index, {
             ...fields[index],
             materialId: undefined,
-            materialName: '',
-            invoiceName: '',
+            materialName: fields[index].invoiceName || '',
             isNew: true,
         })
     } else {
+        // When toggling to an EXISTING item, clear the fields to force selection
         update(index, {
             ...fields[index],
             materialId: '',
+            materialName: '',
             isNew: false,
         })
     }
@@ -192,6 +194,17 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
                                     <FormItem>
                                         <FormLabel>Nome do Novo Material (Padrão do Sistema)</FormLabel>
                                         <FormControl><Input {...field} placeholder="Ex: TUBO PVC 100MM" className="uppercase"/></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                             <FormField
+                                control={form.control}
+                                name={`items.${index}.invoiceName`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Nome na Nota Fiscal (Opcional)</FormLabel>
+                                        <FormControl><Input {...field} placeholder="Nome como veio na nota" className="uppercase"/></FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}
