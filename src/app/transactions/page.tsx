@@ -7,7 +7,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useAppContext } from '@/context/AppContext';
 import { TransactionTypeDialog } from './components/transaction-type-dialog';
-import { PlusCircle, Search, SlidersHorizontal } from 'lucide-react';
+import { PlusCircle, Search, SlidersHorizontal, QrCode } from 'lucide-react';
 import { PdfImporter } from './components/pdf-importer';
 import { MultiItemEntryForm } from './components/multi-item-entry-form';
 import { MultiItemTransactionForm } from './components/multi-item-transaction-form';
@@ -20,6 +20,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { TransactionExporter } from './components/transaction-exporter';
 import { useAuth } from '@/context/AuthContext';
 import { WithdrawalImporter } from './components/withdrawal-importer';
+import { QrCodeScanner } from './components/qr-code-scanner';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
 
 function TransactionsPageContent() {
@@ -156,6 +158,22 @@ function TransactionsPageContent() {
     });
   }, [sortedTransactions, typeFilter, materialFilter, costCenterFilter, documentQuery]);
 
+  const handleQrScan = useCallback((scannedMaterialId: string) => {
+    setInitialWithdrawalItems(prevItems => {
+        const existingItemIndex = prevItems.findIndex(item => item.materialId === scannedMaterialId);
+        if (existingItemIndex > -1) {
+            const newItems = [...prevItems];
+            newItems[existingItemIndex] = {
+                ...newItems[existingItemIndex],
+                quantity: newItems[existingItemIndex].quantity + 1,
+            };
+            return newItems;
+        } else {
+            return [...prevItems, { materialId: scannedMaterialId, quantity: 1 }];
+        }
+    });
+  }, []);
+
 
   return (
     <div className="flex flex-col gap-8">
@@ -198,14 +216,31 @@ function TransactionsPageContent() {
                   defaultMaterialId={materialId}
                   initialItems={initialWithdrawalItems}
                   key={`saida-${materialId}-${JSON.stringify(initialWithdrawalItems)}`}
+                  onItemsChange={setInitialWithdrawalItems}
                 />
              )}
           </div>
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 space-y-8">
                 {transactionType === 'entrada' ? (
                     <PdfImporter onDataExtracted={handlePdfDataExtracted} />
                 ) : (
-                    <WithdrawalImporter onDataExtracted={handleCsvDataExtracted} materials={materials} />
+                    <>
+                      <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <QrCode className="h-5 w-5 text-primary"/>
+                                Leitor de QR Code
+                            </CardTitle>
+                            <CardDescription>
+                                Use a câmera para adicionar materiais à lista de retirada rapidamente.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                           <QrCodeScanner onScan={handleQrScan} materials={materials} />
+                        </CardContent>
+                      </Card>
+                      <WithdrawalImporter onDataExtracted={handleCsvDataExtracted} materials={materials} />
+                    </>
                 )}
             </div>
         </div>

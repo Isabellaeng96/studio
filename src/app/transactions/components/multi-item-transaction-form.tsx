@@ -40,20 +40,19 @@ interface MultiItemTransactionFormProps {
   onSave: (data: { items: MultiTransactionItemSave[] } & Omit<MultiTransactionItemSave, 'materialId' | 'quantity'>) => boolean;
   defaultMaterialId?: string | null;
   initialItems?: MultiTransactionItemSave[];
+  onItemsChange: (items: MultiTransactionItemSave[]) => void;
 }
 
-export function MultiItemTransactionForm({ materials, costCenters, onSave, defaultMaterialId, initialItems = [] }: MultiItemTransactionFormProps) {
+export function MultiItemTransactionForm({ materials, costCenters, onSave, defaultMaterialId, initialItems = [], onItemsChange }: MultiItemTransactionFormProps) {
   const { user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   
-  const defaultItems = defaultMaterialId ? [{ materialId: defaultMaterialId, quantity: 0 }] : [];
-
   const form = useForm<MultiItemFormValues>({
     resolver: zodResolver(multiItemTransactionSchema),
     defaultValues: {
-      items: initialItems.length > 0 ? initialItems : defaultItems,
+      items: [],
       date: new Date(),
       responsible: user?.displayName ?? '',
       osNumber: '',
@@ -61,15 +60,26 @@ export function MultiItemTransactionForm({ materials, costCenters, onSave, defau
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, update } = useFieldArray({
     control: form.control,
     name: "items",
   });
   
   useEffect(() => {
-    form.setValue('responsible', user?.displayName ?? '');
-  }, [form, user]);
+    form.reset({
+      items: initialItems.length > 0 ? initialItems : (defaultMaterialId ? [{ materialId: defaultMaterialId, quantity: 1 }] : []),
+      date: new Date(),
+      responsible: user?.displayName ?? '',
+      osNumber: '',
+      costCenter: '',
+    });
+  }, [initialItems, defaultMaterialId, form]);
 
+  const watchedItems = form.watch('items');
+
+  useEffect(() => {
+    onItemsChange(watchedItems);
+  }, [watchedItems, onItemsChange]);
 
   const onSubmit = (data: MultiItemFormValues) => {
     const wasSaved = onSave(data);
@@ -120,7 +130,7 @@ export function MultiItemTransactionForm({ materials, costCenters, onSave, defau
                             </FormControl>
                             <SelectContent>
                               {materials.map(m => (
-                                <SelectItem key={m.id} value={m.id}>
+                                <SelectItem key={m.id} value={m.id} disabled={m.deleted}>
                                   {m.name}
                                 </SelectItem>
                               ))}
@@ -147,7 +157,7 @@ export function MultiItemTransactionForm({ materials, costCenters, onSave, defau
                     </Button>
                   </div>
                 ))}
-                 <Button type="button" variant="outline" size="sm" onClick={() => append({ materialId: '', quantity: 0 })}>
+                 <Button type="button" variant="outline" size="sm" onClick={() => append({ materialId: '', quantity: 1 })}>
                     <Plus className="mr-2 h-4 w-4" />
                     Adicionar Item
                 </Button>
