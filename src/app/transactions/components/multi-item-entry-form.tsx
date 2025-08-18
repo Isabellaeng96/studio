@@ -78,7 +78,7 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
   }, [form, user]);
   
   useEffect(() => {
-    // For existing items, set the invoiceName to the material's name by default
+    // For existing items, if invoiceName is empty, default it to the material's name
     fields.forEach((field, index) => {
         if (!field.isNew && field.materialId && !field.invoiceName) {
             const material = materials.find(m => m.id === field.materialId);
@@ -119,7 +119,8 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
         ...fields[index],
         materialId: selectedMaterial.id,
         materialName: selectedMaterial.name,
-        invoiceName: selectedMaterial.name, // Default invoice name to material name
+        // Preserve existing invoiceName, only default if it's empty
+        invoiceName: fields[index].invoiceName || selectedMaterial.name, 
         unit: selectedMaterial.unit,
         category: selectedMaterial.category,
         isNew: false,

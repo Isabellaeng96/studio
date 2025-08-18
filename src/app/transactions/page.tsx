@@ -75,6 +75,7 @@ function TransactionsPageContent() {
         return {
             materialId: existingMaterial?.id,
             materialName: existingMaterial ? existingMaterial.name : (item.materialName || ''),
+            invoiceName: item.materialName || '', // Keep original name from PDF
             isNew: !existingMaterial,
             quantity: item.quantity || 0,
             unit: existingMaterial?.unit || item.unit || 'un',
