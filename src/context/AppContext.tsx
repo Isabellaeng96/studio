@@ -509,7 +509,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             date: commonData.date.getTime(),
             materialId: materialToUpdate!.id,
             materialName: currentMaterial.name,
-            invoiceName: item.invoiceName,
+            invoiceName: item.invoiceName || currentMaterial.name,
             quantity: item.quantity,
             responsible: commonData.responsible,
             supplier: commonData.supplier?.toUpperCase(),
@@ -732,3 +732,5 @@ export function useAppContext() {
   }
   return context;
 }
+
+    

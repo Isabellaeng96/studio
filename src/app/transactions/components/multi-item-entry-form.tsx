@@ -91,7 +91,12 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
 
 
   const onSubmit = (data: MultiItemEntryFormValues) => {
-    const wasSaved = onSave(data);
+    // For new items, ensure invoiceName is the same as materialName
+    const processedData = {
+        ...data,
+        items: data.items.map(item => item.isNew ? { ...item, invoiceName: item.materialName } : item),
+    };
+    const wasSaved = onSave(processedData);
     if (wasSaved) {
       handleCancel(true);
     }
@@ -186,30 +191,17 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
                     </div>
 
                     {field.isNew ? (
-                        <>
-                           <FormField
-                                control={form.control}
-                                name={`items.${index}.materialName`}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Nome do Novo Material (Padrão do Sistema)</FormLabel>
-                                        <FormControl><Input {...field} placeholder="Ex: TUBO PVC 100MM" className="uppercase"/></FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                             <FormField
-                                control={form.control}
-                                name={`items.${index}.invoiceName`}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Nome na Nota Fiscal (Opcional)</FormLabel>
-                                        <FormControl><Input {...field} placeholder="Nome como veio na nota" className="uppercase"/></FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </>
+                        <FormField
+                            control={form.control}
+                            name={`items.${index}.materialName`}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Nome do Novo Material</FormLabel>
+                                    <FormControl><Input {...field} placeholder="Ex: TUBO PVC 100MM (conforme nota)" className="uppercase"/></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                     ) : (
                        <div className="grid md:grid-cols-2 gap-4">
                         <FormField
@@ -379,3 +371,5 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
     </Card>
   );
 }
+
+    
