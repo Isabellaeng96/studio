@@ -9,6 +9,7 @@ import {
   Landmark,
   Settings,
   Truck,
+  Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -23,6 +24,7 @@ const navItems = [
   { href: '/suppliers', label: 'Fornecedores', icon: Truck, roles: ['Administrador', 'Gerente de Estoque'] },
   { href: '/cost-centers', label: 'Centros de Custo', icon: Landmark, roles: ['Administrador', 'Gerente de Estoque'] },
   { href: '/analysis', label: 'Análise', icon: BarChart3, roles: ['Administrador'] },
+  { href: '/users', label: 'Usuários', icon: Users, roles: ['Administrador'] },
   { href: '/settings', label: 'Configurações', icon: Settings, roles: ['Administrador'] },
 ];
 

@@ -1,9 +1,10 @@
 
 
+
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react';
-import type { Material, Transaction, TransactionSave, MaterialSave, CostCenter, Supplier, AlertSetting, SectorEmailConfig, MultiTransactionItemSave, EntryItem } from '@/types';
+import type { Material, Transaction, TransactionSave, MaterialSave, CostCenter, Supplier, AlertSetting, SectorEmailConfig, MultiTransactionItemSave, EntryItem, AppUser, AppUserSave } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 
 // Helper function to get item from localStorage safely
@@ -51,6 +52,7 @@ interface AppContextType {
   categories: string[];
   costCenters: CostCenter[];
   suppliers: Supplier[];
+  users: AppUser[];
   activeMaterials: Material[]; // Materials that are not deleted
   addMaterial: (material: MaterialSave) => string | null;
   addMultipleMaterials: (materials: MaterialSave[]) => { messages: {variant: "default" | "destructive", title: string, description: string}[] };
@@ -69,6 +71,9 @@ interface AppContextType {
   updateSupplier: (supplier: Supplier) => void;
   deleteSupplier: (supplierId: string) => void;
   addMultipleSuppliers: (suppliers: Omit<Supplier, 'id'>[]) => { messages: { variant: "default" | "destructive", title: string, description: string }[] };
+  addUser: (user: AppUserSave) => void;
+  updateUser: (user: AppUser) => void;
+  deleteUser: (userId: string) => void;
   // Alert Settings
   alertSettings: AlertSetting[];
   availableSectors: string[];
@@ -86,13 +91,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [categories, setCategories] = useState<string[]>([]);
   const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [users, setUsers] = useState<AppUser[]>([]);
   const [alertSettings, setAlertSettings] = useState<AlertSetting[]>([]);
   const [sectorEmailConfig, setSectorEmailConfig] = useState<SectorEmailConfig>({});
 
   const [isLoaded, setIsLoaded] = useState(false);
   const { toast } = useToast();
 
-  const availableSectors = useMemo(() => ['Engenharia', 'Manutenção', 'Compras'], []);
+  const availableSectors = useMemo(() => ['Engenharia', 'Manutenção', 'Compras', 'Logística', 'Diretoria'], []);
   
   const loadStateFromStorage = useCallback(() => {
     // Always load from storage. If it's the very first run, it will load empty arrays.
@@ -101,6 +107,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCategories(getFromStorage<string[]>('categories', []));
     setCostCenters(getFromStorage<CostCenter[]>('costCenters', []));
     setSuppliers(getFromStorage<Supplier[]>('suppliers', []));
+    setUsers(getFromStorage<AppUser[]>('users', [
+        { id: 'USR-001', name: 'Admin Geoblue', email: 'tec08@geoblue.com.br', role: 'Administrador', sector: 'Manutenção' },
+        { id: 'USR-002', name: 'Gerente Compras', email: 'compras@geoblue.com.br', role: 'Gerente de Estoque', sector: 'Logística' },
+    ]));
     setAlertSettings(getFromStorage<AlertSetting[]>('alertSettings', []));
     setSectorEmailConfig(getFromStorage<SectorEmailConfig>('sectorEmailConfig', {}));
   }, []);
@@ -113,7 +123,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Add event listener for storage changes from other tabs
     const handleStorageChange = (event: StorageEvent) => {
       // Check if the change is relevant to this app's data
-      const appKeys = ['materials', 'transactions', 'categories', 'costCenters', 'suppliers', 'alertSettings', 'sectorEmailConfig'];
+      const appKeys = ['materials', 'transactions', 'categories', 'costCenters', 'suppliers', 'users', 'alertSettings', 'sectorEmailConfig'];
       if (event.key && appKeys.includes(event.key)) {
          console.log(`Storage changed in another tab for key: ${event.key}. Reloading state.`);
          loadStateFromStorage();
@@ -135,6 +145,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => { if (isLoaded) setInStorage('categories', categories); }, [categories, isLoaded]);
   useEffect(() => { if (isLoaded) setInStorage('costCenters', costCenters); }, [costCenters, isLoaded]);
   useEffect(() => { if (isLoaded) setInStorage('suppliers', suppliers); }, [suppliers, isLoaded]);
+  useEffect(() => { if (isLoaded) setInStorage('users', users); }, [users, isLoaded]);
   useEffect(() => { if (isLoaded) setInStorage('alertSettings', alertSettings); }, [alertSettings, isLoaded]);
   useEffect(() => { if (isLoaded) setInStorage('sectorEmailConfig', sectorEmailConfig); }, [sectorEmailConfig, isLoaded]);
 
@@ -520,14 +531,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         if (item.isNew) {
             const added = materialsToAdd.find(m => m.entryItem.materialName.toUpperCase() === item.materialName.toUpperCase());
-            materialToUpdate = added?.newMaterial;
-            currentMaterialId = added?.newMaterial.id;
+            if (added) {
+                materialToUpdate = added.newMaterial;
+                currentMaterialId = added.newMaterial.id;
+            }
         } else {
             materialToUpdate = updatedMaterialsList.find(m => m.id === currentMaterialId);
         }
         
         if (!materialToUpdate || !currentMaterialId) {
-            console.error(`Critical error: Material not found for item: ${item.materialName}`);
+            console.error(`Critical error: New material not found immediately after creation.`);
             allSucceeded = false;
             continue;
         }
@@ -728,6 +741,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
         };
     });
   }, []);
+  
+  const addUser = useCallback((user: AppUserSave) => {
+    const existing = users.find(u => u.email === user.email);
+    if (existing) {
+        toast({
+            variant: 'destructive',
+            title: 'E-mail já cadastrado',
+            description: `O e-mail ${user.email} já pertence a um usuário.`
+        });
+        return;
+    }
+    const newUser: AppUser = { ...user, id: generateId('USR') };
+    setUsers(prev => [newUser, ...prev]);
+  }, [users, toast]);
+  
+  const updateUser = useCallback((user: AppUser) => {
+    setUsers(prev => prev.map(u => u.id === user.id ? user : u));
+  }, []);
+  
+  const deleteUser = useCallback((userId: string) => {
+    setUsers(prev => prev.filter(u => u.id !== userId));
+  }, []);
 
 
   const value = {
@@ -736,6 +771,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     categories,
     costCenters,
     suppliers,
+    users,
     activeMaterials,
     addMaterial,
     addMultipleMaterials,
@@ -754,6 +790,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addMultipleSuppliers,
     updateSupplier,
     deleteSupplier,
+    addUser,
+    updateUser,
+    deleteUser,
     alertSettings,
     availableSectors,
     updateAlertSetting,

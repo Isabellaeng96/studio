@@ -1,5 +1,6 @@
 
 
+
 export type Material = {
   id: string;
   name: string;
@@ -86,13 +87,16 @@ export type Supplier = {
   website?: string;
 };
 
-export type User = {
+export type AppUser = {
     id: string;
     name: string;
     email: string;
-    role: string;
+    role: 'Administrador' | 'Gerente de Estoque' | 'Operador de Campo' | 'Visitante';
     sector: string;
 };
+
+export type AppUserSave = Omit<AppUser, 'id'>;
+
 
 export type AlertSetting = {
   materialId: string;

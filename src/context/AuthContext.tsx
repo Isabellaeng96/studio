@@ -1,4 +1,5 @@
 
+
 // src/context/AuthContext.tsx
 "use client";
 
@@ -7,16 +8,6 @@ import { onAuthStateChanged, User, signOut, signInWithEmailAndPassword, createUs
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { useAppContext } from './AppContext';
-import type { User as AppUser } from '@/types';
-
-// Simple in-memory user role management
-// In a real app, this would come from a database (e.g., Firestore)
-const userRoles: Omit<AppUser, 'id' | 'name'>[] = [
-  { email: 'admin@geostoque.com', role: 'Administrador', sector: 'Diretoria' },
-  { email: 'gerente@geostoque.com', role: 'Gerente de Estoque', sector: 'Logística' },
-  { email: 'operador@geostoque.com', role: 'Operador de Campo', sector: 'Manutenção' },
-];
-
 
 interface AuthContextType {
   user: User | null;
@@ -44,11 +35,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 
   useEffect(() => {
+    if(!appContext) return;
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       if (user) {
         // Find user role from our "database"
-        const userInfo = userRoles.find(r => r.email === user.email);
+        const userInfo = appContext.users.find(r => r.email === user.email);
         if (userInfo) {
           setRole(userInfo.role);
           setSector(userInfo.sector);
@@ -66,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, [router]);
+  }, [router, appContext]);
 
   const login = (email: string, pass: string) => {
     return signInWithEmailAndPassword(auth, email, pass);
