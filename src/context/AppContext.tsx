@@ -442,21 +442,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 continue;
             }
             
-            const newMaterial: Material = {
+            const newMaterialData: MaterialSave = {
                 name: materialNameUpper,
-                id: generateId('PRD'),
-                currentStock: 0,
-                deleted: false,
                 category: item.category || 'GERAL',
                 unit: item.unit || 'un',
                 minStock: 0,
                 supplier: commonData.supplier,
             };
             
-            updatedMaterials = [newMaterial, ...updatedMaterials];
-            materialToUpdate = newMaterial;
+            const newMaterialId = addMaterial(newMaterialData);
+
+            if(!newMaterialId) {
+                allSucceeded = false;
+                continue;
+            }
+            
+            // Re-fetch updated materials list to get the new material
+            materialToUpdate = { ...newMaterialData, id: newMaterialId, currentStock: 0 };
+            updatedMaterials = [materialToUpdate, ...updatedMaterials];
             newMaterialCount++;
-            if (newMaterial.category) newCategories.add(newMaterial.category);
+
         } else {
             materialToUpdate = updatedMaterials.find(m => m.id === materialId);
             if (!materialToUpdate) {
@@ -507,7 +512,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     
     return allSucceeded;
-}, [materials, transactions, categories, toast]);
+}, [materials, transactions, categories, toast, addMaterial]);
 
 
   const addCostCenter = useCallback((costCenter: Omit<CostCenter, 'id'>) => {
@@ -705,5 +710,7 @@ export function useAppContext() {
   }
   return context;
 }
+
+    
 
     

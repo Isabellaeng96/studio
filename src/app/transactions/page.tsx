@@ -25,7 +25,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 
 
 function TransactionsPageContent() {
-  const { activeMaterials, materials, transactions, addMultipleEntries, addMultipleTransactions, costCenters, categories } = useAppContext();
+  const { activeMaterials, materials, transactions, addMultipleEntries, addMultipleTransactions, costCenters, categories } from useAppContext();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -229,7 +229,6 @@ function TransactionsPageContent() {
                   defaultMaterialId={materialId}
                   initialItems={initialWithdrawalItems}
                   key={`saida-${materialId}-${JSON.stringify(initialWithdrawalItems)}`}
-                  onItemsChange={setInitialWithdrawalItems}
                 />
              )}
           </div>
@@ -316,3 +315,5 @@ export default function TransactionsPage() {
     </Suspense>
   )
 }
+
+    
