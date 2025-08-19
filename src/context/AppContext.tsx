@@ -555,7 +555,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
         
         if (!materialToUpdate || !currentMaterialId) {
-            console.error(`Critical error: Material not found. ID: ${currentMaterialId}`);
+            console.error(`Critical error: Material not found immediately after creation. ID: ${currentMaterialId}`);
             allSucceeded = false;
             continue; // Skip this item, but don't abort the whole process
         }
