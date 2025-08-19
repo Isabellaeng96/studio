@@ -25,7 +25,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 
 
 function TransactionsPageContent() {
-  const { activeMaterials, materials, transactions, addMultipleEntries, addMultipleTransactions, costCenters, categories } from useAppContext();
+  const { activeMaterials, materials, transactions, addMultipleEntries, addMultipleTransactions, costCenters, categories } = useAppContext();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
