@@ -85,8 +85,12 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [materials, setMaterials] = useState<Material[]>([]);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [materials, setMaterials] = useState<Material[]>(() => getFromStorage<Material[]>('materials', [
+    { id: 'mat-007', name: 'CABO PP 3X1.5MM²', unit: 'm', category: 'Elétrica', minStock: 100, currentStock: 105, supplier: 'PRYSMIAN', deleted: false },
+  ]));
+  const [transactions, setTransactions] = useState<Transaction[]>(() => getFromStorage<Transaction[]>('transactions', [
+      { id: 'trn-007', type: 'saida', date: new Date().getTime(), materialId: 'mat-007', materialName: 'CABO PP 3X1.5MM²', quantity: 10, responsible: 'Sistema', osNumber: 'OS-TESTE', costCenter: 'Manutenção Preventiva' }
+  ]));
   const [categories, setCategories] = useState<string[]>([]);
   const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -94,8 +98,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         { id: 'USR-001', name: 'Admin Geoblue', email: 'tec08@geoblue.com.br', role: 'Administrador', sector: 'Manutenção' },
         { id: 'USR-002', name: 'Gerente Compras', email: 'compras@geoblue.com.br', role: 'Gerente de Estoque', sector: 'Logística' },
     ]));
-  const [alertSettings, setAlertSettings] = useState<AlertSetting[]>([]);
-  const [sectorEmailConfig, setSectorEmailConfig] = useState<SectorEmailConfig>({});
+  const [alertSettings, setAlertSettings] = useState<AlertSetting[]>(() => getFromStorage<AlertSetting[]>('alertSettings', [
+    { materialId: 'mat-007', sectors: ['Compras'] }
+  ]));
+  const [sectorEmailConfig, setSectorEmailConfig] = useState<SectorEmailConfig>(() => getFromStorage<SectorEmailConfig>('sectorEmailConfig', {
+    'Compras': ['compras@geoblue.com.br']
+  }));
 
   const [isLoaded, setIsLoaded] = useState(false);
   const { toast } = useToast();
@@ -103,35 +111,47 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const availableSectors = useMemo(() => ['Engenharia', 'Manutenção', 'Compras', 'Logística', 'Diretoria'], []);
   
   const loadStateFromStorage = useCallback(() => {
-    setMaterials(getFromStorage<Material[]>('materials', []));
-    setTransactions(getFromStorage<Transaction[]>('transactions', []));
+    // This now primarily sets the initial state, but getFromStorage will still be used
+    // in the useState initializers for a first-load scenario.
+    // Subsequent loads and tab syncs are handled here.
+    const storedMaterials = getFromStorage<Material[]>('materials', []);
+    if (storedMaterials.length > 0) setMaterials(storedMaterials);
+    
+    const storedTransactions = getFromStorage<Transaction[]>('transactions', []);
+    if (storedTransactions.length > 0) setTransactions(storedTransactions);
+    
     setCategories(getFromStorage<string[]>('categories', []));
     setCostCenters(getFromStorage<CostCenter[]>('costCenters', []));
     setSuppliers(getFromStorage<Supplier[]>('suppliers', []));
     
-    // Load users, ensuring the admin user is always present if it's the first load
     const storedUsers = getFromStorage<AppUser[]>('users', []);
-    if (storedUsers.length === 0) {
-        setUsers([
+     if (storedUsers.length > 0) {
+        setUsers(storedUsers);
+    } else {
+        // If nothing in storage, ensure the default admin is set.
+         setUsers([
             { id: 'USR-001', name: 'Admin Geoblue', email: 'tec08@geoblue.com.br', role: 'Administrador', sector: 'Manutenção' },
             { id: 'USR-002', name: 'Gerente Compras', email: 'compras@geoblue.com.br', role: 'Gerente de Estoque', sector: 'Logística' },
         ]);
-    } else {
-        setUsers(storedUsers);
     }
     
-    setAlertSettings(getFromStorage<AlertSetting[]>('alertSettings', []));
-    setSectorEmailConfig(getFromStorage<SectorEmailConfig>('sectorEmailConfig', {}));
+    const storedAlertSettings = getFromStorage<AlertSetting[]>('alertSettings', []);
+    if (storedAlertSettings.length > 0) setAlertSettings(storedAlertSettings);
+
+    const storedSectorEmails = getFromStorage<SectorEmailConfig>('sectorEmailConfig', {});
+    if(Object.keys(storedSectorEmails).length > 0) setSectorEmailConfig(storedSectorEmails);
+    
   }, []);
 
   useEffect(() => {
     // Load from storage only once on initial load
-    loadStateFromStorage();
-    setIsLoaded(true);
+    if(!isLoaded) {
+      loadStateFromStorage();
+      setIsLoaded(true);
+    }
     
     // Add event listener for storage changes from other tabs
     const handleStorageChange = (event: StorageEvent) => {
-      // Check if the change is relevant to this app's data
       const appKeys = ['materials', 'transactions', 'categories', 'costCenters', 'suppliers', 'users', 'alertSettings', 'sectorEmailConfig'];
       if (event.key && appKeys.includes(event.key)) {
          console.log(`Storage changed in another tab for key: ${event.key}. Reloading state.`);
@@ -146,7 +166,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('storage', handleStorageChange);
     };
 
-  }, [loadStateFromStorage]);
+  }, [isLoaded, loadStateFromStorage]);
 
 
   useEffect(() => { if (isLoaded) setInStorage('materials', materials); }, [materials, isLoaded]);
@@ -466,7 +486,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             materialName: currentMaterial.name,
             quantity: item.quantity,
             responsible: commonData.responsible,
-            osNumber: commonData.osNumber,
+            osNumber: commonData.osNumber?.toUpperCase(),
             costCenter: commonData.costCenter,
             stockLocation: commonData.stockLocation?.toUpperCase(),
         };
@@ -496,25 +516,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const newCategories = new Set(categories);
     let updatedMaterialsList = [...materials]; // Start with the current state
 
-    // First pass: validate new materials to avoid partial saves
+    // First pass: validate and collect new materials
     for (const item of items) {
         if (item.isNew) {
             const materialNameUpper = item.materialName.toUpperCase();
-            if (updatedMaterialsList.some(m => !m.deleted && m.name.toUpperCase() === materialNameUpper)) {
+            if (updatedMaterialsList.some(m => !m.deleted && m.name.toUpperCase() === materialNameUpper) || materialsToAdd.some(m => m.newMaterial.name === materialNameUpper)) {
                 toast({
                     variant: 'destructive',
                     title: 'Material Duplicado',
-                    description: `Um material com o nome "${item.materialName}" já existe. A entrada não pode ser salva.`,
+                    description: `Um material com o nome "${item.materialName}" já existe ou está duplicado na lista. A entrada não pode ser salva.`,
                 });
                 return false; // Abort the whole operation
-            }
-            if (materialsToAdd.some(m => m.newMaterial.name === materialNameUpper)) {
-                 toast({
-                    variant: 'destructive',
-                    title: 'Material Duplicado na Lista',
-                    description: `O nome "${item.materialName}" está duplicado na lista de entrada.`,
-                });
-                return false; // Abort
             }
             
             const newMaterial: Material = {
@@ -522,20 +534,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 category: item.category || 'GERAL',
                 unit: item.unit || 'un',
                 minStock: 0,
-                supplier: commonData.supplier,
+                supplier: commonData.supplier?.toUpperCase(),
                 id: generateId('PRD'),
                 currentStock: 0,
                 deleted: false,
             };
             materialsToAdd.push({ newMaterial, entryItem: item });
             newCategories.add(newMaterial.category);
-            newMaterialCount++;
         }
     }
     
     // Add all new materials to the list at once
     if (materialsToAdd.length > 0) {
-        updatedMaterialsList = [...materialsToAdd.map(m => m.newMaterial), ...updatedMaterialsList];
+        const newMaterialsOnly = materialsToAdd.map(m => m.newMaterial);
+        updatedMaterialsList = [...newMaterialsOnly, ...updatedMaterialsList];
+        newMaterialCount = newMaterialsOnly.length;
     }
 
     const newTransactions: Transaction[] = [];
@@ -547,7 +560,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         if (item.isNew) {
             const added = materialsToAdd.find(m => m.entryItem.materialName.toUpperCase() === item.materialName.toUpperCase());
-            materialToUpdate = added?.newMaterial;
+            materialToUpdate = updatedMaterialsList.find(m => m.id === added?.newMaterial.id);
             currentMaterialId = added?.newMaterial.id;
         } else {
             currentMaterialId = item.materialId;
@@ -826,3 +839,5 @@ export function useAppContext() {
   }
   return context;
 }
+
+    
