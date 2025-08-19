@@ -386,7 +386,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       type: type,
       date: transactionData.date.getTime(),
       materialId: material.id,
-      materialName: material.name,
+      materialName: materialName || transactionData.materialName || 'Nome não encontrado',
       invoiceName: transactionData.invoiceName,
     };
 
@@ -794,7 +794,3 @@ export function useAppContext() {
   }
   return context;
 }
-
-    
-
-    
