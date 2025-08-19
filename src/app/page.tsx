@@ -9,7 +9,8 @@ import {
   Package,
   PlusCircle,
   Archive,
-  ChevronRight
+  ChevronRight,
+  Truck
 } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +38,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { TransactionTypeDialog } from './transactions/components/transaction-type-dialog';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { MaterialForm } from './materials/components/material-form';
+import { SupplierForm } from './suppliers/components/supplier-form';
 
 
 function getRecentTransactions(transactions: Transaction[], limit = 5): Transaction[] {
@@ -46,7 +49,7 @@ function getRecentTransactions(transactions: Transaction[], limit = 5): Transact
 }
 
 export default function DashboardPage() {
-  const { materials, activeMaterials, transactions, costCenters } = useAppContext();
+  const { materials, activeMaterials, transactions, costCenters, addMaterial, categories, suppliers, addSupplier } = useAppContext();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -71,7 +74,19 @@ export default function DashboardPage() {
             Uma visão geral do seu inventário e atividades recentes.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <MaterialForm onSave={addMaterial} categories={categories}>
+            <Button variant="outline">
+              <Package className="mr-2 h-4 w-4" />
+              Adicionar Material
+            </Button>
+          </MaterialForm>
+           <SupplierForm onSave={addSupplier}>
+            <Button variant="outline">
+              <Truck className="mr-2 h-4 w-4" />
+              Adicionar Fornecedor
+            </Button>
+          </SupplierForm>
           <TransactionTypeDialog>
             <Button>
               <PlusCircle className="mr-2 h-4 w-4" />
@@ -208,7 +223,7 @@ export default function DashboardPage() {
                            <div><span className="font-semibold">Quantidade:</span> {tx.quantity}</div>
                            <div><span className="font-semibold">Data:</span> {isClient ? format(new Date(tx.date), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR }) : ''}</div>
                            <div><span className="font-semibold">Responsável:</span> {tx.responsible}</div>
-                           {tx.costCenter && <div><span className="font-semibold">Centro de Custo:</span> {costCenters.find(c => c.id === tx.costCenter)?.name || tx.costCenter}</div>}
+                           {tx.costCenter && <div><span className="font-semibold">Centro de Custo:</span> {costCenters.find(c => c.name === tx.costCenter)?.name || tx.costCenter}</div>}
                            {tx.type === 'entrada' && tx.supplier && <div><span className="font-semibold">Fornecedor:</span> {tx.supplier}</div>}
                            {tx.invoice && <div><span className="font-semibold">Nota Fiscal:</span> {tx.invoice}</div>}
                            {tx.type === 'saida' && tx.osNumber && <div><span className="font-semibold">Nº da OS:</span> {tx.osNumber}</div>}
