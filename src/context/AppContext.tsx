@@ -149,7 +149,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const addMaterial = useCallback((material: MaterialSave): string | null => {
+  const addMaterial = useCallback((material: MaterialSave): { id: string, newMaterial: Material } | null => {
     const materialNameUpper = material.name.toUpperCase();
     
     const existingActiveMaterial = materials.find(
@@ -168,9 +168,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       (m) => m.deleted && m.name.toUpperCase() === materialNameUpper
     );
 
-    let materialId: string;
+    let newOrUpdatedMaterial: Material;
     if (existingDeletedIndex !== -1) {
-      const updatedMaterial = {
+      newOrUpdatedMaterial = {
           ...materials[existingDeletedIndex],
           ...material,
           name: materialNameUpper,
@@ -179,16 +179,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       };
       setMaterials(prev => {
         const newMaterials = [...prev];
-        newMaterials[existingDeletedIndex] = updatedMaterial;
+        newMaterials[existingDeletedIndex] = newOrUpdatedMaterial;
         return newMaterials;
       });
-      materialId = updatedMaterial.id;
       toast({
         title: 'Material Reativado',
         description: `O material "${material.name}" foi reativado com o código existente.`,
       });
     } else {
-      const newMaterial: Material = {
+      newOrUpdatedMaterial = {
         ...material,
         name: materialNameUpper,
         supplier: material.supplier?.toUpperCase(),
@@ -196,14 +195,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         currentStock: 0,
         deleted: false,
       };
-      setMaterials(prev => [newMaterial, ...prev]);
-      materialId = newMaterial.id;
+      setMaterials(prev => [newOrUpdatedMaterial, ...prev]);
     }
 
     if (!categories.includes(material.category)) {
       addCategory(material.category);
     }
-    return materialId;
+    return { id: newOrUpdatedMaterial.id, newMaterial: newOrUpdatedMaterial };
   }, [materials, categories, toast, addCategory]);
   
   const addMultipleMaterials = useCallback((newMaterials: MaterialSave[]) => {
@@ -340,7 +338,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // Handle new material creation on entry
     if (type === 'entrada' && !materialId && transactionData.materialName && transactionData.unit && transactionData.category) {
-        const newMaterialId = addMaterial({
+        const result = addMaterial({
             name: transactionData.materialName,
             category: transactionData.category,
             unit: transactionData.unit,
@@ -348,8 +346,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
             supplier: transactionData.supplier,
         });
 
-        if (newMaterialId) {
-            materialId = newMaterialId;
+        if (result) {
+            materialId = result.id;
             materialName = transactionData.materialName;
         } else {
             return false; // Stop if material creation failed
@@ -498,14 +496,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
             return false;
         }
     }
+    
+    const materialsToAdd: Material[] = [];
 
     for (const item of items) {
-        let materialId = item.materialId;
-        const materialNameUpper = item.materialName.toUpperCase();
-        let materialToUpdate: Material | undefined;
-        let isNewMaterialFlow = item.isNew;
-        
-        if (isNewMaterialFlow) {
+        if (item.isNew) {
+            const materialNameUpper = item.materialName.toUpperCase();
             const existingMaterial = updatedMaterials.find(m => !m.deleted && m.name.toUpperCase() === materialNameUpper);
             if (existingMaterial) {
                 toast({
@@ -514,52 +510,44 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     description: `Um novo material com o nome "${item.materialName}" não pode ser criado pois ele já existe.`,
                 });
                 allSucceeded = false;
-                continue;
+                continue; // Skip this item
             }
-            
-            const newMaterialData: MaterialSave = {
+
+            const newMaterial: Material = {
                 name: materialNameUpper,
                 category: item.category || 'GERAL',
                 unit: item.unit || 'un',
                 minStock: 0,
                 supplier: commonData.supplier,
+                id: generateId('PRD'),
+                currentStock: 0,
+                deleted: false,
             };
-            
-            const newMaterialId = addMaterial(newMaterialData);
-
-            if(!newMaterialId) {
-                allSucceeded = false;
-                continue;
-            }
-            
-            // This is tricky, addMaterial updates state, but we need the new list here
-            updatedMaterials = getFromStorage('materials', []);
-            
-            materialToUpdate = updatedMaterials.find(m => m.id === newMaterialId);
-            if (!materialToUpdate) {
-                // This case should ideally not happen if addMaterial is successful
-                console.error("Critical error: New material not found immediately after creation.");
-                allSucceeded = false;
-                continue;
-            }
-            
+            materialsToAdd.push(newMaterial);
+            // Use the newly created material object for the transaction
+            item.materialId = newMaterial.id;
             newMaterialCount++;
-
-        } else {
-            materialToUpdate = updatedMaterials.find(m => m.id === materialId);
-            if (!materialToUpdate) {
-                toast({
-                    variant: 'destructive',
-                    title: 'Material não encontrado',
-                    description: `O material selecionado não foi encontrado.`,
-                });
-                allSucceeded = false;
-                continue;
-            }
         }
+    }
+    
+    if (!allSucceeded) return false;
+
+    // Batch add new materials to the main list
+    if (materialsToAdd.length > 0) {
+        updatedMaterials = [...materialsToAdd, ...updatedMaterials];
+        materialsToAdd.forEach(m => newCategories.add(m.category));
+    }
 
 
-        const materialIndex = updatedMaterials.findIndex(m => m.id === materialToUpdate!.id);
+    for (const item of items) {
+        const materialIndex = updatedMaterials.findIndex(m => m.id === item.materialId);
+        if (materialIndex === -1) {
+            // This should not happen now with the new logic, but as a safeguard:
+            console.error(`Critical error: Material with ID ${item.materialId} not found in the processed list.`);
+            allSucceeded = false;
+            continue;
+        }
+        
         const currentMaterial = updatedMaterials[materialIndex];
         const newStock = currentMaterial.currentStock + item.quantity;
         updatedMaterials[materialIndex] = { ...currentMaterial, currentStock: newStock };
@@ -568,7 +556,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             id: generateId('TRN'),
             type: 'entrada',
             date: commonData.date.getTime(),
-            materialId: materialToUpdate!.id,
+            materialId: currentMaterial.id,
             materialName: currentMaterial.name,
             invoiceName: item.invoiceName || currentMaterial.name,
             quantity: item.quantity,
@@ -595,7 +583,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     
     return allSucceeded;
-}, [materials, transactions, categories, toast, addMaterial]);
+}, [materials, transactions, categories, toast]);
 
 
   const addCostCenter = useCallback((costCenter: Omit<CostCenter, 'id'>) => {
@@ -794,3 +782,4 @@ export function useAppContext() {
   }
   return context;
 }
+
