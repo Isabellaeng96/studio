@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -27,7 +28,6 @@ import type { Material, MaterialSave } from '@/types';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useAppContext } from '@/context/AppContext';
 
 const materialSchema = z.object({
   name: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres.').transform(val => val.toUpperCase()),
