@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,13 +22,12 @@ interface TransactionTypeDialogProps {
 export function TransactionTypeDialog({ children, onOpen }: TransactionTypeDialogProps) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
-  const pathname = usePathname();
 
   const handleSelect = (type: 'entrada' | 'saida') => {
     const params = new URLSearchParams();
     params.set('tab', type);
     params.set('showForm', 'true');
-    router.push(`${pathname}?${params.toString()}`);
+    router.push(`/transactions?${params.toString()}`);
     setOpen(false);
   };
   
