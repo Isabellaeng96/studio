@@ -40,9 +40,8 @@ function setInStorage<T>(key: string, value: T): void {
 
 // Helper function to generate a unique product ID
 function generateId(prefix: string): string {
-    const timestamp = Date.now();
-    const randomNumber = Math.floor(Math.random() * 1000000);
-    return `${prefix}-${timestamp}-${randomNumber}`;
+    const randomNumber = Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
+    return `${prefix}-${randomNumber}`;
 }
 
 
