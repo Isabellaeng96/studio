@@ -477,7 +477,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const newCategories = new Set(categories);
     const materialsToAdd: { newMaterial: Material, entryItem: EntryItem }[] = [];
     
-    // First pass: validate and prepare new materials without modifying state
     for (const item of items) {
       if (item.isNew) {
         const materialNameUpper = item.materialName.toUpperCase();
@@ -509,21 +508,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     
     if (!allSucceeded) return false;
 
-    // If all validations pass, update the materials list with the new ones
     if (materialsToAdd.length > 0) {
         const newMaterialObjects = materialsToAdd.map(m => m.newMaterial);
         updatedMaterialsList = [...newMaterialObjects, ...updatedMaterialsList];
         newMaterialObjects.forEach(m => newCategories.add(m.category));
     }
 
-    // Second pass: Process all items (new and existing) to create transactions
     for (const item of items) {
         let materialToUpdate: Material | undefined;
         let currentMaterialId: string | undefined = item.materialId;
 
         if (item.isNew) {
-            // Find the newly created material from our temporary list
-            const added = materialsToAdd.find(m => m.entryItem === item);
+            const added = materialsToAdd.find(m => m.entryItem.materialName.toUpperCase() === item.materialName.toUpperCase());
             materialToUpdate = added?.newMaterial;
             currentMaterialId = added?.newMaterial.id;
         } else {
@@ -558,7 +554,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         successfulCount++;
     }
 
-    // Final state update
     if (successfulCount > 0) {
         setMaterials(updatedMaterialsList);
         setTransactions(prev => [...newTransactions, ...prev]);
@@ -593,13 +588,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
   
   const getStockByLocation = useCallback((materialId: string): Record<string, number> => {
     const stockMap: Record<string, number> = {};
-    const materialTransactions = transactions.filter(t => t.materialId === materialId);
+    
+    // Sort transactions by date to process them in chronological order
+    const materialTransactions = transactions
+      .filter(t => t.materialId === materialId)
+      .sort((a, b) => a.date - b.date);
 
     materialTransactions.forEach(t => {
       const location = t.stockLocation || 'Não especificado';
-      if (!stockMap[location]) {
+      if (stockMap[location] === undefined) {
         stockMap[location] = 0;
       }
+      
       if (t.type === 'entrada') {
         stockMap[location] += t.quantity;
       } else {
@@ -607,6 +607,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     });
 
+    // Remove locations where stock is zero or less
     Object.keys(stockMap).forEach(key => {
       if (stockMap[key] <= 0) {
         delete stockMap[key];
