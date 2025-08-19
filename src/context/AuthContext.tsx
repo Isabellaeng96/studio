@@ -9,6 +9,15 @@ import { useRouter } from 'next/navigation';
 import { useAppContext } from './AppContext';
 import type { User as AppUser } from '@/types';
 
+// Simple in-memory user role management
+// In a real app, this would come from a database (e.g., Firestore)
+const userRoles: Omit<AppUser, 'id' | 'name'>[] = [
+  { email: 'admin@geostoque.com', role: 'Administrador', sector: 'Diretoria' },
+  { email: 'gerente@geostoque.com', role: 'Gerente de Estoque', sector: 'Logística' },
+  { email: 'operador@geostoque.com', role: 'Operador de Campo', sector: 'Manutenção' },
+];
+
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -38,10 +47,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       if (user) {
-        // For simplicity, all logged-in users are admins for now.
-        // This can be expanded with a user management system.
-        setRole("Administrador");
-        setSector("Engenharia"); // Default sector
+        // Find user role from our "database"
+        const userInfo = userRoles.find(r => r.email === user.email);
+        if (userInfo) {
+          setRole(userInfo.role);
+          setSector(userInfo.sector);
+        } else {
+          // Default role for any other authenticated user
+          setRole("Visitante");
+          setSector("N/A");
+        }
       } else {
         setRole(null);
         setSector(null);
