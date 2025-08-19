@@ -20,6 +20,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuth } from '@/context/AuthContext';
 import { Switch } from '@/components/ui/switch';
+import { useToast } from '@/hooks/use-toast';
 
 
 const multiItemEntrySchema = z.object({
@@ -54,6 +55,7 @@ interface MultiItemEntryFormProps {
 
 export function MultiItemEntryForm({ materials, categories, onSave, onCancel, initialItems, initialInvoice, initialSupplier }: MultiItemEntryFormProps) {
   const { user } = useAuth();
+  const { toast } = useToast();
 
   const form = useForm<MultiItemEntryFormValues>({
     resolver: zodResolver(multiItemEntrySchema),
