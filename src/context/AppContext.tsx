@@ -3,8 +3,10 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react';
+import { collection, addDoc } from 'firebase/firestore';
 import type { Material, Transaction, TransactionSave, MaterialSave, CostCenter, Supplier, AlertSetting, SectorEmailConfig, MultiTransactionItemSave, EntryItem, AppUser, AppUserSave } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import { db } from '@/lib/firebase';
 
 // Helper function to get item from localStorage safely
 function getFromStorage<T>(key: string, defaultValue: T): T {
@@ -86,7 +88,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [materials, setMaterials] = useState<Material[]>(() => getFromStorage<Material[]>('materials', [
-    { id: 'mat-007', name: 'CABO PP 3X1.5MM²', unit: 'm', category: 'Elétrica', minStock: 100, currentStock: 105, supplier: 'PRYSMIAN', deleted: false },
+    { id: 'mat-007', name: 'CABO PP 3X1.5MM²', unit: 'm', category: 'Elétrica', minStock: 100, currentStock: 95, supplier: 'PRYSMIAN', deleted: false },
   ]));
   const [transactions, setTransactions] = useState<Transaction[]>(() => getFromStorage<Transaction[]>('transactions', [
       { id: 'trn-007', type: 'saida', date: new Date().getTime(), materialId: 'mat-007', materialName: 'CABO PP 3X1.5MM²', quantity: 10, responsible: 'Sistema', osNumber: 'OS-TESTE', costCenter: 'Manutenção Preventiva' }
@@ -343,7 +345,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setMaterials(prev => prev.map(m => materialIds.includes(m.id) ? { ...m, deleted: true } : m));
   }, []);
 
-  const checkAndSendAlert = useCallback((material: Material) => {
+  const checkAndSendAlert = useCallback(async (material: Material) => {
     if (material.currentStock < material.minStock) {
       const setting = alertSettings.find(s => s.materialId === material.id);
       if (!setting || setting.sectors.length === 0) return;
@@ -357,17 +359,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
   
       if (recipientEmails.size > 0) {
-        console.log(`-- SIMULATING EMAIL ALERT --`);
-        console.log(`To: ${Array.from(recipientEmails).join(', ')}`);
-        console.log(`Subject: Alerta de Estoque Baixo - ${material.name}`);
-        console.log(`Body: O material "${material.name}" (ID: ${material.id}) está com estoque baixo.`);
-        console.log(`   - Estoque Atual: ${material.currentStock}`);
-        console.log(`   - Estoque Mínimo: ${material.minStock}`);
-        console.log(`-----------------------------`);
-        toast({
-            title: `Alerta de Estoque Baixo: ${material.name}`,
-            description: `Notificação (simulada) enviada para: ${setting.sectors.join(', ')}`,
-        })
+         try {
+           const mailRef = collection(db, "mail");
+           await addDoc(mailRef, {
+             to: Array.from(recipientEmails),
+             message: {
+               subject: `Alerta de Estoque Baixo - ${material.name}`,
+               html: `
+                <h1>Alerta de Estoque Baixo</h1>
+                <p>O material "${material.name}" (Código: ${material.id}) atingiu um nível de estoque baixo.</p>
+                <ul>
+                  <li><strong>Estoque Atual:</strong> ${material.currentStock} ${material.unit}</li>
+                  <li><strong>Estoque Mínimo:</strong> ${material.minStock} ${material.unit}</li>
+                </ul>
+                <p>Por favor, tome as medidas necessárias para a reposição.</p>
+               `,
+             }
+           });
+           toast({
+             title: `Alerta de Estoque Baixo: ${material.name}`,
+             description: `Notificação enviada para: ${setting.sectors.join(', ')}`,
+           });
+         } catch(error) {
+            console.error("Erro ao escrever e-mail no Firestore:", error);
+            toast({
+              variant: "destructive",
+              title: `Falha ao Enviar Alerta: ${material.name}`,
+              description: `Não foi possível registrar o e-mail no Firestore. Verifique a configuração.`,
+            });
+         }
       }
     }
   }, [alertSettings, sectorEmailConfig, toast]);
