@@ -29,9 +29,10 @@ export type Transaction = {
   stockLocation?: string;
 };
 
-export type TransactionSave = Omit<Transaction, 'id' | 'type' | 'date' | 'materialName'> & {
+export type TransactionSave = Omit<Transaction, 'id' | 'type' | 'date' | 'materialName' | 'invoiceName'> & {
   date: Date;
   materialName?: string;
+  invoiceName?: string;
   // Fields for new material creation
   unit?: string;
   category?: string;

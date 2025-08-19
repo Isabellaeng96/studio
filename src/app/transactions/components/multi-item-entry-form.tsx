@@ -318,6 +318,32 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
                 />
                  <FormField
                   control={form.control}
+                  name="stockLocation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Local de Estoque (Opcional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ex: Almoxarifado Principal, Prateleira A-3" {...field} value={field.value ?? ''} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="costCenter"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Centro de Custo (Opcional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ex: Projeto B" {...field} value={field.value ?? ''} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
                   name="date"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
@@ -371,5 +397,3 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
     </Card>
   );
 }
-
-    

@@ -96,7 +96,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   
   const loadStateFromStorage = useCallback(() => {
     // Always load from storage. If it's the very first run, it will load empty arrays.
-    // The mock data is no longer loaded automatically.
     setMaterials(getFromStorage<Material[]>('materials', []));
     setTransactions(getFromStorage<Transaction[]>('transactions', []));
     setCategories(getFromStorage<string[]>('categories', []));
