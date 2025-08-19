@@ -10,7 +10,9 @@ import {
   PlusCircle,
   Archive,
   ChevronRight,
-  Truck
+  Truck,
+  TrendingUp,
+  Landmark
 } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
@@ -36,7 +38,7 @@ import { useAppContext } from '@/context/AppContext';
 import { useMemo, useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { TransactionTypeDialog } from './transactions/components/transaction-type-dialog';
-import { format } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MaterialForm } from './materials/components/material-form';
 import { SupplierForm } from './suppliers/components/supplier-form';
@@ -64,6 +66,38 @@ export default function DashboardPage() {
     return getRecentTransactions(transactions, 5)
   }, [transactions]);
   
+  const thirtyDaysAgo = useMemo(() => subDays(new Date(), 30).getTime(), []);
+
+  const mostUsedMaterial = useMemo(() => {
+    const recentTransactions = transactions.filter(t => t.type === 'saida' && t.date >= thirtyDaysAgo);
+    if (recentTransactions.length === 0) return null;
+
+    const usageCount = recentTransactions.reduce((acc, curr) => {
+        acc[curr.materialId] = (acc[curr.materialId] || 0) + curr.quantity;
+        return acc;
+    }, {} as Record<string, number>);
+
+    const mostUsedId = Object.keys(usageCount).reduce((a, b) => usageCount[a] > usageCount[b] ? a : b);
+    const material = materials.find(m => m.id === mostUsedId);
+
+    return material ? { name: material.name, count: usageCount[mostUsedId] } : null;
+  }, [transactions, materials, thirtyDaysAgo]);
+
+  const mostActiveCostCenter = useMemo(() => {
+      const transactionsWithCC = transactions.filter(t => t.costCenter);
+      if (transactionsWithCC.length === 0) return null;
+
+      const ccCount = transactionsWithCC.reduce((acc, curr) => {
+        const ccName = curr.costCenter!;
+        acc[ccName] = (acc[ccName] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const mostActiveName = Object.keys(ccCount).reduce((a, b) => ccCount[a] > ccCount[b] ? a : b);
+      
+      return { name: mostActiveName, count: ccCount[mostActiveName] };
+  }, [transactions]);
+
 
   return (
     <div className="flex flex-col gap-8">
@@ -149,7 +183,52 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      <div className="flex flex-col gap-8">
+      <div className="grid gap-6 md:grid-cols-2">
+        {mostUsedMaterial ? (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Mais Retirado (Últimos 30 dias)</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{mostUsedMaterial.name}</p>
+              <p className="text-xs text-muted-foreground">
+                {mostUsedMaterial.count} unidades retiradas.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="flex items-center justify-center h-full">
+            <CardContent className="text-center text-muted-foreground">
+              <TrendingUp className="h-6 w-6 mx-auto mb-2" />
+              <p>Nenhuma saída nos últimos 30 dias.</p>
+            </CardContent>
+          </Card>
+        )}
+        {mostActiveCostCenter ? (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Centro de Custo Mais Ativo</CardTitle>
+              <Landmark className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{mostActiveCostCenter.name}</p>
+              <p className="text-xs text-muted-foreground">
+                {mostActiveCostCenter.count} requisições.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="flex items-center justify-center h-full">
+            <CardContent className="text-center text-muted-foreground">
+              <Landmark className="h-6 w-6 mx-auto mb-2" />
+              <p>Nenhuma requisição com centro de custo.</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      <div className="grid gap-8 lg:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
              <div>
@@ -285,3 +364,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    

@@ -89,8 +89,8 @@ export type User = {
     id: string;
     name: string;
     email: string;
-    role: 'Administrador' | 'Gerente de Estoque' | 'Operador de Campo' | 'Visitante';
-    sector: 'Engenharia' | 'Manutenção' | 'Compras' | 'N/A';
+    role: string;
+    sector: string;
 };
 
 export type AlertSetting = {
@@ -101,3 +101,5 @@ export type AlertSetting = {
 export type SectorEmailConfig = {
   [sector: string]: string[];
 };
+
+    
