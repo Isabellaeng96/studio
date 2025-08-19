@@ -1,6 +1,5 @@
 
 
-
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react';
@@ -91,7 +90,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [categories, setCategories] = useState<string[]>([]);
   const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [users, setUsers] = useState<AppUser[]>([]);
+  const [users, setUsers] = useState<AppUser[]>(() => getFromStorage<AppUser[]>('users', [
+        { id: 'USR-001', name: 'Admin Geoblue', email: 'tec08@geoblue.com.br', role: 'Administrador', sector: 'Manutenção' },
+        { id: 'USR-002', name: 'Gerente Compras', email: 'compras@geoblue.com.br', role: 'Gerente de Estoque', sector: 'Logística' },
+    ]));
   const [alertSettings, setAlertSettings] = useState<AlertSetting[]>([]);
   const [sectorEmailConfig, setSectorEmailConfig] = useState<SectorEmailConfig>({});
 
@@ -101,16 +103,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const availableSectors = useMemo(() => ['Engenharia', 'Manutenção', 'Compras', 'Logística', 'Diretoria'], []);
   
   const loadStateFromStorage = useCallback(() => {
-    // Always load from storage. If it's the very first run, it will load empty arrays.
     setMaterials(getFromStorage<Material[]>('materials', []));
     setTransactions(getFromStorage<Transaction[]>('transactions', []));
     setCategories(getFromStorage<string[]>('categories', []));
     setCostCenters(getFromStorage<CostCenter[]>('costCenters', []));
     setSuppliers(getFromStorage<Supplier[]>('suppliers', []));
-    setUsers(getFromStorage<AppUser[]>('users', [
-        { id: 'USR-001', name: 'Admin Geoblue', email: 'tec08@geoblue.com.br', role: 'Administrador', sector: 'Manutenção' },
-        { id: 'USR-002', name: 'Gerente Compras', email: 'compras@geoblue.com.br', role: 'Gerente de Estoque', sector: 'Logística' },
-    ]));
+    
+    // Load users, ensuring the admin user is always present if it's the first load
+    const storedUsers = getFromStorage<AppUser[]>('users', []);
+    if (storedUsers.length === 0) {
+        setUsers([
+            { id: 'USR-001', name: 'Admin Geoblue', email: 'tec08@geoblue.com.br', role: 'Administrador', sector: 'Manutenção' },
+            { id: 'USR-002', name: 'Gerente Compras', email: 'compras@geoblue.com.br', role: 'Gerente de Estoque', sector: 'Logística' },
+        ]);
+    } else {
+        setUsers(storedUsers);
+    }
+    
     setAlertSettings(getFromStorage<AlertSetting[]>('alertSettings', []));
     setSectorEmailConfig(getFromStorage<SectorEmailConfig>('sectorEmailConfig', {}));
   }, []);
@@ -160,7 +169,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const addMaterial = useCallback((material: MaterialSave): { id: string, newMaterial: Material } | null => {
+  const addMaterial = useCallback((material: MaterialSave): string | null => {
     const materialNameUpper = material.name.toUpperCase();
     
     const existingActiveMaterial = materials.find(
@@ -212,7 +221,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!categories.includes(material.category)) {
       addCategory(material.category);
     }
-    return { id: newOrUpdatedMaterial.id, newMaterial: newOrUpdatedMaterial };
+    return newOrUpdatedMaterial.id;
   }, [materials, categories, toast, addCategory]);
   
   const addMultipleMaterials = useCallback((newMaterials: MaterialSave[]) => {
@@ -358,7 +367,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
 
         if (result) {
-            materialId = result.id;
+            materialId = result;
             materialName = transactionData.materialName;
         } else {
             return false; // Stop if material creation failed
@@ -483,68 +492,74 @@ export function AppProvider({ children }: { children: ReactNode }) {
     let successfulCount = 0;
     let newMaterialCount = 0;
 
-    let updatedMaterialsList = [...materials];
-    const newTransactions: Transaction[] = [];
-    const newCategories = new Set(categories);
     const materialsToAdd: { newMaterial: Material, entryItem: EntryItem }[] = [];
-    
+    const newCategories = new Set(categories);
+    let updatedMaterialsList = [...materials]; // Start with the current state
+
+    // First pass: validate new materials to avoid partial saves
     for (const item of items) {
-      if (item.isNew) {
-        const materialNameUpper = item.materialName.toUpperCase();
-        if (updatedMaterialsList.some(m => !m.deleted && m.name.toUpperCase() === materialNameUpper)) {
-          toast({
-            variant: 'destructive',
-            title: 'Material Duplicado',
-            description: `Um novo material com o nome "${item.materialName}" não pode ser criado pois ele já existe.`,
-          });
-          allSucceeded = false;
-          continue;
+        if (item.isNew) {
+            const materialNameUpper = item.materialName.toUpperCase();
+            if (updatedMaterialsList.some(m => !m.deleted && m.name.toUpperCase() === materialNameUpper)) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Material Duplicado',
+                    description: `Um material com o nome "${item.materialName}" já existe. A entrada não pode ser salva.`,
+                });
+                return false; // Abort the whole operation
+            }
+            if (materialsToAdd.some(m => m.newMaterial.name === materialNameUpper)) {
+                 toast({
+                    variant: 'destructive',
+                    title: 'Material Duplicado na Lista',
+                    description: `O nome "${item.materialName}" está duplicado na lista de entrada.`,
+                });
+                return false; // Abort
+            }
+            
+            const newMaterial: Material = {
+                name: materialNameUpper,
+                category: item.category || 'GERAL',
+                unit: item.unit || 'un',
+                minStock: 0,
+                supplier: commonData.supplier,
+                id: generateId('PRD'),
+                currentStock: 0,
+                deleted: false,
+            };
+            materialsToAdd.push({ newMaterial, entryItem: item });
+            newCategories.add(newMaterial.category);
+            newMaterialCount++;
         }
-        
-        const newMaterial: Material = {
-          name: materialNameUpper,
-          category: item.category || 'GERAL',
-          unit: item.unit || 'un',
-          minStock: 0,
-          supplier: commonData.supplier,
-          id: generateId('PRD'),
-          currentStock: 0,
-          deleted: false,
-        };
-        
-        materialsToAdd.push({ newMaterial, entryItem: item });
-        newMaterialCount++;
-      }
     }
     
-    if (!allSucceeded) return false;
-
+    // Add all new materials to the list at once
     if (materialsToAdd.length > 0) {
-        const newMaterialObjects = materialsToAdd.map(m => m.newMaterial);
-        updatedMaterialsList = [...newMaterialObjects, ...updatedMaterialsList];
-        newMaterialObjects.forEach(m => newCategories.add(m.category));
+        updatedMaterialsList = [...materialsToAdd.map(m => m.newMaterial), ...updatedMaterialsList];
     }
 
+    const newTransactions: Transaction[] = [];
+
+    // Second pass: process all items (new and existing) against the updated list
     for (const item of items) {
         let materialToUpdate: Material | undefined;
-        let currentMaterialId: string | undefined = item.materialId;
+        let currentMaterialId: string | undefined;
 
         if (item.isNew) {
             const added = materialsToAdd.find(m => m.entryItem.materialName.toUpperCase() === item.materialName.toUpperCase());
-            if (added) {
-                materialToUpdate = added.newMaterial;
-                currentMaterialId = added.newMaterial.id;
-            }
+            materialToUpdate = added?.newMaterial;
+            currentMaterialId = added?.newMaterial.id;
         } else {
+            currentMaterialId = item.materialId;
             materialToUpdate = updatedMaterialsList.find(m => m.id === currentMaterialId);
         }
         
         if (!materialToUpdate || !currentMaterialId) {
-            console.error(`Critical error: New material not found immediately after creation.`);
+            console.error(`Critical error: Material not found. ID: ${currentMaterialId}`);
             allSucceeded = false;
-            continue;
+            continue; // Skip this item, but don't abort the whole process
         }
-
+        
         const materialIndex = updatedMaterialsList.findIndex(m => m.id === currentMaterialId);
         const newStock = materialToUpdate.currentStock + item.quantity;
         updatedMaterialsList[materialIndex] = { ...materialToUpdate, currentStock: newStock };
