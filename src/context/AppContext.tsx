@@ -448,7 +448,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             responsible: commonData.responsible,
             osNumber: commonData.osNumber,
             costCenter: commonData.costCenter,
-            stockLocation: commonData.stockLocation,
+            stockLocation: commonData.stockLocation?.toUpperCase(),
         };
         newTransactions.push(newTransaction);
         successfulCount++;
@@ -472,106 +472,95 @@ export function AppProvider({ children }: { children: ReactNode }) {
     let successfulCount = 0;
     let newMaterialCount = 0;
 
+    let updatedMaterialsList = [...materials];
     const newTransactions: Transaction[] = [];
-    let updatedMaterials = [...materials];
     const newCategories = new Set(categories);
-    const existingTransactions = [...transactions];
-
-    if (commonData.invoice && commonData.supplier) {
-        const newInvoice = commonData.invoice.trim().toUpperCase();
-        const newSupplier = commonData.supplier.trim().toUpperCase();
-
-        const isDuplicate = existingTransactions.some(tx =>
-            tx.type === 'entrada' &&
-            tx.invoice?.trim().toUpperCase() === newInvoice &&
-            tx.supplier?.trim().toUpperCase() === newSupplier
-        );
-
-        if (isDuplicate) {
-            toast({
-                variant: 'destructive',
-                title: 'Transação Duplicada',
-                description: `Esta nota fiscal já foi registrada para o fornecedor "${commonData.supplier}".`,
-            });
-            return false;
-        }
-    }
+    const materialsToAdd: { newMaterial: Material, entryItem: EntryItem }[] = [];
     
-    const materialsToAdd: Material[] = [];
-
+    // First pass: validate and prepare new materials without modifying state
     for (const item of items) {
-        if (item.isNew) {
-            const materialNameUpper = item.materialName.toUpperCase();
-            const existingMaterial = updatedMaterials.find(m => !m.deleted && m.name.toUpperCase() === materialNameUpper);
-            if (existingMaterial) {
-                toast({
-                    variant: 'destructive',
-                    title: 'Material Duplicado',
-                    description: `Um novo material com o nome "${item.materialName}" não pode ser criado pois ele já existe.`,
-                });
-                allSucceeded = false;
-                continue; // Skip this item
-            }
-
-            const newMaterial: Material = {
-                name: materialNameUpper,
-                category: item.category || 'GERAL',
-                unit: item.unit || 'un',
-                minStock: 0,
-                supplier: commonData.supplier,
-                id: generateId('PRD'),
-                currentStock: 0,
-                deleted: false,
-            };
-            materialsToAdd.push(newMaterial);
-            // Use the newly created material object for the transaction
-            item.materialId = newMaterial.id;
-            newMaterialCount++;
+      if (item.isNew) {
+        const materialNameUpper = item.materialName.toUpperCase();
+        if (updatedMaterialsList.some(m => !m.deleted && m.name.toUpperCase() === materialNameUpper)) {
+          toast({
+            variant: 'destructive',
+            title: 'Material Duplicado',
+            description: `Um novo material com o nome "${item.materialName}" não pode ser criado pois ele já existe.`,
+          });
+          allSucceeded = false;
+          continue;
         }
+        
+        const newMaterial: Material = {
+          name: materialNameUpper,
+          category: item.category || 'GERAL',
+          unit: item.unit || 'un',
+          minStock: 0,
+          supplier: commonData.supplier,
+          id: generateId('PRD'),
+          currentStock: 0,
+          deleted: false,
+        };
+        
+        materialsToAdd.push({ newMaterial, entryItem: item });
+        newMaterialCount++;
+      }
     }
     
     if (!allSucceeded) return false;
 
-    // Batch add new materials to the main list
+    // If all validations pass, update the materials list with the new ones
     if (materialsToAdd.length > 0) {
-        updatedMaterials = [...materialsToAdd, ...updatedMaterials];
-        materialsToAdd.forEach(m => newCategories.add(m.category));
+        const newMaterialObjects = materialsToAdd.map(m => m.newMaterial);
+        updatedMaterialsList = [...newMaterialObjects, ...updatedMaterialsList];
+        newMaterialObjects.forEach(m => newCategories.add(m.category));
     }
 
-
+    // Second pass: Process all items (new and existing) to create transactions
     for (const item of items) {
-        const materialIndex = updatedMaterials.findIndex(m => m.id === item.materialId);
-        if (materialIndex === -1) {
-            // This should not happen now with the new logic, but as a safeguard:
-            console.error(`Critical error: Material with ID ${item.materialId} not found in the processed list.`);
+        let materialToUpdate: Material | undefined;
+        let currentMaterialId: string | undefined = item.materialId;
+
+        if (item.isNew) {
+            // Find the newly created material from our temporary list
+            const added = materialsToAdd.find(m => m.entryItem === item);
+            materialToUpdate = added?.newMaterial;
+            currentMaterialId = added?.newMaterial.id;
+        } else {
+            materialToUpdate = updatedMaterialsList.find(m => m.id === currentMaterialId);
+        }
+        
+        if (!materialToUpdate || !currentMaterialId) {
+            console.error(`Critical error: Material not found for item: ${item.materialName}`);
             allSucceeded = false;
             continue;
         }
-        
-        const currentMaterial = updatedMaterials[materialIndex];
-        const newStock = currentMaterial.currentStock + item.quantity;
-        updatedMaterials[materialIndex] = { ...currentMaterial, currentStock: newStock };
 
+        const materialIndex = updatedMaterialsList.findIndex(m => m.id === currentMaterialId);
+        const newStock = materialToUpdate.currentStock + item.quantity;
+        updatedMaterialsList[materialIndex] = { ...materialToUpdate, currentStock: newStock };
+        
         const newTransaction: Transaction = {
             id: generateId('TRN'),
             type: 'entrada',
             date: commonData.date.getTime(),
-            materialId: currentMaterial.id,
-            materialName: currentMaterial.name,
-            invoiceName: item.invoiceName || currentMaterial.name,
+            materialId: currentMaterialId,
+            materialName: materialToUpdate.name,
+            invoiceName: item.invoiceName || materialToUpdate.name,
             quantity: item.quantity,
             responsible: commonData.responsible,
             supplier: commonData.supplier?.toUpperCase(),
             invoice: commonData.invoice,
             costCenter: commonData.costCenter,
-            stockLocation: commonData.stockLocation,
+            stockLocation: commonData.stockLocation?.toUpperCase(),
         };
         newTransactions.push(newTransaction);
         successfulCount++;
     }
 
+    // Final state update
     if (successfulCount > 0) {
-        setMaterials(updatedMaterials);
+        setMaterials(updatedMaterialsList);
         setTransactions(prev => [...newTransactions, ...prev]);
         if(newCategories.size > categories.length) {
             setCategories(Array.from(newCategories).sort());
@@ -581,9 +570,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
             description: `${successfulCount} itens foram adicionados ao estoque. ${newMaterialCount > 0 ? `${newMaterialCount} novos materiais foram criados.` : ''}`,
         });
     }
-    
+
     return allSucceeded;
-}, [materials, transactions, categories, toast]);
+}, [materials, categories, toast]);
 
 
   const addCostCenter = useCallback((costCenter: Omit<CostCenter, 'id'>) => {
@@ -782,4 +771,3 @@ export function useAppContext() {
   }
   return context;
 }
-

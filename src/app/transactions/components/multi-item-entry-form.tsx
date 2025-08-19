@@ -38,7 +38,7 @@ const multiItemEntrySchema = z.object({
   supplier: z.string().optional().transform(val => val ? val.toUpperCase() : val),
   invoice: z.string().optional(),
   costCenter: z.string().optional(),
-  stockLocation: z.string().optional(),
+  stockLocation: z.string().optional().transform(val => val ? val.toUpperCase() : val),
 });
 
 type MultiItemEntryFormValues = z.infer<typeof multiItemEntrySchema>;
@@ -325,7 +325,7 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
                     <FormItem>
                       <FormLabel>Local de Estoque (Opcional)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ex: Almoxarifado Principal, Prateleira A-3" {...field} value={field.value ?? ''} />
+                        <Input placeholder="Ex: Almoxarifado Principal, Prateleira A-3" {...field} value={field.value ?? ''} className="uppercase" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

@@ -30,7 +30,7 @@ const multiItemTransactionSchema = z.object({
   responsible: z.string().min(2, 'O responsável é obrigatório.'),
   osNumber: z.string().min(1, 'O número da OS é obrigatório.').transform(val => val.toUpperCase()),
   costCenter: z.string().optional(),
-  stockLocation: z.string().optional(),
+  stockLocation: z.string().optional().transform(val => val ? val.toUpperCase() : val),
 });
 
 type MultiItemFormValues = z.infer<typeof multiItemTransactionSchema>;
@@ -210,7 +210,7 @@ export function MultiItemTransactionForm({ materials, costCenters, onSave, defau
                     <FormItem>
                       <FormLabel>Local de Estoque (Opcional)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ex: Almoxarifado Principal, Prateleira A-3" {...field} value={field.value ?? ''} />
+                        <Input placeholder="Ex: Almoxarifado Principal, Prateleira A-3" {...field} value={field.value ?? ''} className="uppercase" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
