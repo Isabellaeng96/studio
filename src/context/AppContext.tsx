@@ -58,6 +58,7 @@ interface AppContextType {
   deleteMaterial: (materialId: string) => void;
   deleteMultipleMaterials: (materialIds: string[]) => void;
   addCategory: (category: string) => void;
+  addTransaction: (transaction: TransactionSave, type: 'entrada' | 'saida') => boolean;
   addMultipleEntries: (items: EntryItem[], commonData: Omit<TransactionSave, 'materialId' | 'quantity' | 'materialName' | 'unit' | 'category'>) => boolean;
   addMultipleTransactions: (items: MultiTransactionItemSave[], commonData: Omit<TransactionSave, 'materialId' | 'quantity'>) => boolean;
   addCostCenter: (costCenter: Omit<CostCenter, 'id'>) => void;
@@ -333,6 +334,79 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [alertSettings, sectorEmailConfig, toast]);
   
+  const addTransaction = useCallback((transactionData: TransactionSave, type: 'entrada' | 'saida') => {
+    let materialId = transactionData.materialId;
+    let materialName = transactionData.materialName;
+
+    // Handle new material creation on entry
+    if (type === 'entrada' && !materialId && transactionData.materialName && transactionData.unit && transactionData.category) {
+        const newMaterialId = addMaterial({
+            name: transactionData.materialName,
+            category: transactionData.category,
+            unit: transactionData.unit,
+            minStock: 0, 
+            supplier: transactionData.supplier,
+        });
+
+        if (newMaterialId) {
+            materialId = newMaterialId;
+            materialName = transactionData.materialName;
+        } else {
+            return false; // Stop if material creation failed
+        }
+    }
+
+    if (!materialId) {
+      toast({ variant: 'destructive', title: 'Erro', description: 'Material não especificado.' });
+      return false;
+    }
+
+    const materialIndex = materials.findIndex(m => m.id === materialId);
+    if (materialIndex === -1) {
+      toast({ variant: 'destructive', title: 'Erro', description: `Material com ID ${materialId} não encontrado.` });
+      return false;
+    }
+    
+    const material = materials[materialIndex];
+    let newStock = material.currentStock;
+
+    if (type === 'entrada') {
+      newStock += transactionData.quantity;
+    } else { // 'saida'
+      if (material.currentStock < transactionData.quantity) {
+        toast({ variant: 'destructive', title: 'Estoque Insuficiente', description: `Não há estoque suficiente de "${material.name}" para esta saída.` });
+        return false;
+      }
+      newStock -= transactionData.quantity;
+    }
+
+    const newTransaction: Transaction = {
+      ...transactionData,
+      id: generateId('TRN'),
+      type: type,
+      date: transactionData.date.getTime(),
+      materialId: material.id,
+      materialName: material.name,
+      invoiceName: transactionData.invoiceName,
+    };
+
+    const updatedMaterial = { ...material, currentStock: newStock };
+    setMaterials(prev => {
+        const newMaterials = [...prev];
+        newMaterials[materialIndex] = updatedMaterial;
+        return newMaterials;
+    });
+
+    setTransactions(prev => [newTransaction, ...prev]);
+
+    if(type === 'saida') {
+        checkAndSendAlert(updatedMaterial);
+    }
+    
+    return true;
+  }, [materials, toast, addMaterial, checkAndSendAlert]);
+
+
   const addMultipleTransactions = useCallback((items: MultiTransactionItemSave[], commonData: Omit<TransactionSave, 'materialId' | 'quantity'>) => {
     let allSucceeded = true;
     let successfulCount = 0;
@@ -429,8 +503,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         let materialId = item.materialId;
         const materialNameUpper = item.materialName.toUpperCase();
         let materialToUpdate: Material | undefined;
+        let isNewMaterialFlow = item.isNew;
         
-        if (item.isNew) {
+        if (isNewMaterialFlow) {
             const existingMaterial = updatedMaterials.find(m => !m.deleted && m.name.toUpperCase() === materialNameUpper);
             if (existingMaterial) {
                 toast({
@@ -457,9 +532,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 continue;
             }
             
-            // Re-fetch updated materials list to get the new material
-            materialToUpdate = { ...newMaterialData, id: newMaterialId, currentStock: 0 };
-            updatedMaterials = [materialToUpdate, ...updatedMaterials];
+            // This is tricky, addMaterial updates state, but we need the new list here
+            updatedMaterials = getFromStorage('materials', []);
+            
+            materialToUpdate = updatedMaterials.find(m => m.id === newMaterialId);
+            if (!materialToUpdate) {
+                // This case should ideally not happen if addMaterial is successful
+                console.error("Critical error: New material not found immediately after creation.");
+                allSucceeded = false;
+                continue;
+            }
+            
             newMaterialCount++;
 
         } else {
@@ -682,6 +765,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     deleteMaterial,
     deleteMultipleMaterials,
     addCategory,
+    addTransaction,
     addMultipleEntries,
     addMultipleTransactions,
     addCostCenter,

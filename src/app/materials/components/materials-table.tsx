@@ -139,8 +139,8 @@ export function MaterialsTable({ data, onSave, onDelete, onDeleteMultiple, categ
             <TableBody>
               {data.length > 0 ? (
                 data.map(material => (
-                  <TableRow 
-                    key={material.id} 
+                  <TableRow
+                    key={material.id}
                     data-state={selectedRows.includes(material.id) ? "selected" : ""}
                     className="cursor-pointer"
                   >
