@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react';
@@ -98,7 +97,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [users, setUsers] = useState<AppUser[]>(() => getFromStorage<AppUser[]>('users', [
         { id: 'USR-001', name: 'Admin Geoblue', email: 'tec08@geoblue.com.br', role: 'Administrador', sector: 'Manutenção' },
-        { id: 'USR-002', name: 'Gerente Compras', email: 'compras@geoblue.com.br', role: 'Gerente de Estoque', sector: 'Logística' },
+        { id: 'USR-002', name: 'Gerente Compras', email: 'gerente@geoblue.com.br', role: 'Gerente de Estoque', sector: 'Logística' },
+        { id: 'USR-003', name: 'Admin Padrão', email: 'admin@geoblue.com.br', role: 'Administrador', sector: 'Diretoria' },
     ]));
   const [alertSettings, setAlertSettings] = useState<AlertSetting[]>(() => getFromStorage<AlertSetting[]>('alertSettings', [
     { materialId: 'mat-007', sectors: ['Compras'] }
@@ -133,7 +133,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // If nothing in storage, ensure the default admin is set.
          setUsers([
             { id: 'USR-001', name: 'Admin Geoblue', email: 'tec08@geoblue.com.br', role: 'Administrador', sector: 'Manutenção' },
-            { id: 'USR-002', name: 'Gerente Compras', email: 'compras@geoblue.com.br', role: 'Gerente de Estoque', sector: 'Logística' },
+            { id: 'USR-002', name: 'Gerente Compras', email: 'gerente@geoblue.com.br', role: 'Gerente de Estoque', sector: 'Logística' },
+            { id: 'USR-003', name: 'Admin Padrão', email: 'admin@geoblue.com.br', role: 'Administrador', sector: 'Diretoria' },
         ]);
     }
     
@@ -588,7 +589,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
         
         if (!materialToUpdate || !currentMaterialId) {
-            console.error(`Critical error: Material not found immediately after creation. ID: ${currentMaterialId}`);
+            console.error(`Critical error: New material not found immediately after creation. ID: ${currentMaterialId}`);
             allSucceeded = false;
             continue; // Skip this item, but don't abort the whole process
         }
