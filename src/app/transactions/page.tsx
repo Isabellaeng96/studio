@@ -172,20 +172,28 @@ function TransactionsPageContent() {
   }, [sortedTransactions, typeFilter, materialFilter, costCenterFilter, documentQuery]);
 
   const handleQrScan = useCallback((scannedMaterialId: string) => {
-    setInitialWithdrawalItems(prevItems => {
-        const existingItemIndex = prevItems.findIndex(item => item.materialId === scannedMaterialId);
-        if (existingItemIndex > -1) {
-            const newItems = [...prevItems];
-            newItems[existingItemIndex] = {
-                ...newItems[existingItemIndex],
-                quantity: newItems[existingItemIndex].quantity + 1,
-            };
-            return newItems;
-        } else {
-            return [...prevItems, { materialId: scannedMaterialId, quantity: 1 }];
-        }
-    });
-  }, []);
+    const newItems = [...initialWithdrawalItems];
+    const existingItemIndex = newItems.findIndex(item => item.materialId === scannedMaterialId);
+    
+    if (existingItemIndex > -1) {
+      newItems[existingItemIndex] = {
+        ...newItems[existingItemIndex],
+        quantity: newItems[existingItemIndex].quantity + 1,
+      };
+    } else {
+      newItems.push({ materialId: scannedMaterialId, quantity: 1 });
+    }
+    
+    setInitialWithdrawalItems(newItems);
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', 'saida');
+    params.set('showForm', 'true');
+    // Add a random query param to force re-render with new items
+    params.set('qr_update', Date.now().toString()); 
+    router.push(`${pathname}?${params.toString()}`);
+
+  }, [initialWithdrawalItems, router, pathname, searchParams]);
 
 
   return (
