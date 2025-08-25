@@ -36,7 +36,7 @@ export default function PurchasingPage() {
       toast({
         variant: 'destructive',
         title: 'Nenhum material selecionado',
-        description: 'Por favor, selecione pelo menos um material para gerar o pedido.',
+        description: 'Por favor, selecione pelo menos um material para gerar o orçamento.',
       });
       return;
     }
@@ -133,7 +133,7 @@ export default function PurchasingPage() {
     <div className={cn("flex justify-end", className)}>
         <Button onClick={handleGenerateOrder} disabled={selectedMaterials.length === 0}>
             <ShoppingCart className="mr-2"/>
-            Gerar Pedido ({selectedMaterials.length})
+            Gerar Orçamento ({selectedMaterials.length})
         </Button>
     </div>
   );
@@ -144,7 +144,7 @@ export default function PurchasingPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Pedidos de Compra</h1>
           <p className="text-muted-foreground">
-            Crie e gerencie pedidos de compra para materiais com estoque baixo.
+            Crie e gerencie pedidos de orçamento para materiais com estoque baixo.
           </p>
         </div>
       </div>
@@ -160,7 +160,7 @@ export default function PurchasingPage() {
           <CardHeader>
             <CardTitle>Materiais com Estoque Baixo</CardTitle>
             <CardDescription>
-              Selecione os materiais para incluir no pedido de compra e clique em "Gerar Pedido".
+              Selecione os materiais para incluir no pedido de orçamento e clique em "Gerar Orçamento".
             </CardDescription>
           </CardHeader>
           <CardContent>

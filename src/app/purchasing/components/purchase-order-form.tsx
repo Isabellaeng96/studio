@@ -69,9 +69,9 @@ export function PurchaseOrderForm({ materialIds, onCancel, onExport }: PurchaseO
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Criar Pedido de Compra</CardTitle>
+        <CardTitle>Criar Pedido de Orçamento</CardTitle>
         <CardDescription>
-          Ajuste as quantidades, selecione o fornecedor e exporte o pedido.
+          Ajuste as quantidades, selecione o fornecedor e exporte o pedido de orçamento.
         </CardDescription>
       </CardHeader>
       <Form {...form}>
@@ -138,7 +138,7 @@ export function PurchaseOrderForm({ materialIds, onCancel, onExport }: PurchaseO
              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button disabled={!form.formState.isValid}>
-                        Exportar Pedido
+                        Exportar Orçamento
                         <ChevronDown className="ml-2 h-4 w-4" />
                     </Button>
                 </DropdownMenuTrigger>
