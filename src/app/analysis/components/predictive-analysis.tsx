@@ -301,28 +301,20 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
                             <CardHeader>
                                 <CardTitle className="text-xl">{pred.materialName}</CardTitle>
                             </CardHeader>
-                            <CardContent className="grid gap-4 sm:grid-cols-2 flex-grow">
-                            <Card>
-                                <CardHeader className="pb-2">
+                            <CardContent className="grid gap-4 sm:grid-cols-2">
+                            <Card className="p-4">
                                 <CardDescription>Consumo Previsto</CardDescription>
-                                <CardTitle className="text-4xl text-primary">
+                                <CardTitle className="text-3xl text-primary">
                                     {pred.forecastedConsumption}
                                 </CardTitle>
-                                </CardHeader>
-                                <CardFooter>
-                                <p className="text-xs text-muted-foreground">unidades de uso previsto</p>
-                                </CardFooter>
+                                <p className="text-xs text-muted-foreground pt-1">unidades de uso previsto</p>
                             </Card>
-                            <Card>
-                                <CardHeader className="pb-2">
+                            <Card className="p-4">
                                 <CardDescription>Nível de Confiança</CardDescription>
-                                <CardTitle className="text-4xl text-primary">
+                                <CardTitle className="text-3xl text-primary">
                                     {(pred.confidenceLevel * 100).toFixed(0)}%
                                 </CardTitle>
-                                </CardHeader>
-                                <CardFooter>
-                                <p className="text-xs text-muted-foreground">pontuação de confiança</p>
-                                </CardFooter>
+                                 <p className="text-xs text-muted-foreground pt-1">pontuação de confiança</p>
                             </Card>
                             </CardContent>
                             <CardFooter className="flex-col items-start gap-2 mt-auto pt-4 card-footer-explanation">
