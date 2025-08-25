@@ -50,13 +50,13 @@ export default function AnalysisPage() {
 
     const intervalDays = eachDayOfInterval({ start: date.from, end: date.to });
     const data = intervalDays.map(day => ({
-        date: format(day, "MMM dd"),
+        date: format(day, "dd MMM", { locale: ptBR }),
         value: 0,
     }));
 
     filteredTransactions.forEach(tx => {
       if (tx.type === "entrada") {
-        const dateStr = format(new Date(tx.date), "MMM dd");
+        const dateStr = format(new Date(tx.date), "dd MMM", { locale: ptBR });
         const entry = data.find(d => d.date === dateStr);
         if (entry) {
           entry.value += tx.quantity;
@@ -72,13 +72,13 @@ export default function AnalysisPage() {
 
     const intervalDays = eachDayOfInterval({ start: date.from, end: date.to });
     const data = intervalDays.map(day => ({
-        date: format(day, "MMM dd"),
+        date: format(day, "dd MMM", { locale: ptBR }),
         value: 0,
     }));
 
     filteredTransactions.forEach(tx => {
       if (tx.type === "saida") {
-        const dateStr = format(new Date(tx.date), "MMM dd");
+        const dateStr = format(new Date(tx.date), "dd MMM", { locale: ptBR });
         const entry = data.find(d => d.date === dateStr);
         if (entry) {
           entry.value += tx.quantity;
