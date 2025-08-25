@@ -16,6 +16,7 @@ import { PurchaseOrderForm } from './components/purchase-order-form';
 import type { PurchaseOrderItem } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 export default function PurchasingPage() {
   const { activeMaterials, suppliers } = useAppContext();
