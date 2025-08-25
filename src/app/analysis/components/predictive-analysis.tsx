@@ -91,7 +91,7 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
     if (!predictionResultsRef.current) return;
     setIsExporting(true);
 
-    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdf = new jsPDF('l', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
     const margin = 15;
