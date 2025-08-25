@@ -105,6 +105,9 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
     const period = `Período de Previsão: ${form.getValues("forecastHorizon")}`;
     pdf.text(period, margin, yPosition);
     yPosition += 12;
+
+    const contentHeight = pdfHeight - yPosition - margin;
+    const cardHeight = contentHeight / 2 - 5; // -5 para dar um espaço entre as linhas
     
     const predictionCards = Array.from(
       predictionResultsRef.current.querySelectorAll('.prediction-card')
@@ -112,7 +115,6 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
 
     const cardWidth = (pdfWidth - (margin * 3)) / 2;
     let xPosition = margin;
-    let maxHeightInRow = 0;
 
     for (let i = 0; i < predictionCards.length; i++) {
         const cardElement = predictionCards[i];
@@ -121,7 +123,6 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
             pdf.addPage();
             yPosition = margin; // Reinicia o cabeçalho e posição
             xPosition = margin;
-            maxHeightInRow = 0;
             pdf.setFontSize(18);
             pdf.text('Relatório de Análise Preditiva', margin, yPosition);
             yPosition += 8;
@@ -145,25 +146,16 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
         if (footerElement) {
             footerElement.style.display = '';
         }
-
-        const cardHeight = (canvas.height * cardWidth) / canvas.width;
         
-        if (yPosition + cardHeight > pdfHeight - margin) {
-            pdf.addPage();
-            yPosition = margin;
-            xPosition = margin;
-            maxHeightInRow = 0;
-        }
+        // Determina a posição vertical com base no índice (0,1 na primeira linha; 2,3 na segunda)
+        const currentY = yPosition + (Math.floor(i / 2) % 2) * (cardHeight + 10);
         
-        pdf.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', xPosition, yPosition, cardWidth, cardHeight);
+        pdf.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', xPosition, currentY, cardWidth, cardHeight);
         
         if (i % 2 === 0) { // Ímpar (primeiro da linha)
             xPosition += cardWidth + margin;
-            maxHeightInRow = cardHeight;
         } else { // Par (segundo da linha)
             xPosition = margin;
-            yPosition += Math.max(maxHeightInRow, cardHeight) + 10;
-            maxHeightInRow = 0;
         }
     }
     
