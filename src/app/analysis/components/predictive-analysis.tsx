@@ -88,7 +88,7 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
   };
   
   const handleExport = async () => {
-    if (!predictionResultsRef.current || !prediction) return;
+    if (!predictionResultsRef.current) return;
     setIsExporting(true);
 
     const pdf = new jsPDF('p', 'mm', 'a4');
@@ -105,50 +105,38 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
     pdf.text(period, margin, yPosition);
     yPosition += 12;
     
+    // Captura os cartões de previsão
     const predictionCards = Array.from(
       predictionResultsRef.current.querySelectorAll('.prediction-card')
     ) as HTMLElement[];
 
-    for (let i = 0; i < predictionCards.length; i++) {
-        const cardElement = predictionCards[i];
-        const predData = prediction.predictions[i];
+    for (const cardElement of predictionCards) {
+      // Temporariamente remove a parte da explicação antes de capturar
+      const footerElement = cardElement.querySelector('div.mt-auto') as HTMLElement;
+      if (footerElement) {
+        footerElement.style.display = 'none';
+      }
 
-        // Parte a ser renderizada como imagem (cabeçalho + conteúdo principal)
-        const headerAndContent = cardElement.querySelector('.card-render-part') as HTMLElement;
-        if (!headerAndContent) continue;
-        
-        const canvas = await html2canvas(headerAndContent, { scale: 2, backgroundColor: '#ffffff' });
-        
-        const cardWidth = pdfWidth - margin * 2;
-        const cardHeight = (canvas.height * cardWidth) / canvas.width;
-        
-        if (yPosition + cardHeight > pdf.internal.pageSize.getHeight() - margin) {
-            pdf.addPage();
-            yPosition = margin;
-        }
+      const canvas = await html2canvas(cardElement, {
+        scale: 2,
+        backgroundColor: '#ffffff'
+      });
 
-        pdf.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', margin, yPosition, cardWidth, cardHeight);
-        yPosition += cardHeight + 2;
+      // Restaura a visibilidade do rodapé
+      if (footerElement) {
+        footerElement.style.display = '';
+      }
 
-        // Adicionar a explicação como texto
-        pdf.setFontSize(10);
-        pdf.setFont('helvetica', 'bold');
-        pdf.text('Explicação da IA:', margin, yPosition);
-        yPosition += 5;
-        
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(9);
-        const explanationLines = pdf.splitTextToSize(predData.explanation, cardWidth);
-        
-        const textHeight = explanationLines.length * pdf.getLineHeight() / pdf.internal.scaleFactor;
-        
-        if (yPosition + textHeight > pdf.internal.pageSize.getHeight() - margin) {
-            pdf.addPage();
-            yPosition = margin;
-        }
-        
-        pdf.text(explanationLines, margin, yPosition);
-        yPosition += textHeight + 10;
+      const cardWidth = (pdfWidth / 2) - (margin * 1.5);
+      const cardHeight = (canvas.height * cardWidth) / canvas.width;
+      
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', margin, yPosition, cardWidth, cardHeight);
+      yPosition += cardHeight + 10;
+
+      if (yPosition > pdf.internal.pageSize.getHeight() - margin) {
+        pdf.addPage();
+        yPosition = margin;
+      }
     }
     
     // Rodapé
@@ -305,32 +293,34 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
                 </Card>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {prediction.predictions.map((pred, index) => (
-                         <Card key={index} className="prediction-card flex flex-col">
-                           <div className="card-render-part">
+                        <Card key={index} className="prediction-card">
                             <CardHeader>
                                 <CardTitle className="text-xl">{pred.materialName}</CardTitle>
                             </CardHeader>
-                            <CardContent className="grid gap-4 sm:grid-cols-2">
-                            <Card className="p-4">
-                                <CardDescription>Consumo Previsto</CardDescription>
-                                <CardTitle className="text-3xl">
-                                    {pred.forecastedConsumption}
-                                </CardTitle>
-                                <p className="text-xs text-muted-foreground pt-1">unidades de uso previsto</p>
-                            </Card>
-                            <Card className="p-4">
-                                <CardDescription>Nível de Confiança</CardDescription>
-                                <CardTitle className="text-3xl text-primary">
-                                    {(pred.confidenceLevel * 100).toFixed(0)}%
-                                </CardTitle>
-                                 <p className="text-xs text-muted-foreground pt-1">pontuação de confiança</p>
-                            </Card>
+                            <CardContent>
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <Card className="p-4">
+                                        <CardDescription>Consumo Previsto</CardDescription>
+                                        <CardTitle className="text-3xl">
+                                            {pred.forecastedConsumption}
+                                        </CardTitle>
+                                        <p className="text-xs text-muted-foreground pt-1">unidades de uso previsto</p>
+                                    </Card>
+                                    <Card className="p-4">
+                                        <CardDescription>Nível de Confiança</CardDescription>
+                                        <CardTitle className="text-3xl text-primary">
+                                            {(pred.confidenceLevel * 100).toFixed(0)}%
+                                        </CardTitle>
+                                        <p className="text-xs text-muted-foreground pt-1">pontuação de confiança</p>
+                                    </Card>
+                                </div>
                             </CardContent>
-                           </div>
-                            <CardFooter className="flex-col items-start gap-2 pt-4">
-                                <h3 className="font-semibold">Explicação da IA</h3>
-                                <p className="text-sm text-muted-foreground">{pred.explanation}</p>
-                            </CardFooter>
+                            <div className="mt-auto">
+                                <CardFooter className="flex-col items-start gap-2 pt-4">
+                                    <h3 className="font-semibold">Explicação da IA</h3>
+                                    <p className="text-sm text-muted-foreground">{pred.explanation}</p>
+                                </CardFooter>
+                            </div>
                         </Card>
                     ))}
                 </div>
