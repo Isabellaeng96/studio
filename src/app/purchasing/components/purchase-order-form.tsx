@@ -15,10 +15,10 @@ import type { PurchaseOrderItem } from "@/types";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
 const purchaseOrderSchema = z.object({
+  supplierId: z.string().min(1, "Selecione um fornecedor."),
   items: z.array(z.object({
     materialId: z.string(),
     quantity: z.coerce.number().min(1, "A quantidade deve ser maior que 0."),
-    supplierId: z.string().min(1, "Selecione um fornecedor."),
   })).min(1, "O pedido deve ter pelo menos um item."),
 });
 
@@ -27,7 +27,7 @@ type PurchaseOrderFormValues = z.infer<typeof purchaseOrderSchema>;
 interface PurchaseOrderFormProps {
   materialIds: string[];
   onCancel: () => void;
-  onExport: (items: PurchaseOrderItem[], format: 'pdf' | 'xlsx') => void;
+  onExport: (supplierId: string, items: Omit<PurchaseOrderItem, 'supplierId'>[], format: 'pdf' | 'xlsx') => void;
 }
 
 export function PurchaseOrderForm({ materialIds, onCancel, onExport }: PurchaseOrderFormProps) {
@@ -38,19 +38,16 @@ export function PurchaseOrderForm({ materialIds, onCancel, onExport }: PurchaseO
   const form = useForm<PurchaseOrderFormValues>({
     resolver: zodResolver(purchaseOrderSchema),
     defaultValues: {
-      items: materialsInOrder.map(m => {
-        const defaultSupplier = suppliers.find(s => s.name === m.supplier);
-        return {
-          materialId: m.id,
-          // Suggest ordering enough to reach double the min stock
-          quantity: Math.max(1, (m.minStock * 2) - m.currentStock), 
-          supplierId: defaultSupplier?.id || '',
-        };
-      }),
+      supplierId: '',
+      items: materialsInOrder.map(m => ({
+        materialId: m.id,
+        // Suggest ordering enough to reach double the min stock
+        quantity: Math.max(1, (m.minStock * 2) - m.currentStock), 
+      })),
     },
   });
 
-  const { fields, remove, update } = useFieldArray({
+  const { fields, remove } = useFieldArray({
     control: form.control,
     name: "items",
   });
@@ -62,7 +59,11 @@ export function PurchaseOrderForm({ materialIds, onCancel, onExport }: PurchaseO
   
   const handleExport = (format: 'pdf' | 'xlsx') => {
       const data = form.getValues();
-      onExport(data.items, format);
+      if (!data.supplierId) {
+          form.setError("supplierId", { type: "manual", message: "É necessário selecionar um fornecedor para exportar." });
+          return;
+      }
+      onExport(data.supplierId, data.items, format);
   }
 
   return (
@@ -70,22 +71,43 @@ export function PurchaseOrderForm({ materialIds, onCancel, onExport }: PurchaseO
       <CardHeader>
         <CardTitle>Criar Pedido de Compra</CardTitle>
         <CardDescription>
-          Ajuste as quantidades e selecione os fornecedores para cada material.
+          Ajuste as quantidades, selecione o fornecedor e exporte o pedido.
         </CardDescription>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
+            <FormField
+              control={form.control}
+              name="supplierId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Fornecedor</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um fornecedor para este pedido" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div className="space-y-4 rounded-md border p-4">
                 {fields.map((field, index) => {
                     const material = materialsInOrder.find(m => m.id === field.materialId);
                     if (!material) return null;
                     
                     return (
-                        <div key={field.id} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_2fr_auto] gap-4 items-end p-3 rounded-md border bg-muted/50 relative">
+                        <div key={field.id} className="grid grid-cols-1 md:grid-cols-[3fr_1fr_auto] gap-4 items-end p-3 rounded-md border bg-muted/50 relative">
                             <div className="font-medium">
                                 <p>{material.name}</p>
-                                <p className="text-xs text-muted-foreground">Estoque Atual: {material.currentStock}</p>
+                                <p className="text-xs text-muted-foreground">Estoque Atual: {material.currentStock} | Mínimo: {material.minStock}</p>
                             </div>
                              <FormField
                                 control={form.control}
@@ -100,26 +122,6 @@ export function PurchaseOrderForm({ materialIds, onCancel, onExport }: PurchaseO
                                     </FormItem>
                                 )}
                             />
-                            <FormField
-                                control={form.control}
-                                name={`items.${index}.supplierId`}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Fornecedor</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                            <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Selecione um fornecedor" />
-                                            </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                             />
                             <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
                                 <Trash2 className="h-4 w-4 text-destructive"/>
                             </Button>

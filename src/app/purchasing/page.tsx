@@ -48,91 +48,84 @@ export default function PurchasingPage() {
     setSelectedMaterials([]);
   }
 
-  const exportToFile = (items: PurchaseOrderItem[], formatType: 'pdf' | 'xlsx') => {
+  const exportToFile = (supplierId: string, items: Omit<PurchaseOrderItem, 'supplierId'>[], formatType: 'pdf' | 'xlsx') => {
     if (items.length === 0) return;
     
-    const ordersBySupplier = items.reduce((acc, item) => {
-      const supplierName = suppliers.find(s => s.id === item.supplierId)?.name || 'Fornecedor não encontrado';
-      if (!acc[supplierName]) {
-        acc[supplierName] = [];
-      }
-      const material = activeMaterials.find(m => m.id === item.materialId);
-      if (material) {
-        acc[supplierName].push({ ...material, orderQuantity: item.quantity });
-      }
-      return acc;
-    }, {} as Record<string, (typeof activeMaterials[0] & { orderQuantity: number })[]>);
+    const supplier = suppliers.find(s => s.id === supplierId);
+    if (!supplier) {
+        toast({
+            variant: "destructive",
+            title: "Fornecedor não encontrado",
+            description: "O fornecedor selecionado não foi encontrado.",
+        });
+        return;
+    }
 
-    const filename = `pedido_compra_${format(new Date(), 'yyyyMMdd')}`;
+    const orderItems = items.map(item => {
+        const material = activeMaterials.find(m => m.id === item.materialId);
+        return {
+            ...material,
+            orderQuantity: item.quantity,
+        }
+    }).filter(item => item.id); // Filter out any items where material was not found
+
+    const filename = `pedido_compra_${supplier.name.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}`;
     
     if (formatType === 'pdf') {
-      exportToPDF(ordersBySupplier, filename);
+      exportToPDF(supplier.name, orderItems, filename);
     } else {
-      exportToXLSX(ordersBySupplier, filename);
+      exportToXLSX(supplier.name, orderItems, filename);
     }
 
     toast({
       title: 'Exportação Concluída',
-      description: `Seu arquivo ${formatType.toUpperCase()} foi gerado.`,
+      description: `Seu arquivo ${formatType.toUpperCase()} foi gerado para o fornecedor ${supplier.name}.`,
     });
   }
 
-  const exportToPDF = (orders: Record<string, any[]>, filename: string) => {
+  const exportToPDF = (supplierName: string, items: any[], filename: string) => {
     const doc = new jsPDF();
     const generationDate = new Date();
     let yPosition = 22;
 
     doc.setFontSize(18);
-    doc.text('Pedido de Compra', 14, yPosition);
+    doc.text(`Pedido de Compra - ${supplierName}`, 14, yPosition);
     yPosition += 15;
 
-    Object.entries(orders).forEach(([supplierName, items]) => {
-      if (yPosition > 250) {
-        doc.addPage();
-        yPosition = 22;
+    autoTable(doc, {
+      startY: yPosition,
+      head: [['Material', 'Código', 'Unidade', 'Qtd. Pedido']],
+      body: items.map(item => [item.name, item.id, item.unit, item.orderQuantity]),
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: '#3b82f6' },
+      didDrawPage: (data) => {
+        const str = `Página ${data.pageNumber}`;
+        doc.setFontSize(8);
+        const pageSize = doc.internal.pageSize;
+        const pageHeight = pageSize.height || pageSize.getHeight();
+        const pageWidth = pageSize.width || pageSize.getWidth();
+        const userText = `Gerado por: ${user?.displayName || 'N/A'}`;
+        const dateText = `Data: ${format(generationDate, 'dd/MM/yyyy HH:mm:ss')}`;
+        doc.text(userText, data.settings.margin.left, pageHeight - 10);
+        doc.text(str, pageWidth / 2, pageHeight - 10, { align: 'center' });
+        doc.text(dateText, pageWidth - data.settings.margin.right, pageHeight - 10, { align: 'right' });
       }
-      doc.setFontSize(14);
-      doc.text(`Fornecedor: ${supplierName}`, 14, yPosition);
-      yPosition += 7;
-
-      autoTable(doc, {
-        startY: yPosition,
-        head: [['Material', 'Código', 'Unidade', 'Qtd. Pedido']],
-        body: items.map(item => [item.name, item.id, item.unit, item.orderQuantity]),
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: '#3b82f6' },
-        didDrawPage: (data) => {
-          const str = `Página ${data.pageNumber}`;
-          doc.setFontSize(8);
-          const pageSize = doc.internal.pageSize;
-          const pageHeight = pageSize.height || pageSize.getHeight();
-          const pageWidth = pageSize.width || pageSize.getWidth();
-          const userText = `Gerado por: ${user?.displayName || 'N/A'}`;
-          const dateText = `Data: ${format(generationDate, 'dd/MM/yyyy HH:mm:ss')}`;
-          doc.text(userText, data.settings.margin.left, pageHeight - 10);
-          doc.text(str, pageWidth / 2, pageHeight - 10, { align: 'center' });
-          doc.text(dateText, pageWidth - data.settings.margin.right, pageHeight - 10, { align: 'right' });
-        }
-      });
-      
-      yPosition = (doc as any).lastAutoTable.finalY + 15;
     });
-
+    
     doc.save(`${filename}.pdf`);
   };
 
-  const exportToXLSX = (orders: Record<string, any[]>, filename: string) => {
+  const exportToXLSX = (supplierName: string, items: any[], filename: string) => {
     const wb = XLSX.utils.book_new();
-    Object.entries(orders).forEach(([supplierName, items]) => {
-      const sheetData = items.map(item => ({
+    const sheetData = items.map(item => ({
+        'Fornecedor': supplierName,
         'Material': item.name,
         'Código': item.id,
         'Unidade': item.unit,
         'Quantidade Pedida': item.orderQuantity,
-      }));
-      const ws = XLSX.utils.json_to_sheet(sheetData);
-      XLSX.utils.book_append_sheet(wb, ws, supplierName.substring(0, 31)); // Sheet name limit is 31 chars
-    });
+    }));
+    const ws = XLSX.utils.json_to_sheet(sheetData);
+    XLSX.utils.book_append_sheet(wb, ws, supplierName.substring(0, 31)); // Sheet name limit is 31 chars
     XLSX.writeFile(wb, `${filename}.xlsx`);
   };
 
