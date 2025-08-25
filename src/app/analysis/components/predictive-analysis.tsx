@@ -2,10 +2,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BrainCircuit, Check, ChevronsUpDown, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { BrainCircuit, Check, ChevronsUpDown, Loader2, FileText } from "lucide-react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import { format } from "date-fns";
 
 import { predictMaterialConsumption, type PredictiveInventoryAnalysisOutput } from "@/ai/flows/predictive-inventory-analysis";
 import { Button } from "@/components/ui/button";
@@ -18,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { Material, Transaction } from "@/types";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/context/AuthContext";
 
 const predictiveSchema = z.object({
   materialIds: z.array(z.string()).min(1, 'Por favor, selecione pelo menos um material.'),
@@ -33,9 +37,12 @@ interface PredictiveAnalysisProps {
 
 export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalysisProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [prediction, setPrediction] = useState<PredictiveInventoryAnalysisOutput | null>(null);
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const predictionResultsRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<PredictiveFormValues>({
     resolver: zodResolver(predictiveSchema),
@@ -78,6 +85,65 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  const handleExport = async () => {
+    if (!predictionResultsRef.current || !prediction) return;
+    setIsExporting(true);
+
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const margin = 15;
+    let yPosition = margin;
+
+    // Cabeçalho do PDF
+    pdf.setFontSize(18);
+    pdf.text('Relatório de Análise Preditiva', margin, yPosition);
+    yPosition += 8;
+    pdf.setFontSize(11);
+    const period = `Período de Previsão: ${form.getValues("forecastHorizon")}`;
+    pdf.text(period, margin, yPosition);
+    yPosition += 12;
+
+    const predictionCards = Array.from(
+      predictionResultsRef.current.querySelectorAll('.prediction-card')
+    ) as HTMLElement[];
+
+    for (const cardElement of predictionCards) {
+      const canvas = await html2canvas(cardElement, { scale: 2, backgroundColor: '#ffffff' });
+      const imgData = canvas.toDataURL('image/jpeg', 0.9);
+      const imgWidth = pdfWidth - margin * 2;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      if (yPosition + imgHeight > pdf.internal.pageSize.getHeight() - margin) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+
+      pdf.addImage(imgData, 'JPEG', margin, yPosition, imgWidth, imgHeight);
+      yPosition += imgHeight + 10;
+    }
+    
+    // Rodapé
+    const pageCount = (pdf as any).internal.getNumberOfPages();
+    const generationDate = new Date();
+    for (let i = 1; i <= pageCount; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        const userText = `Gerado por: ${user?.displayName || 'N/A'}`;
+        const dateText = `Data: ${format(generationDate, 'dd/MM/yyyy HH:mm:ss')}`;
+        const pageText = `Página ${i} de ${pageCount}`;
+
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        
+        pdf.text(userText, 14, pageHeight - 10);
+        pdf.text(pageText, pageWidth / 2, pageHeight - 10, { align: 'center' });
+        pdf.text(dateText, pageWidth - 14, pageHeight - 10, { align: 'right' });
+    }
+
+    pdf.save(`relatorio_preditivo_${format(new Date(), 'yyyyMMdd')}.pdf`);
+    setIsExporting(false);
   };
   
   const selectedMaterials = form.watch('materialIds');
@@ -196,18 +262,24 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
           </Card>
         )}
         {!isLoading && prediction && (
-            <div className="space-y-6">
+            <div ref={predictionResultsRef} className="space-y-6">
                 <Card className="bg-gradient-to-br from-primary/5 to-background">
-                     <CardHeader>
-                        <CardTitle>Resultados da Previsão</CardTitle>
-                        <CardDescription>
-                            Previsão de consumo para o(a) <span className="font-bold text-primary">{form.getValues("forecastHorizon")}</span>.
-                        </CardDescription>
+                     <CardHeader className="flex-row items-center justify-between">
+                        <div>
+                            <CardTitle>Resultados da Previsão</CardTitle>
+                            <CardDescription>
+                                Previsão de consumo para o(a) <span className="font-bold text-primary">{form.getValues("forecastHorizon")}</span>.
+                            </CardDescription>
+                        </div>
+                        <Button onClick={handleExport} disabled={isExporting}>
+                          {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
+                          Exportar PDF
+                        </Button>
                     </CardHeader>
                 </Card>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {prediction.predictions.map((pred, index) => (
-                         <Card key={index} className="flex flex-col">
+                         <Card key={index} className="flex flex-col prediction-card">
                             <CardHeader>
                                 <CardTitle className="text-xl">{pred.materialName}</CardTitle>
                             </CardHeader>
