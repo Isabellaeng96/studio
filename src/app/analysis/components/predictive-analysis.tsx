@@ -93,7 +93,6 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
 
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
     const margin = 15;
     let yPosition = margin;
 
@@ -105,41 +104,51 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
     const period = `Período de Previsão: ${form.getValues("forecastHorizon")}`;
     pdf.text(period, margin, yPosition);
     yPosition += 12;
-
+    
     const predictionCards = Array.from(
       predictionResultsRef.current.querySelectorAll('.prediction-card')
     ) as HTMLElement[];
-    
-    const cardsPerPage = 2;
-    const cardWidth = (pdfWidth - margin * 2 - (cardsPerPage - 1) * 10) / cardsPerPage;
 
     for (let i = 0; i < predictionCards.length; i++) {
         const cardElement = predictionCards[i];
-        
-        const footer = cardElement.querySelector('.card-footer-explanation') as HTMLElement | null;
-        if (footer) footer.style.display = 'none';
+        const predData = prediction.predictions[i];
 
-        const canvas = await html2canvas(cardElement, { scale: 2, backgroundColor: '#ffffff' });
+        // Parte a ser renderizada como imagem (cabeçalho + conteúdo principal)
+        const headerAndContent = cardElement.querySelector('.card-render-part') as HTMLElement;
+        if (!headerAndContent) continue;
         
-        if (footer) footer.style.display = ''; // Restore visibility
+        const canvas = await html2canvas(headerAndContent, { scale: 2, backgroundColor: '#ffffff' });
         
-        const imgData = canvas.toDataURL('image/jpeg', 0.9);
+        const cardWidth = pdfWidth - margin * 2;
         const cardHeight = (canvas.height * cardWidth) / canvas.width;
-
-        const columnIndex = i % cardsPerPage;
         
-        if (columnIndex === 0 && i > 0) {
-            yPosition += cardHeight + 10;
-        }
-
-        if (yPosition + cardHeight > pdfHeight - margin) {
+        if (yPosition + cardHeight > pdf.internal.pageSize.getHeight() - margin) {
             pdf.addPage();
             yPosition = margin;
         }
 
-        const xPosition = margin + columnIndex * (cardWidth + 10);
+        pdf.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', margin, yPosition, cardWidth, cardHeight);
+        yPosition += cardHeight + 2;
 
-        pdf.addImage(imgData, 'JPEG', xPosition, yPosition, cardWidth, cardHeight);
+        // Adicionar a explicação como texto
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Explicação da IA:', margin, yPosition);
+        yPosition += 5;
+        
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(9);
+        const explanationLines = pdf.splitTextToSize(predData.explanation, cardWidth);
+        
+        const textHeight = explanationLines.length * pdf.getLineHeight() / pdf.internal.scaleFactor;
+        
+        if (yPosition + textHeight > pdf.internal.pageSize.getHeight() - margin) {
+            pdf.addPage();
+            yPosition = margin;
+        }
+        
+        pdf.text(explanationLines, margin, yPosition);
+        yPosition += textHeight + 10;
     }
     
     // Rodapé
@@ -152,12 +161,11 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
         const dateText = `Data: ${format(generationDate, 'dd/MM/yyyy HH:mm:ss')}`;
         const pageText = `Página ${i} de ${pageCount}`;
 
-        const pageWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
         
         pdf.text(userText, 14, pageHeight - 10);
-        pdf.text(pageText, pageWidth / 2, pageHeight - 10, { align: 'center' });
-        pdf.text(dateText, pageWidth - 14, pageHeight - 10, { align: 'right' });
+        pdf.text(pageText, pdfWidth / 2, pageHeight - 10, { align: 'center' });
+        pdf.text(dateText, pdfWidth - 14, pageHeight - 10, { align: 'right' });
     }
 
     pdf.save(`relatorio_preditivo_${format(new Date(), 'yyyyMMdd')}.pdf`);
@@ -298,6 +306,7 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {prediction.predictions.map((pred, index) => (
                          <Card key={index} className="prediction-card flex flex-col">
+                           <div className="card-render-part">
                             <CardHeader>
                                 <CardTitle className="text-xl">{pred.materialName}</CardTitle>
                             </CardHeader>
@@ -317,7 +326,8 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
                                  <p className="text-xs text-muted-foreground pt-1">pontuação de confiança</p>
                             </Card>
                             </CardContent>
-                            <CardFooter className="flex-col items-start gap-2 pt-4 card-footer-explanation">
+                           </div>
+                            <CardFooter className="flex-col items-start gap-2 pt-4">
                                 <h3 className="font-semibold">Explicação da IA</h3>
                                 <p className="text-sm text-muted-foreground">{pred.explanation}</p>
                             </CardFooter>
