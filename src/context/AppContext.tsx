@@ -391,6 +391,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [alertSettings, sectorEmailConfig, toast]);
   
   const addTransaction = useCallback((transactionData: TransactionSave, type: 'entrada' | 'saida') => {
+    // Check for duplicate invoice on entry
+    if (type === 'entrada' && transactionData.invoice) {
+        const invoiceExists = transactions.some(
+            tx => tx.type === 'entrada' && tx.invoice?.toLowerCase() === transactionData.invoice?.toLowerCase()
+        );
+        if (invoiceExists) {
+            toast({
+                variant: 'destructive',
+                title: 'Nota Fiscal Duplicada',
+                description: `A nota fiscal "${transactionData.invoice}" já foi cadastrada no sistema.`,
+            });
+            return false;
+        }
+    }
+
     let materialId = transactionData.materialId;
     let materialName = transactionData.materialName;
 
@@ -481,7 +496,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     
     return true;
-  }, [materials, suppliers, toast, addMaterial, checkAndSendAlert]);
+  }, [materials, suppliers, transactions, toast, addMaterial, checkAndSendAlert]);
 
 
   const addMultipleTransactions = useCallback((items: MultiTransactionItemSave[], commonData: Omit<TransactionSave, 'materialId' | 'quantity'>) => {
@@ -547,6 +562,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [materials, toast, checkAndSendAlert]);
   
  const addMultipleEntries = useCallback((items: EntryItem[], commonData: Omit<TransactionSave, 'materialId' | 'quantity' | 'materialName' | 'unit' | 'category' | 'supplier'> & { supplier?: Omit<Supplier, 'id'> }) => {
+    // Check for duplicate invoice before processing anything
+    if (commonData.invoice) {
+        const invoiceExists = transactions.some(
+            tx => tx.type === 'entrada' && tx.invoice?.toLowerCase() === commonData.invoice?.toLowerCase()
+        );
+        if (invoiceExists) {
+            toast({
+                variant: 'destructive',
+                title: 'Nota Fiscal Duplicada',
+                description: `A nota fiscal "${commonData.invoice}" já foi cadastrada no sistema.`,
+            });
+            return false;
+        }
+    }
+
     let allSucceeded = true;
     let successfulCount = 0;
     let newMaterialCount = 0;
@@ -684,7 +714,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     return allSucceeded;
-}, [materials, suppliers, categories, toast]);
+}, [materials, suppliers, categories, transactions, toast]);
 
 
   const addCostCenter = useCallback((costCenter: Omit<CostCenter, 'id'>) => {
