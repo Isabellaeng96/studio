@@ -93,6 +93,7 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
 
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
     const margin = 15;
     let yPosition = margin;
 
@@ -105,38 +106,52 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
     pdf.text(period, margin, yPosition);
     yPosition += 12;
     
-    // Captura os cartões de previsão
     const predictionCards = Array.from(
       predictionResultsRef.current.querySelectorAll('.prediction-card')
     ) as HTMLElement[];
 
-    for (const cardElement of predictionCards) {
-      // Temporariamente remove a parte da explicação antes de capturar
-      const footerElement = cardElement.querySelector('div.mt-auto') as HTMLElement;
-      if (footerElement) {
-        footerElement.style.display = 'none';
-      }
+    const cardWidth = (pdfWidth - (margin * 3)) / 2;
+    let xPosition = margin;
+    let maxHeightInRow = 0;
 
-      const canvas = await html2canvas(cardElement, {
-        scale: 2,
-        backgroundColor: '#ffffff'
-      });
+    for (let i = 0; i < predictionCards.length; i++) {
+        const cardElement = predictionCards[i];
+        
+        // Esconde a explicação
+        const footerElement = cardElement.querySelector('.prediction-footer') as HTMLElement;
+        if (footerElement) {
+            footerElement.style.display = 'none';
+        }
 
-      // Restaura a visibilidade do rodapé
-      if (footerElement) {
-        footerElement.style.display = '';
-      }
+        const canvas = await html2canvas(cardElement, {
+            scale: 2,
+            backgroundColor: '#ffffff'
+        });
 
-      const cardWidth = (pdfWidth / 2) - (margin * 1.5);
-      const cardHeight = (canvas.height * cardWidth) / canvas.width;
-      
-      pdf.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', margin, yPosition, cardWidth, cardHeight);
-      yPosition += cardHeight + 10;
+        // Mostra a explicação de novo
+        if (footerElement) {
+            footerElement.style.display = '';
+        }
 
-      if (yPosition > pdf.internal.pageSize.getHeight() - margin) {
-        pdf.addPage();
-        yPosition = margin;
-      }
+        const cardHeight = (canvas.height * cardWidth) / canvas.width;
+        
+        if (yPosition + cardHeight > pdfHeight - margin) {
+            pdf.addPage();
+            yPosition = margin;
+            xPosition = margin;
+            maxHeightInRow = 0;
+        }
+        
+        pdf.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', xPosition, yPosition, cardWidth, cardHeight);
+        
+        if (i % 2 === 0) { // Ímpar (primeiro da linha)
+            xPosition += cardWidth + margin;
+            maxHeightInRow = cardHeight;
+        } else { // Par (segundo da linha)
+            xPosition = margin;
+            yPosition += Math.max(maxHeightInRow, cardHeight) + 10;
+            maxHeightInRow = 0;
+        }
     }
     
     // Rodapé
@@ -149,11 +164,9 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
         const dateText = `Data: ${format(generationDate, 'dd/MM/yyyy HH:mm:ss')}`;
         const pageText = `Página ${i} de ${pageCount}`;
 
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        
-        pdf.text(userText, 14, pageHeight - 10);
-        pdf.text(pageText, pdfWidth / 2, pageHeight - 10, { align: 'center' });
-        pdf.text(dateText, pdfWidth - 14, pageHeight - 10, { align: 'right' });
+        pdf.text(userText, 14, pdfHeight - 10);
+        pdf.text(pageText, pdfWidth / 2, pdfHeight - 10, { align: 'center' });
+        pdf.text(dateText, pdfWidth - 14, pdfHeight - 10, { align: 'right' });
     }
 
     pdf.save(`relatorio_preditivo_${format(new Date(), 'yyyyMMdd')}.pdf`);
@@ -291,7 +304,7 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
                         </Button>
                     </CardHeader>
                 </Card>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6">
                     {prediction.predictions.map((pred, index) => (
                         <Card key={index} className="prediction-card">
                             <CardHeader>
@@ -315,12 +328,10 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
                                     </Card>
                                 </div>
                             </CardContent>
-                            <div className="mt-auto">
-                                <CardFooter className="flex-col items-start gap-2 pt-4">
-                                    <h3 className="font-semibold">Explicação da IA</h3>
-                                    <p className="text-sm text-muted-foreground">{pred.explanation}</p>
-                                </CardFooter>
-                            </div>
+                            <CardFooter className="prediction-footer flex-col items-start gap-2 pt-4">
+                                <h3 className="font-semibold">Explicação da IA</h3>
+                                <p className="text-sm text-muted-foreground">{pred.explanation}</p>
+                            </CardFooter>
                         </Card>
                     ))}
                 </div>
