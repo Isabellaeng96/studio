@@ -2,6 +2,7 @@
 
 
 
+
 export type Material = {
   id: string;
   name: string;
@@ -111,4 +112,9 @@ export type SectorEmailConfig = {
   [sector: string]: string[];
 };
 
+export type PurchaseOrderItem = {
+  materialId: string;
+  quantity: number;
+  supplierId: string;
+};
     

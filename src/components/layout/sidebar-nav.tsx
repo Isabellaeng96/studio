@@ -10,6 +10,7 @@ import {
   Settings,
   Truck,
   Users,
+  ShoppingCart,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -21,6 +22,7 @@ const navItems = [
   { href: '/', label: 'Painel', icon: Home, roles: ['Administrador', 'Gerente de Estoque', 'Operador de Campo', 'Visitante'] },
   { href: '/materials', label: 'Materiais', icon: Package, roles: ['Administrador', 'Gerente de Estoque', 'Operador de Campo'] },
   { href: '/transactions', label: 'Transações', icon: Replace, roles: ['Administrador', 'Gerente de Estoque', 'Operador de Campo'] },
+  { href: '/purchasing', label: 'Compras', icon: ShoppingCart, roles: ['Administrador', 'Gerente de Estoque'] },
   { href: '/suppliers', label: 'Fornecedores', icon: Truck, roles: ['Administrador', 'Gerente de Estoque'] },
   { href: '/cost-centers', label: 'Centros de Custo', icon: Landmark, roles: ['Administrador', 'Gerente de Estoque'] },
   { href: '/analysis', label: 'Análise', icon: BarChart3, roles: ['Administrador'] },
