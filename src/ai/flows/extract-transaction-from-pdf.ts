@@ -51,16 +51,23 @@ const prompt = ai.definePrompt({
   input: { schema: z.object({ pdfTextContent: z.string() }) },
   output: { schema: TransactionExtractionOutputSchema },
   prompt: `Você é um assistente de entrada de dados especialista em analisar texto de notas fiscais e faturas.
-Analise o seguinte texto extraído de um PDF e identifique os seguintes campos gerais do fornecedor: nome, CNPJ, telefone, endereço completo (rua, número, bairro), cidade e estado. Identifique também o número da nota fiscal.
+Sua tarefa é analisar o texto extraído de um PDF e extrair **apenas** as seguintes informações:
 
-Além disso, identifique **TODOS** os materiais ou produtos listados no documento e crie uma lista para eles. Para cada item na lista, extraia: nome do material, quantidade, valor unitário, unidade de medida e sugira uma categoria.
+1.  **Dados do Fornecedor**:
+    *   name: O nome do fornecedor ou da empresa.
+    *   cnpj: O CNPJ do fornecedor.
+    *   phone: O telefone de contato.
+    *   address: O endereço completo (rua, número, bairro).
+    *   city: A cidade.
+    *   state: O estado (sigla com 2 letras, ex: SP, RJ).
+2.  **Dados da Nota**:
+    *   invoice: O número da nota fiscal ou fatura.
+3.  **Lista de Materiais**:
+    *   Para **cada item** listado, extraia: materialName, quantity, unitPrice, unit e category.
+    *   Para quantity e unitPrice, extraia **apenas o valor numérico**.
+    *   Para category, sugira uma com base no nome do produto (ex: 'Hidráulica', 'Elétrica', 'Ferramenta').
 
-Se um campo não for encontrado, deixe-o em branco. Foque em extrair os valores exatos.
-Para o nome do material, procure por uma descrição de produto.
-Para a quantidade, extraia **apenas o valor numérico**, ignorando qualquer texto ou unidade que possa acompanhá-lo. O resultado deve ser um número. Atenção: Não confunda 'quantidade' com 'valor total'.
-Para o valor unitário, extraia **apenas o valor numérico** do preço por unidade. Ignore o valor total do item. Se o valor estiver em formato de moeda (ex: R$ 10,50), extraia apenas o número (10.50).
-Para a unidade, procure por abreviações como 'un', 'pc', 'kg', 'm', 'm2', 'm3', 'sc'.
-Para a categoria, sugira uma categoria com base no nome do produto (ex: 'Hidráulica', 'Elétrica', 'Ferramenta', 'Agregado', 'Estrutura').
+Se um campo específico não for encontrado no texto, deixe-o em branco. **Não inclua nenhuma informação adicional ou desnecessária.** Foque em extrair os valores exatos.
 
 Texto do PDF:
 {{{pdfTextContent}}}
