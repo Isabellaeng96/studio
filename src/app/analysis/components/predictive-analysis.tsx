@@ -297,7 +297,7 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
                 </Card>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {prediction.predictions.map((pred, index) => (
-                         <Card key={index} className="flex flex-col prediction-card">
+                         <Card key={index} className="prediction-card">
                             <CardHeader>
                                 <CardTitle className="text-xl">{pred.materialName}</CardTitle>
                             </CardHeader>
@@ -317,7 +317,7 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
                                  <p className="text-xs text-muted-foreground pt-1">pontuação de confiança</p>
                             </Card>
                             </CardContent>
-                            <CardFooter className="flex-col items-start gap-2 mt-auto pt-4 card-footer-explanation">
+                            <CardFooter className="flex-col items-start gap-2 pt-4 card-footer-explanation">
                                 <h3 className="font-semibold">Explicação da IA</h3>
                                 <p className="text-sm text-muted-foreground">{pred.explanation}</p>
                             </CardFooter>
