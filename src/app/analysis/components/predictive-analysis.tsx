@@ -93,6 +93,7 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
 
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
     const margin = 15;
     let yPosition = margin;
 
@@ -108,20 +109,37 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
     const predictionCards = Array.from(
       predictionResultsRef.current.querySelectorAll('.prediction-card')
     ) as HTMLElement[];
+    
+    const cardsPerPage = 2;
+    const cardWidth = (pdfWidth - margin * 2 - (cardsPerPage - 1) * 10) / cardsPerPage;
 
-    for (const cardElement of predictionCards) {
-      const canvas = await html2canvas(cardElement, { scale: 2, backgroundColor: '#ffffff' });
-      const imgData = canvas.toDataURL('image/jpeg', 0.9);
-      const imgWidth = pdfWidth - margin * 2;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    for (let i = 0; i < predictionCards.length; i++) {
+        const cardElement = predictionCards[i];
+        
+        const footer = cardElement.querySelector('.card-footer-explanation') as HTMLElement | null;
+        if (footer) footer.style.display = 'none';
 
-      if (yPosition + imgHeight > pdf.internal.pageSize.getHeight() - margin) {
-        pdf.addPage();
-        yPosition = margin;
-      }
+        const canvas = await html2canvas(cardElement, { scale: 2, backgroundColor: '#ffffff' });
+        
+        if (footer) footer.style.display = ''; // Restore visibility
+        
+        const imgData = canvas.toDataURL('image/jpeg', 0.9);
+        const cardHeight = (canvas.height * cardWidth) / canvas.width;
 
-      pdf.addImage(imgData, 'JPEG', margin, yPosition, imgWidth, imgHeight);
-      yPosition += imgHeight + 10;
+        const columnIndex = i % cardsPerPage;
+        
+        if (columnIndex === 0 && i > 0) {
+            yPosition += cardHeight + 10;
+        }
+
+        if (yPosition + cardHeight > pdfHeight - margin) {
+            pdf.addPage();
+            yPosition = margin;
+        }
+
+        const xPosition = margin + columnIndex * (cardWidth + 10);
+
+        pdf.addImage(imgData, 'JPEG', xPosition, yPosition, cardWidth, cardHeight);
     }
     
     // Rodapé
@@ -307,7 +325,7 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
                                 </CardFooter>
                             </Card>
                             </CardContent>
-                            <CardFooter className="flex-col items-start gap-2 mt-auto pt-4">
+                            <CardFooter className="flex-col items-start gap-2 mt-auto pt-4 card-footer-explanation">
                                 <h3 className="font-semibold">Explicação da IA</h3>
                                 <p className="text-sm text-muted-foreground">{pred.explanation}</p>
                             </CardFooter>
