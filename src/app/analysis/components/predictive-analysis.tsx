@@ -1,7 +1,8 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BrainCircuit, Loader2 } from "lucide-react";
+import { BrainCircuit, Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -10,12 +11,16 @@ import { predictMaterialConsumption, type PredictiveInventoryAnalysisOutput } fr
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import type { Material, Transaction } from "@/types";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 const predictiveSchema = z.object({
-  materialId: z.string().min(1, 'Por favor, selecione um material.'),
+  materialIds: z.array(z.string()).min(1, 'Por favor, selecione pelo menos um material.'),
   forecastHorizon: z.string().min(1, 'Por favor, selecione um horizonte de previsão.'),
 });
 
@@ -29,26 +34,36 @@ interface PredictiveAnalysisProps {
 export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalysisProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [prediction, setPrediction] = useState<PredictiveInventoryAnalysisOutput | null>(null);
+  const [open, setOpen] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<PredictiveFormValues>({
     resolver: zodResolver(predictiveSchema),
+    defaultValues: {
+        materialIds: [],
+    },
   });
 
   const onSubmit = async (data: PredictiveFormValues) => {
     setIsLoading(true);
     setPrediction(null);
     try {
-      const material = materials.find(m => m.id === data.materialId);
-      if (!material) throw new Error("Material not found");
+      const materialsToPredict = data.materialIds.map(id => {
+        const material = materials.find(m => m.id === id);
+        if (!material) throw new Error(`Material com id ${id} não encontrado`);
+        
+        const historicalData = transactions
+          .filter(t => t.materialId === id)
+          .map(t => ({ date: new Date(t.date).toISOString().split('T')[0], quantity: t.quantity, type: t.type }));
 
-      const historicalData = transactions
-        .filter(t => t.materialId === data.materialId)
-        .map(t => ({ date: new Date(t.date).toISOString().split('T')[0], quantity: t.quantity, type: t.type }));
+        return {
+          materialName: material.name,
+          historicalData: JSON.stringify(historicalData, null, 2),
+        };
+      });
 
       const result = await predictMaterialConsumption({
-        materialName: material.name,
-        historicalData: JSON.stringify(historicalData, null, 2),
+        materials: materialsToPredict,
         forecastHorizon: data.forecastHorizon,
       });
 
@@ -64,133 +79,177 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
       setIsLoading(false);
     }
   };
+  
+  const selectedMaterials = form.watch('materialIds');
 
   return (
     <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-      <Card className="md:col-span-1">
-        <CardHeader>
-          <CardTitle>Previsão de Consumo</CardTitle>
-          <CardDescription>
-            Use IA para prever o uso de material com base em dados históricos.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="materialId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Material</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione um material" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {materials.map(m => (
-                          <SelectItem key={m.id} value={m.id} disabled={m.deleted}>
-                            {m.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="forecastHorizon"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Horizonte de Previsão</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione um período" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="próxima semana">Próxima Semana</SelectItem>
-                        <SelectItem value="próximo mês">Próximo Mês</SelectItem>
-                        <SelectItem value="próximo trimestre">Próximo Trimestre</SelectItem>
-                        <SelectItem value="próximos 6 meses">Próximos 6 Meses</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" disabled={isLoading} className="w-full">
-                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <BrainCircuit className="mr-2 h-4 w-4" />}
-                Gerar Previsão
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+      <div className="md:col-span-1">
+        <Card>
+            <CardHeader>
+            <CardTitle>Previsão de Consumo</CardTitle>
+            <CardDescription>
+                Use IA para prever o uso de material com base em dados históricos.
+            </CardDescription>
+            </CardHeader>
+            <CardContent>
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                    control={form.control}
+                    name="materialIds"
+                    render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                        <FormLabel>Materiais</FormLabel>
+                        <Popover open={open} onOpenChange={setOpen}>
+                        <PopoverTrigger asChild>
+                            <FormControl>
+                            <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn("w-full justify-between h-auto", !field.value?.length && "text-muted-foreground")}
+                            >
+                                <div className="flex gap-1 flex-wrap">
+                                    {selectedMaterials.length > 0 ? selectedMaterials.map(id => {
+                                        const mat = materials.find(m => m.id === id);
+                                        return mat ? <Badge key={id} variant="secondary">{mat.name}</Badge> : null;
+                                    }) : "Selecione os materiais"}
+                                </div>
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                            </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0">
+                            <Command>
+                            <CommandInput placeholder="Buscar material..." />
+                             <CommandList>
+                                <CommandEmpty>Nenhum material encontrado.</CommandEmpty>
+                                <CommandGroup>
+                                    {materials.map((material) => (
+                                    <CommandItem
+                                        key={material.id}
+                                        value={material.name}
+                                        onSelect={() => {
+                                            const currentValues = form.getValues("materialIds");
+                                            if (currentValues.includes(material.id)) {
+                                                form.setValue("materialIds", currentValues.filter(id => id !== material.id));
+                                            } else {
+                                                form.setValue("materialIds", [...currentValues, material.id]);
+                                            }
+                                        }}
+                                    >
+                                        <Check
+                                        className={cn("mr-2 h-4 w-4", field.value?.includes(material.id) ? "opacity-100" : "opacity-0")}
+                                        />
+                                        {material.name}
+                                    </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                             </CommandList>
+                            </Command>
+                        </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="forecastHorizon"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Horizonte de Previsão</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                            <SelectTrigger>
+                            <SelectValue placeholder="Selecione um período" />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value="próxima semana">Próxima Semana</SelectItem>
+                            <SelectItem value="próximo mês">Próximo Mês</SelectItem>
+                            <SelectItem value="próximo trimestre">Próximo Trimestre</SelectItem>
+                            <SelectItem value="próximos 6 meses">Próximos 6 Meses</SelectItem>
+                        </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <Button type="submit" disabled={isLoading} className="w-full">
+                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <BrainCircuit className="mr-2 h-4 w-4" />}
+                    Gerar Previsão
+                </Button>
+                </form>
+            </Form>
+            </CardContent>
+        </Card>
+      </div>
       <div className="md:col-span-2">
         {isLoading && (
           <Card className="flex h-full min-h-[400px] items-center justify-center">
             <div className="text-center text-muted-foreground">
               <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
-              <p className="mt-4 text-lg">Gerando previsão...</p>
+              <p className="mt-4 text-lg">Gerando previsões...</p>
               <p>A IA está analisando os dados históricos.</p>
             </div>
           </Card>
         )}
         {!isLoading && prediction && (
-          <Card className="h-full min-h-[400px] bg-gradient-to-br from-primary/5 to-background">
-            <CardHeader>
-              <CardTitle>Resultado da Previsão</CardTitle>
-              <CardDescription>
-                Previsão de consumo alimentada por IA para{" "}
-                <span className="font-bold text-primary">
-                  {materials.find(m => m.id === form.getValues("materialId"))?.name}
-                </span>{" "}
-                durante o(a){" "}
-                <span className="font-bold text-primary">{form.getValues("forecastHorizon")}</span>.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardDescription>Consumo Previsto</CardDescription>
-                  <CardTitle className="text-4xl text-primary">
-                    {prediction.forecastedConsumption}
-                  </CardTitle>
-                </CardHeader>
-                <CardFooter>
-                  <p className="text-xs text-muted-foreground">unidades de uso previsto</p>
-                </CardFooter>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardDescription>Nível de Confiança</CardDescription>
-                  <CardTitle className="text-4xl text-primary">
-                    {(prediction.confidenceLevel * 100).toFixed(0)}%
-                  </CardTitle>
-                </CardHeader>
-                 <CardFooter>
-                  <p className="text-xs text-muted-foreground">pontuação de confiança do modelo</p>
-                 </CardFooter>
-              </Card>
-            </CardContent>
-             <CardFooter className="flex-col items-start gap-2">
-                <h3 className="font-semibold">Explicação</h3>
-                <p className="text-sm text-muted-foreground">{prediction.explanation}</p>
-             </CardFooter>
-          </Card>
+            <div className="space-y-6">
+                <Card className="bg-gradient-to-br from-primary/5 to-background">
+                     <CardHeader>
+                        <CardTitle>Resultados da Previsão</CardTitle>
+                        <CardDescription>
+                            Previsão de consumo para o(a) <span className="font-bold text-primary">{form.getValues("forecastHorizon")}</span>.
+                        </CardDescription>
+                    </CardHeader>
+                </Card>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {prediction.predictions.map((pred, index) => (
+                         <Card key={index} className="flex flex-col">
+                            <CardHeader>
+                                <CardTitle className="text-xl">{pred.materialName}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="grid gap-4 sm:grid-cols-2 flex-grow">
+                            <Card>
+                                <CardHeader className="pb-2">
+                                <CardDescription>Consumo Previsto</CardDescription>
+                                <CardTitle className="text-4xl text-primary">
+                                    {pred.forecastedConsumption}
+                                </CardTitle>
+                                </CardHeader>
+                                <CardFooter>
+                                <p className="text-xs text-muted-foreground">unidades de uso previsto</p>
+                                </CardFooter>
+                            </Card>
+                            <Card>
+                                <CardHeader className="pb-2">
+                                <CardDescription>Nível de Confiança</CardDescription>
+                                <CardTitle className="text-4xl text-primary">
+                                    {(pred.confidenceLevel * 100).toFixed(0)}%
+                                </CardTitle>
+                                </CardHeader>
+                                <CardFooter>
+                                <p className="text-xs text-muted-foreground">pontuação de confiança</p>
+                                </CardFooter>
+                            </Card>
+                            </CardContent>
+                            <CardFooter className="flex-col items-start gap-2 mt-auto pt-4">
+                                <h3 className="font-semibold">Explicação da IA</h3>
+                                <p className="text-sm text-muted-foreground">{pred.explanation}</p>
+                            </CardFooter>
+                        </Card>
+                    ))}
+                </div>
+            </div>
         )}
         {!isLoading && !prediction && (
           <Card className="flex h-full min-h-[400px] items-center justify-center border-dashed">
             <div className="text-center text-muted-foreground">
               <BrainCircuit className="mx-auto h-12 w-12" />
               <p className="mt-4 text-lg font-medium">Aguardando Previsão</p>
-              <p>Selecione um material e um horizonte para gerar uma previsão.</p>
+              <p>Selecione um ou mais materiais e um horizonte para gerar uma previsão.</p>
             </div>
           </Card>
         )}
