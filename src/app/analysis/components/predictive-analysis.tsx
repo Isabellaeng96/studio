@@ -117,6 +117,19 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
     for (let i = 0; i < predictionCards.length; i++) {
         const cardElement = predictionCards[i];
         
+        if (i > 0 && i % 4 === 0) { // Adiciona nova página a cada 4 itens
+            pdf.addPage();
+            yPosition = margin; // Reinicia o cabeçalho e posição
+            xPosition = margin;
+            maxHeightInRow = 0;
+            pdf.setFontSize(18);
+            pdf.text('Relatório de Análise Preditiva', margin, yPosition);
+            yPosition += 8;
+            pdf.setFontSize(11);
+            pdf.text(period, margin, yPosition);
+            yPosition += 12;
+        }
+        
         // Esconde a explicação
         const footerElement = cardElement.querySelector('.prediction-footer') as HTMLElement;
         if (footerElement) {
