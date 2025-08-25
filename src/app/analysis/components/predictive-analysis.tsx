@@ -304,7 +304,7 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
                             <CardContent className="grid gap-4 sm:grid-cols-2">
                             <Card className="p-4">
                                 <CardDescription>Consumo Previsto</CardDescription>
-                                <CardTitle className="text-3xl text-primary">
+                                <CardTitle className="text-3xl">
                                     {pred.forecastedConsumption}
                                 </CardTitle>
                                 <p className="text-xs text-muted-foreground pt-1">unidades de uso previsto</p>
