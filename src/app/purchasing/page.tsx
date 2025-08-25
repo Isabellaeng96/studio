@@ -2,12 +2,11 @@
 "use client";
 
 import { useState, useMemo } from 'react';
-import { FileSpreadsheet, FileText, ShoppingCart } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import type { User } from 'firebase/auth';
 
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
@@ -129,6 +128,15 @@ export default function PurchasingPage() {
     XLSX.writeFile(wb, `${filename}.xlsx`);
   };
 
+  const GenerateOrderButton = ({ className }: { className?: string }) => (
+    <div className={cn("flex justify-end", className)}>
+        <Button onClick={handleGenerateOrder} disabled={selectedMaterials.length === 0}>
+            <ShoppingCart className="mr-2"/>
+            Gerar Pedido ({selectedMaterials.length})
+        </Button>
+    </div>
+  );
+
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -155,18 +163,16 @@ export default function PurchasingPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {lowStockMaterials.length > 0 && (
+                <GenerateOrderButton className="pb-4" />
+            )}
             <LowStockTable 
               materials={lowStockMaterials}
               selectedMaterials={selectedMaterials}
               setSelectedMaterials={setSelectedMaterials}
             />
             {lowStockMaterials.length > 0 && (
-                 <div className="flex justify-end pt-6">
-                    <Button onClick={handleGenerateOrder} disabled={selectedMaterials.length === 0}>
-                        <ShoppingCart className="mr-2"/>
-                        Gerar Pedido ({selectedMaterials.length})
-                    </Button>
-                </div>
+                <GenerateOrderButton className="pt-6" />
             )}
           </CardContent>
         </Card>
