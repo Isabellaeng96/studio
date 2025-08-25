@@ -69,7 +69,7 @@ export default function PurchasingPage() {
         }
     }).filter(item => item.id); // Filter out any items where material was not found
 
-    const filename = `pedido_compra_${supplier.name.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}`;
+    const filename = `pedido_orcamento_${supplier.name.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}`;
     
     if (formatType === 'pdf') {
       exportToPDF(supplier.name, orderItems, filename);
@@ -89,7 +89,7 @@ export default function PurchasingPage() {
     let yPosition = 22;
 
     doc.setFontSize(18);
-    doc.text(`Pedido de Compra - ${supplierName}`, 14, yPosition);
+    doc.text(`Pedido de Orçamento - ${supplierName}`, 14, yPosition);
     yPosition += 15;
 
     autoTable(doc, {
