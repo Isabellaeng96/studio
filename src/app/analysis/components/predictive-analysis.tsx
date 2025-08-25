@@ -297,7 +297,7 @@ export function PredictiveAnalysis({ materials, transactions }: PredictiveAnalys
                 </Card>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {prediction.predictions.map((pred, index) => (
-                         <Card key={index} className="prediction-card">
+                         <Card key={index} className="prediction-card flex flex-col">
                             <CardHeader>
                                 <CardTitle className="text-xl">{pred.materialName}</CardTitle>
                             </CardHeader>
