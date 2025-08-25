@@ -13,7 +13,7 @@ import { MultiItemEntryForm } from './components/multi-item-entry-form';
 import { MultiItemTransactionForm } from './components/multi-item-transaction-form';
 import { TransactionsTable } from './components/transactions-table';
 import { useToast } from '@/hooks/use-toast';
-import type { TransactionSave, MultiTransactionItemSave, EntryItem } from '@/types';
+import type { TransactionSave, MultiTransactionItemSave, EntryItem, Supplier } from '@/types';
 import type { TransactionExtractionOutput } from '@/ai/flows/extract-transaction-from-pdf';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -50,7 +50,7 @@ function TransactionsPageContent() {
   const [initialEntryItems, setInitialEntryItems] = useState<EntryItem[]>([]);
   const [initialWithdrawalItems, setInitialWithdrawalItems] = useState<MultiTransactionItemSave[]>([]);
   const [initialInvoice, setInitialInvoice] = useState<string | undefined>();
-  const [initialSupplier, setInitialSupplier] = useState<string | undefined>();
+  const [initialSupplier, setInitialSupplier] = useState<Omit<Supplier, 'id'>>();
   
   const resetInitialState = useCallback(() => {
     setInitialEntryItems([]);
@@ -111,7 +111,9 @@ function TransactionsPageContent() {
     
     setInitialEntryItems(extractedItems);
     setInitialInvoice(data.invoice);
-    setInitialSupplier(data.supplier);
+    if (data.supplier) {
+        setInitialSupplier(data.supplier);
+    }
 
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', 'entrada');
@@ -132,7 +134,7 @@ function TransactionsPageContent() {
     return addMultipleTransactions(data.items, data);
   };
 
-  const handleSaveMultiEntry = (data: { items: EntryItem[] } & Omit<TransactionSave, 'materialId' | 'quantity' | 'materialName' | 'unit' | 'category'>) => {
+  const handleSaveMultiEntry = (data: { items: EntryItem[] } & Omit<TransactionSave, 'materialId' | 'quantity' | 'materialName' | 'unit' | 'category' | 'supplier'> & { supplier?: Omit<Supplier, 'id'> }) => {
      return addMultipleEntries(data.items, data);
   };
 
@@ -325,5 +327,3 @@ export default function TransactionsPage() {
     </Suspense>
   )
 }
-
-    

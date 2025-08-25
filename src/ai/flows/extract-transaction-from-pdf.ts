@@ -25,8 +25,17 @@ const MaterialDetailSchema = z.object({
     category: z.string().optional().describe('Uma categoria sugerida para o material com base no seu nome ou tipo.'),
 });
 
+const SupplierDetailSchema = z.object({
+  name: z.string().optional().describe('O nome do fornecedor ou da empresa que emitiu o documento.'),
+  cnpj: z.string().optional().describe('O CNPJ do fornecedor.'),
+  phone: z.string().optional().describe('O telefone de contato do fornecedor.'),
+  address: z.string().optional().describe('O endereço do fornecedor (rua, número, bairro).'),
+  city: z.string().optional().describe('A cidade do fornecedor.'),
+  state: z.string().optional().describe('O estado (sigla) do fornecedor.'),
+});
+
 const TransactionExtractionOutputSchema = z.object({
-  supplier: z.string().optional().describe('O nome do fornecedor ou da empresa que emitiu o documento.'),
+  supplier: SupplierDetailSchema.optional(),
   invoice: z.string().optional().describe('O número da nota fiscal ou fatura, se encontrado.'),
   materials: z.array(MaterialDetailSchema).describe('Uma lista de todos os materiais encontrados no documento.'),
 });
@@ -41,8 +50,8 @@ const prompt = ai.definePrompt({
   name: 'extractTransactionPrompt',
   input: { schema: z.object({ pdfTextContent: z.string() }) },
   output: { schema: TransactionExtractionOutputSchema },
-  prompt: `Você é um assistente de entrada de dados especializado em analisar texto de notas fiscais e faturas.
-Analise o seguinte texto extraído de um PDF e identifique os seguintes campos gerais: fornecedor e número da nota fiscal.
+  prompt: `Você é um assistente de entrada de dados especialista em analisar texto de notas fiscais e faturas.
+Analise o seguinte texto extraído de um PDF e identifique os seguintes campos gerais do fornecedor: nome, CNPJ, telefone, endereço completo (rua, número, bairro), cidade e estado. Identifique também o número da nota fiscal.
 
 Além disso, identifique **TODOS** os materiais ou produtos listados no documento e crie uma lista para eles. Para cada item na lista, extraia: nome do material, quantidade, valor unitário, unidade de medida e sugira uma categoria.
 
@@ -56,7 +65,7 @@ Para a categoria, sugira uma categoria com base no nome do produto (ex: 'Hidráu
 Texto do PDF:
 {{{pdfTextContent}}}
 
-Retorne os dados extraídos no formato JSON, com uma lista de materiais.
+Retorne os dados extraídos no formato JSON, com um objeto de fornecedor e uma lista de materiais.
 `,
 });
 
@@ -76,8 +85,8 @@ const extractTransactionFlow = ai.defineFlow(
     const { output } = await prompt({ pdfTextContent: data.text });
     
     if (output) {
-      if (output.supplier) {
-        output.supplier = output.supplier.toUpperCase();
+      if (output.supplier && output.supplier.name) {
+        output.supplier.name = output.supplier.name.toUpperCase();
       }
       if (output.materials) {
         output.materials = output.materials.map(material => ({

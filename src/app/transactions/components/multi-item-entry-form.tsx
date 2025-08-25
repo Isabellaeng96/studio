@@ -15,13 +15,22 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import type { Material, EntryItem } from '@/types';
+import type { Material, EntryItem, Supplier } from '@/types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuth } from '@/context/AuthContext';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 
+
+const supplierSchema = z.object({
+  name: z.string().optional(),
+  cnpj: z.string().optional(),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+}).optional();
 
 const multiItemEntrySchema = z.object({
   items: z.array(z.object({
@@ -36,7 +45,7 @@ const multiItemEntrySchema = z.object({
   })).min(1, 'Adicione pelo menos um material à lista.'),
   date: z.date({ required_error: 'A data é obrigatória.' }),
   responsible: z.string().min(2, 'O responsável é obrigatório.'),
-  supplier: z.string().optional().transform(val => val ? val.toUpperCase() : val),
+  supplier: supplierSchema,
   invoice: z.string().optional(),
   costCenter: z.string().optional(),
   stockLocation: z.string().optional().transform(val => val ? val.toUpperCase() : val),
@@ -51,7 +60,7 @@ interface MultiItemEntryFormProps {
   onCancel: (shouldReset: boolean) => void;
   initialItems?: EntryItem[];
   initialInvoice?: string;
-  initialSupplier?: string;
+  initialSupplier?: Omit<Supplier, 'id'>;
 }
 
 export function MultiItemEntryForm({ materials, categories, onSave, onCancel, initialItems, initialInvoice, initialSupplier }: MultiItemEntryFormProps) {
@@ -64,7 +73,7 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
       items: initialItems && initialItems.length > 0 ? initialItems : [],
       date: new Date(),
       responsible: user?.displayName ?? '',
-      supplier: initialSupplier ?? '',
+      supplier: initialSupplier ?? { name: '' },
       invoice: initialInvoice ?? '',
       costCenter: '',
       stockLocation: ''
@@ -113,7 +122,7 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
       items: [],
       date: new Date(),
       responsible: user?.displayName ?? '',
-      supplier: '',
+      supplier: { name: '' },
       invoice: '',
       costCenter: '',
       stockLocation: '',
@@ -302,7 +311,7 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
             <div className="grid md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="supplier"
+                  name="supplier.name"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Fornecedor</FormLabel>

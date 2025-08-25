@@ -61,7 +61,7 @@ interface AppContextType {
   deleteMultipleMaterials: (materialIds: string[]) => void;
   addCategory: (category: string) => void;
   addTransaction: (transaction: TransactionSave, type: 'entrada' | 'saida') => boolean;
-  addMultipleEntries: (items: EntryItem[], commonData: Omit<TransactionSave, 'materialId' | 'quantity' | 'materialName' | 'unit' | 'category'>) => boolean;
+  addMultipleEntries: (items: EntryItem[], commonData: Omit<TransactionSave, 'materialId' | 'quantity' | 'materialName' | 'unit' | 'category' | 'supplier'> & { supplier?: Omit<Supplier, 'id'> }) => boolean;
   addMultipleTransactions: (items: MultiTransactionItemSave[], commonData: Omit<TransactionSave, 'materialId' | 'quantity'>) => boolean;
   addCostCenter: (costCenter: Omit<CostCenter, 'id'>) => void;
   updateCostCenter: (costCenter: CostCenter) => void;
@@ -546,7 +546,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return allSucceeded;
   }, [materials, toast, checkAndSendAlert]);
   
- const addMultipleEntries = useCallback((items: EntryItem[], commonData: Omit<TransactionSave, 'materialId' | 'quantity' | 'materialName' | 'unit' | 'category'>) => {
+ const addMultipleEntries = useCallback((items: EntryItem[], commonData: Omit<TransactionSave, 'materialId' | 'quantity' | 'materialName' | 'unit' | 'category' | 'supplier'> & { supplier?: Omit<Supplier, 'id'> }) => {
     let allSucceeded = true;
     let successfulCount = 0;
     let newMaterialCount = 0;
@@ -555,24 +555,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const newCategories = new Set(categories);
     let updatedMaterialsList = [...materials]; // Start with the current state
 
-    // Auto-add supplier if it's new
-    let updatedSuppliers = [...suppliers];
-    if (commonData.supplier) {
-        const supplierNameUpper = commonData.supplier.toUpperCase();
-        const supplierExists = updatedSuppliers.some(s => s.name.toUpperCase() === supplierNameUpper);
-        if (!supplierExists) {
+    // Auto-add/update supplier if provided
+    let finalSupplier: Supplier | undefined;
+    if (commonData.supplier && commonData.supplier.name) {
+        const supplierNameUpper = commonData.supplier.name.toUpperCase();
+        const existingSupplier = suppliers.find(s => s.name.toUpperCase() === supplierNameUpper);
+
+        if (existingSupplier) {
+            finalSupplier = existingSupplier;
+        } else {
             const newSupplier: Supplier = {
                 id: generateId('SUP'),
-                name: supplierNameUpper
+                name: supplierNameUpper,
+                cnpj: commonData.supplier.cnpj,
+                phone: commonData.supplier.phone,
+                address: commonData.supplier.address,
+                city: commonData.supplier.city,
+                state: commonData.supplier.state,
+                website: commonData.supplier.website,
             };
-            updatedSuppliers = [newSupplier, ...updatedSuppliers];
+            setSuppliers(prev => [newSupplier, ...prev]);
+            finalSupplier = newSupplier;
             toast({
                 title: 'Fornecedor Adicionado',
-                description: `O fornecedor "${newSupplier.name}" foi cadastrado automaticamente.`,
+                description: `O fornecedor "${newSupplier.name}" foi cadastrado automaticamente com os dados da nota.`,
             });
         }
     }
-    setSuppliers(updatedSuppliers);
+
 
     // First pass: validate and collect new materials
     for (const item of items) {
@@ -592,7 +602,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 category: item.category || 'GERAL',
                 unit: item.unit || 'un',
                 minStock: 0,
-                supplier: commonData.supplier?.toUpperCase(),
+                supplier: finalSupplier?.name,
                 id: generateId('PRD'),
                 currentStock: 0,
                 deleted: false,
@@ -627,7 +637,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
         
         if (!materialToUpdate || !currentMaterialId) {
-            console.error(`Critical error: New material not found immediately after creation. ID: ${currentMaterialId}`);
+            console.error(`Critical error: Material not found. ID: ${currentMaterialId}`);
             allSucceeded = false;
             continue; // Skip this item, but don't abort the whole process
         }
@@ -638,6 +648,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
             ...materialToUpdate, 
             currentStock: newStock,
             lastPaidPrice: item.unitPrice,
+            // If an existing material has no supplier, update it with the one from the invoice
+            supplier: materialToUpdate.supplier || finalSupplier?.name,
         };
         
         const newTransaction: Transaction = {
@@ -650,7 +662,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             responsible: commonData.responsible,
-            supplier: commonData.supplier?.toUpperCase(),
+            supplier: finalSupplier?.name,
             invoice: commonData.invoice,
             costCenter: commonData.costCenter,
             stockLocation: commonData.stockLocation?.toUpperCase(),
