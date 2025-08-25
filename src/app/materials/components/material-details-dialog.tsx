@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -69,6 +70,16 @@ export function MaterialDetailsDialog({ open, onOpenChange, material, stockByLoc
     }
   };
 
+  const formatCurrency = (value?: number) => {
+    if (typeof value !== 'number') {
+      return 'N/A';
+    }
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
+  };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -88,6 +99,7 @@ export function MaterialDetailsDialog({ open, onOpenChange, material, stockByLoc
                 <div><span className="font-semibold">Fornecedor Padrão:</span> {material.supplier || 'N/A'}</div>
                 <div><span className="font-semibold">Estoque Mínimo:</span> <span className="font-mono">{material.minStock}</span></div>
                 <div><span className="font-semibold">Estoque Total:</span> <span className="font-mono">{material.currentStock}</span></div>
+                <div><span className="font-semibold">Último Valor Pago:</span> <span className="font-mono">{formatCurrency(material.lastPaidPrice)}</span></div>
               </div>
             </div>
             <div>

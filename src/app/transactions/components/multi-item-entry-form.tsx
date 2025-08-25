@@ -30,6 +30,7 @@ const multiItemEntrySchema = z.object({
     invoiceName: z.string().optional(),
     isNew: z.boolean(),
     quantity: z.coerce.number().positive('A quantidade deve ser positiva.'),
+    unitPrice: z.coerce.number().positive('O valor unitário deve ser positivo.'),
     unit: z.string().min(1, "A unidade é obrigatória."),
     category: z.string().min(1, "A categoria é obrigatória."),
   })).min(1, 'Adicione pelo menos um material à lista.'),
@@ -156,7 +157,7 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
   }
   
   const validCategories = categories.filter(c => c && c.trim() !== '');
-  const defaultNewItem = { materialId: '', materialName: '', invoiceName: '', isNew: true, quantity: 0, unit: 'un', category: 'GERAL' };
+  const defaultNewItem = { materialId: '', materialName: '', invoiceName: '', isNew: true, quantity: 0, unitPrice: 0, unit: 'un', category: 'GERAL' };
 
   return (
     <Card>
@@ -247,12 +248,19 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
                        </div>
                     )}
 
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         <FormField
                             control={form.control}
                             name={`items.${index}.quantity`}
                             render={({ field }) => (
                                 <FormItem><FormLabel>Quantidade</FormLabel><FormControl><Input type="number" placeholder="Qtd" {...field} /></FormControl><FormMessage /></FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name={`items.${index}.unitPrice`}
+                            render={({ field }) => (
+                                <FormItem><FormLabel>Valor Unit. (R$)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="0.00" {...field} /></FormControl><FormMessage /></FormItem>
                             )}
                         />
                         <FormField
@@ -266,7 +274,7 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
                             control={form.control}
                             name={`items.${index}.category`}
                             render={({ field }) => (
-                                <FormItem className="col-span-2 md:col-span-1">
+                                <FormItem>
                                 <FormLabel>Categoria</FormLabel>
                                 <Select onValueChange={field.onChange} value={field.value} disabled={!form.getValues(`items.${index}.isNew`)} >
                                     <FormControl><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger></FormControl>

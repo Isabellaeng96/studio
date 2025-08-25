@@ -9,7 +9,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 
 const TransactionExtractionInputSchema = z.object({
   pdfDataUri: z.string().describe("O arquivo PDF como um data URI, que deve incluir um MIME type e usar codificação Base64. Formato esperado: 'data:<mimetype>;base64,<encoded_data>'."),
@@ -19,7 +19,8 @@ export type TransactionExtractionInput = z.infer<typeof TransactionExtractionInp
 
 const MaterialDetailSchema = z.object({
     materialName: z.string().optional().describe('O nome do material ou produto principal encontrado.'),
-    quantity: z.number().optional().describe('A quantidade do material. Deve ser apenas o valor numérico, ignorando o valor unitário/preço.'),
+    quantity: z.number().optional().describe('A quantidade do material. Deve ser apenas o valor numérico.'),
+    unitPrice: z.number().optional().describe('O valor unitário do material. Deve ser apenas o valor numérico.'),
     unit: z.string().optional().describe('A unidade de medida do material (ex: un, kg, m).'),
     category: z.string().optional().describe('Uma categoria sugerida para o material com base no seu nome ou tipo.'),
 });
@@ -43,11 +44,12 @@ const prompt = ai.definePrompt({
   prompt: `Você é um assistente de entrada de dados especializado em analisar texto de notas fiscais e faturas.
 Analise o seguinte texto extraído de um PDF e identifique os seguintes campos gerais: fornecedor e número da nota fiscal.
 
-Além disso, identifique **TODOS** os materiais ou produtos listados no documento e crie uma lista para eles. Para cada item na lista, extraia: nome do material, quantidade, unidade de medida e sugira uma categoria.
+Além disso, identifique **TODOS** os materiais ou produtos listados no documento e crie uma lista para eles. Para cada item na lista, extraia: nome do material, quantidade, valor unitário, unidade de medida e sugira uma categoria.
 
 Se um campo não for encontrado, deixe-o em branco. Foque em extrair os valores exatos.
 Para o nome do material, procure por uma descrição de produto.
-Para a quantidade, extraia **apenas o valor numérico**, ignorando qualquer texto ou unidade que possa acompanhá-lo. O resultado deve ser um número. Atenção: Não confunda 'quantidade' com 'valor unitário' ou 'preço'. Ignore os valores monetários.
+Para a quantidade, extraia **apenas o valor numérico**, ignorando qualquer texto ou unidade que possa acompanhá-lo. O resultado deve ser um número. Atenção: Não confunda 'quantidade' com 'valor total'.
+Para o valor unitário, extraia **apenas o valor numérico** do preço por unidade. Ignore o valor total do item. Se o valor estiver em formato de moeda (ex: R$ 10,50), extraia apenas o número (10.50).
 Para a unidade, procure por abreviações como 'un', 'pc', 'kg', 'm', 'm2', 'm3', 'sc'.
 Para a categoria, sugira uma categoria com base no nome do produto (ex: 'Hidráulica', 'Elétrica', 'Ferramenta', 'Agregado', 'Estrutura').
 

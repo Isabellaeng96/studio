@@ -87,19 +87,16 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [materials, setMaterials] = useState<Material[]>(() => getFromStorage<Material[]>('materials', [
-    { id: 'mat-007', name: 'CABO PP 3X1.5MM²', unit: 'm', category: 'Elétrica', minStock: 100, currentStock: 95, supplier: 'PRYSMIAN', deleted: false },
+    { id: 'mat-007', name: 'CABO PP 3X1.5MM²', unit: 'm', category: 'Elétrica', minStock: 100, currentStock: 95, supplier: 'PRYSMIAN', deleted: false, lastPaidPrice: 5.50 },
   ]));
   const [transactions, setTransactions] = useState<Transaction[]>(() => getFromStorage<Transaction[]>('transactions', [
-      { id: 'trn-007', type: 'saida', date: new Date().getTime(), materialId: 'mat-007', materialName: 'CABO PP 3X1.5MM²', quantity: 10, responsible: 'Sistema', osNumber: 'OS-TESTE', costCenter: 'Manutenção Preventiva' }
+      { id: 'trn-007', type: 'saida', date: new Date().getTime(), materialId: 'mat-007', materialName: 'CABO PP 3X1.5MM²', quantity: 10, responsible: 'Sistema', osNumber: 'OS-TESTE', costCenter: 'Manutenção Preventiva' },
+      { id: 'trn-008', type: 'entrada', date: new Date('2024-07-25T10:00:00Z').getTime(), materialId: 'mat-007', materialName: 'CABO PP 3X1.5MM²', quantity: 105, unitPrice: 5.50, responsible: 'Admin', invoice: 'NF-TESTE' },
   ]));
   const [categories, setCategories] = useState<string[]>([]);
   const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [users, setUsers] = useState<AppUser[]>(() => getFromStorage<AppUser[]>('users', [
-        { id: 'USR-001', name: 'Admin Geoblue', email: 'tec08@geoblue.com.br', role: 'Administrador', sector: 'Manutenção' },
-        { id: 'USR-002', name: 'Gerente Compras', email: 'gerente@geoblue.com.br', role: 'Gerente de Estoque', sector: 'Logística' },
-        { id: 'USR-003', name: 'Admin Padrão', email: 'admin@geoblue.com.br', role: 'Administrador', sector: 'Diretoria' },
-    ]));
+  const [users, setUsers] = useState<AppUser[]>(() => getFromStorage<AppUser[]>('users', []));
   const [alertSettings, setAlertSettings] = useState<AlertSetting[]>(() => getFromStorage<AlertSetting[]>('alertSettings', [
     { materialId: 'mat-007', sectors: ['Compras'] }
   ]));
@@ -449,7 +446,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       invoiceName: transactionData.invoiceName,
     };
 
-    const updatedMaterial = { ...material, currentStock: newStock };
+    const updatedMaterial = { 
+        ...material, 
+        currentStock: newStock,
+        lastPaidPrice: type === 'entrada' && transactionData.unitPrice ? transactionData.unitPrice : material.lastPaidPrice,
+    };
+
     setMaterials(prev => {
         const newMaterials = [...prev];
         newMaterials[materialIndex] = updatedMaterial;
@@ -559,6 +561,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 id: generateId('PRD'),
                 currentStock: 0,
                 deleted: false,
+                lastPaidPrice: item.unitPrice,
             };
             materialsToAdd.push({ newMaterial, entryItem: item });
             newCategories.add(newMaterial.category);
@@ -596,7 +599,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         
         const materialIndex = updatedMaterialsList.findIndex(m => m.id === currentMaterialId);
         const newStock = materialToUpdate.currentStock + item.quantity;
-        updatedMaterialsList[materialIndex] = { ...materialToUpdate, currentStock: newStock };
+        updatedMaterialsList[materialIndex] = { 
+            ...materialToUpdate, 
+            currentStock: newStock,
+            lastPaidPrice: item.unitPrice,
+        };
         
         const newTransaction: Transaction = {
             id: generateId('TRN'),
@@ -606,6 +613,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             materialName: materialToUpdate.name,
             invoiceName: item.invoiceName || materialToUpdate.name,
             quantity: item.quantity,
+            unitPrice: item.unitPrice,
             responsible: commonData.responsible,
             supplier: commonData.supplier?.toUpperCase(),
             invoice: commonData.invoice,

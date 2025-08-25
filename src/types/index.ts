@@ -1,6 +1,7 @@
 
 
 
+
 export type Material = {
   id: string;
   name: string;
@@ -10,9 +11,10 @@ export type Material = {
   currentStock: number;
   supplier?: string;
   deleted?: boolean;
+  lastPaidPrice?: number;
 };
 
-export type MaterialSave = Omit<Material, 'id' | 'currentStock' | 'deleted'>;
+export type MaterialSave = Omit<Material, 'id' | 'currentStock' | 'deleted' | 'lastPaidPrice'>;
 
 export type Transaction = {
   id: string;
@@ -21,6 +23,7 @@ export type Transaction = {
   materialId: string;
   materialName: string;
   quantity: number;
+  unitPrice?: number;
   supplier?: string;
   invoice?: string;
   invoiceName?: string; // Nome do item conforme a nota fiscal
@@ -50,6 +53,7 @@ export type EntryItem = {
     invoiceName?: string; // Opcional, nome na nota fiscal
     isNew: boolean;
     quantity: number;
+    unitPrice: number;
     unit: string;
     category: string;
 }

@@ -103,6 +103,7 @@ function TransactionsPageContent() {
             invoiceName: item.materialName || '', // Keep original name from PDF
             isNew: !existingMaterial,
             quantity: item.quantity || 0,
+            unitPrice: item.unitPrice || 0,
             unit: existingMaterial?.unit || item.unit || 'un',
             category: existingMaterial?.category || item.category || 'GERAL'
         };
