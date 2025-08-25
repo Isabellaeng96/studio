@@ -423,6 +423,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return false;
     }
     
+    // Auto-add supplier if it's new
+    if (type === 'entrada' && transactionData.supplier) {
+        const supplierExists = suppliers.some(s => s.name.toUpperCase() === transactionData.supplier!.toUpperCase());
+        if (!supplierExists) {
+            const newSupplier: Supplier = {
+                id: generateId('SUP'),
+                name: transactionData.supplier.toUpperCase()
+            };
+            setSuppliers(prev => [newSupplier, ...prev]);
+            toast({
+                title: 'Fornecedor Adicionado',
+                description: `O fornecedor "${newSupplier.name}" foi cadastrado automaticamente.`,
+            });
+        }
+    }
+
     const material = materials[materialIndex];
     let newStock = material.currentStock;
 
@@ -465,7 +481,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     
     return true;
-  }, [materials, toast, addMaterial, checkAndSendAlert]);
+  }, [materials, suppliers, toast, addMaterial, checkAndSendAlert]);
 
 
   const addMultipleTransactions = useCallback((items: MultiTransactionItemSave[], commonData: Omit<TransactionSave, 'materialId' | 'quantity'>) => {
@@ -538,6 +554,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const materialsToAdd: { newMaterial: Material, entryItem: EntryItem }[] = [];
     const newCategories = new Set(categories);
     let updatedMaterialsList = [...materials]; // Start with the current state
+
+    // Auto-add supplier if it's new
+    let updatedSuppliers = [...suppliers];
+    if (commonData.supplier) {
+        const supplierNameUpper = commonData.supplier.toUpperCase();
+        const supplierExists = updatedSuppliers.some(s => s.name.toUpperCase() === supplierNameUpper);
+        if (!supplierExists) {
+            const newSupplier: Supplier = {
+                id: generateId('SUP'),
+                name: supplierNameUpper
+            };
+            updatedSuppliers = [newSupplier, ...updatedSuppliers];
+            toast({
+                title: 'Fornecedor Adicionado',
+                description: `O fornecedor "${newSupplier.name}" foi cadastrado automaticamente.`,
+            });
+        }
+    }
+    setSuppliers(updatedSuppliers);
 
     // First pass: validate and collect new materials
     for (const item of items) {
@@ -637,7 +672,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     return allSucceeded;
-}, [materials, categories, toast]);
+}, [materials, suppliers, categories, toast]);
 
 
   const addCostCenter = useCallback((costCenter: Omit<CostCenter, 'id'>) => {
@@ -868,5 +903,3 @@ export function useAppContext() {
   }
   return context;
 }
-
-    
