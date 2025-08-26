@@ -11,6 +11,7 @@ import {
   Truck,
   Users,
   ShoppingCart,
+  Bell,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -27,6 +28,7 @@ const navItems = [
   { href: '/cost-centers', label: 'Centros de Custo', icon: Landmark, roles: ['Administrador', 'Gerente de Estoque'] },
   { href: '/analysis', label: 'Análise', icon: BarChart3, roles: ['Administrador'] },
   { href: '/users', label: 'Usuários', icon: Users, roles: ['Administrador'] },
+  { href: '/alerts', label: 'Alertas', icon: Bell, roles: ['Administrador'] },
   { href: '/settings', label: 'Configurações', icon: Settings, roles: ['Administrador'] },
 ];
 

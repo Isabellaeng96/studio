@@ -7,9 +7,29 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAuth } from "@/context/AuthContext";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AlertsPage() {
   const { activeMaterials, availableSectors, alertSettings, updateAlertSetting } = useAppContext();
+  const { role } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (role && role !== 'Administrador') {
+      router.push('/');
+    }
+  }, [role, router]);
+
+  if (role !== 'Administrador') {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <p>Você não tem permissão para acessar esta página.</p>
+      </div>
+    );
+  }
+
 
   const handleCheckboxChange = (materialId: string, sector: string, checked: boolean) => {
     const currentSettings = alertSettings.find(s => s.materialId === materialId)?.sectors || [];
