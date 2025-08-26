@@ -96,11 +96,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [categories, setCategories] = useState<string[]>([]);
   const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [users, setUsers] = useState<AppUser[]>([
-      { id: 'USR-001', name: 'Admin Geoblue', email: 'tec08@geoblue.com.br', role: 'Administrador', sector: 'Manutenção' },
-      { id: 'USR-002', name: 'Gerente Compras', email: 'gerente@geoblue.com.br', role: 'Gerente de Estoque', sector: 'Logística' },
-      { id: 'USR-003', name: 'Admin Padrão', email: 'admin@geoblue.com.br', role: 'Administrador', sector: 'Diretoria' },
-  ]);
+  const [users, setUsers] = useState<AppUser[]>([]);
   const [alertSettings, setAlertSettings] = useState<AlertSetting[]>(() => getFromStorage<AlertSetting[]>('alertSettings', [
     { materialId: 'mat-007', sectors: ['Compras'] }
   ]));
@@ -128,11 +124,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSuppliers(getFromStorage<Supplier[]>('suppliers', []));
     
     // Reset users to default
-    setUsers([
+    setUsers(getFromStorage<AppUser[]>('users', [
         { id: 'USR-001', name: 'Admin Geoblue', email: 'tec08@geoblue.com.br', role: 'Administrador', sector: 'Manutenção' },
         { id: 'USR-002', name: 'Gerente Compras', email: 'gerente@geoblue.com.br', role: 'Gerente de Estoque', sector: 'Logística' },
         { id: 'USR-003', name: 'Admin Padrão', email: 'admin@geoblue.com.br', role: 'Administrador', sector: 'Diretoria' },
-    ]);
+    ]));
     
     const storedAlertSettings = getFromStorage<AlertSetting[]>('alertSettings', []);
     if (storedAlertSettings.length > 0) setAlertSettings(storedAlertSettings);
@@ -876,18 +872,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
   
   const addUser = useCallback((user: AppUserSave) => {
-    const existing = users.find(u => u.email === user.email);
-    if (existing) {
-        toast({
-            variant: 'destructive',
-            title: 'E-mail já cadastrado',
-            description: `O e-mail ${user.email} já pertence a um usuário.`
-        });
-        return;
-    }
-    const newUser: AppUser = { ...user, id: generateId('USR') };
-    setUsers(prev => [newUser, ...prev]);
-  }, [users, toast]);
+    setUsers(prevUsers => {
+        const existing = prevUsers.find(u => u.email === user.email);
+        if (existing) {
+            toast({
+                variant: 'destructive',
+                title: 'E-mail já cadastrado',
+                description: `O e-mail ${user.email} já pertence a um usuário.`
+            });
+            return prevUsers;
+        }
+        const newUser: AppUser = { ...user, id: generateId('USR') };
+        return [newUser, ...prevUsers];
+    });
+  }, [toast]);
   
   const updateUser = useCallback((user: AppUser) => {
     setUsers(prev => prev.map(u => u.id === user.id ? user : u));
