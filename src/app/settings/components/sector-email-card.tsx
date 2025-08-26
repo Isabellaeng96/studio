@@ -1,3 +1,4 @@
+
 // src/app/settings/components/sector-email-card.tsx
 "use client";
 

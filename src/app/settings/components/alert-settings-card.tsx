@@ -1,3 +1,4 @@
+
 // src/app/settings/components/alert-settings-card.tsx
 "use client";
 
