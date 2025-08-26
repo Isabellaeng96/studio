@@ -71,6 +71,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await updateProfile(userCredential.user, {
             displayName: name
         });
+        
+        // Add user to the app's user list
+        appContext.addUser({
+            name,
+            email,
+            role: 'Visitante',
+            sector: 'N/A' // Default sector
+        });
     }
     return userCredential;
   };
