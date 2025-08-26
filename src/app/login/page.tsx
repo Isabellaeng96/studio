@@ -62,10 +62,20 @@ export default function LoginPage() {
       router.push('/');
     } catch (error: any) {
       console.error(error);
+      let description = "Ocorreu um erro. Tente novamente.";
+      if (isLoginView) {
+        description = "Verifique seu e-mail e senha e tente novamente.";
+      } else {
+        if (error.code === 'auth/email-already-in-use') {
+          description = "Este e-mail já está em uso por outra conta. Se você excluiu uma conta e deseja usá-la novamente, entre em contato com o suporte.";
+        } else {
+          description = error.message;
+        }
+      }
       toast({
         variant: "destructive",
         title: isLoginView ? "Falha no Login" : "Falha no Cadastro",
-        description: isLoginView ? "Verifique seu e-mail e senha e tente novamente." : error.message,
+        description: description,
       });
     } finally {
         setIsLoading(false);
