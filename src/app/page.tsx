@@ -42,6 +42,7 @@ import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MaterialForm } from './materials/components/material-form';
 import { SupplierForm } from './suppliers/components/supplier-form';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 function getRecentTransactions(transactions: Transaction[], limit = 5): Transaction[] {
@@ -53,10 +54,23 @@ function getRecentTransactions(transactions: Transaction[], limit = 5): Transact
 export default function DashboardPage() {
   const { materials, activeMaterials, transactions, costCenters, addMaterial, categories, suppliers, addSupplier } = useAppContext();
   const [isClient, setIsClient] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [groupedTransactions, setGroupedTransactions] = useState<Transaction[]>([]);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+  
+  const handleTransactionClick = (tx: Transaction) => {
+    setSelectedTransaction(tx);
+    if (tx.type === 'entrada' && tx.invoice) {
+      const relatedTransactions = transactions.filter(t => t.invoice === tx.invoice && t.type === 'entrada');
+      setGroupedTransactions(relatedTransactions);
+    } else {
+      setGroupedTransactions([tx]);
+    }
+  };
+
 
   const lowStockMaterials = useMemo(() => {
     return activeMaterials.filter(material => material.currentStock < material.minStock)
@@ -259,7 +273,7 @@ export default function DashboardPage() {
                 {recentTransactions.map(tx => (
                    <Dialog key={tx.id}>
                     <DialogTrigger asChild>
-                      <TableRow className="cursor-pointer">
+                      <TableRow className="cursor-pointer" onClick={() => handleTransactionClick(tx)}>
                         <TableCell className="font-medium">{materials.find(m => m.id === tx.materialId)?.name || tx.materialId}</TableCell>
                         <TableCell className="text-center">
                           <Badge
@@ -287,28 +301,70 @@ export default function DashboardPage() {
                         <TableCell>{tx.responsible}</TableCell>
                       </TableRow>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="sm:max-w-3xl">
                       <DialogHeader>
                         <DialogTitle>Detalhes da Transação</DialogTitle>
-                        <DialogDescription>
-                          ID da Transação: <span className="font-mono">{tx.id}</span>
-                        </DialogDescription>
+                         {selectedTransaction && (
+                           <DialogDescription>
+                            {selectedTransaction.type === 'entrada' && selectedTransaction.invoice 
+                                ? `Itens da Nota Fiscal: ${selectedTransaction.invoice}`
+                                : `ID da Transação: ${selectedTransaction.id}`
+                            }
+                          </DialogDescription>
+                         )}
                       </DialogHeader>
-                      <div className="grid gap-4 py-4 text-sm">
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                           <div><span className="font-semibold">Material Padrão:</span> {tx.materialName}</div>
-                           {tx.type === 'entrada' && tx.invoiceName && <div><span className="font-semibold">Nome na Nota:</span> {tx.invoiceName}</div>}
-                           <div><span className="font-semibold">Tipo:</span> <span className={cn(tx.type === 'entrada' ? 'text-emerald-600' : 'text-amber-600')}>{tx.type === 'entrada' ? 'Entrada' : 'Saída'}</span></div>
-                           <div><span className="font-semibold">Quantidade:</span> {tx.quantity}</div>
-                           <div><span className="font-semibold">Data:</span> {isClient ? format(new Date(tx.date), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR }) : ''}</div>
-                           <div><span className="font-semibold">Responsável:</span> {tx.responsible}</div>
-                           {tx.costCenter && <div><span className="font-semibold">Centro de Custo:</span> {costCenters.find(c => c.name === tx.costCenter)?.name || tx.costCenter}</div>}
-                           {tx.type === 'entrada' && tx.supplier && <div><span className="font-semibold">Fornecedor:</span> {tx.supplier}</div>}
-                           {tx.invoice && <div><span className="font-semibold">Nota Fiscal:</span> {tx.invoice}</div>}
-                           {tx.type === 'saida' && tx.osNumber && <div><span className="font-semibold">Nº da OS:</span> {tx.osNumber}</div>}
-                           {tx.stockLocation && <div><span className="font-semibold">Local do Estoque:</span> {tx.stockLocation}</div>}
-                        </div>
-                      </div>
+                      {selectedTransaction && (
+                         <div className="grid gap-4 py-4 text-sm">
+                           {groupedTransactions.length > 1 ? (
+                            <>
+                              <div className="grid grid-cols-3 gap-x-4">
+                                <div><span className="font-semibold">Data:</span> {isClient ? format(new Date(selectedTransaction.date), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR }) : ''}</div>
+                                <div><span className="font-semibold">Fornecedor:</span> {selectedTransaction.supplier}</div>
+                                <div><span className="font-semibold">Responsável:</span> {selectedTransaction.responsible}</div>
+                              </div>
+                              <ScrollArea className="h-64 w-full rounded-md border">
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow>
+                                      <TableHead>Material</TableHead>
+                                      <TableHead>Qtd.</TableHead>
+                                      <TableHead>Vl. Un.</TableHead>
+                                      <TableHead>Local</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {groupedTransactions.map(item => (
+                                      <TableRow key={item.id}>
+                                        <TableCell>
+                                          <div>{item.materialName}</div>
+                                          <div className="text-xs text-muted-foreground">{item.invoiceName}</div>
+                                        </TableCell>
+                                        <TableCell>{item.quantity}</TableCell>
+                                        <TableCell>{item.unitPrice?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) ?? 'N/A'}</TableCell>
+                                        <TableCell>{item.stockLocation}</TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              </ScrollArea>
+                            </>
+                           ) : (
+                             <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                               <div><span className="font-semibold">Material Padrão:</span> {selectedTransaction.materialName}</div>
+                               {selectedTransaction.type === 'entrada' && selectedTransaction.invoiceName && <div><span className="font-semibold">Nome na Nota:</span> {selectedTransaction.invoiceName}</div>}
+                               <div><span className="font-semibold">Tipo:</span> <span className={cn(selectedTransaction.type === 'entrada' ? 'text-emerald-600' : 'text-amber-600')}>{selectedTransaction.type === 'entrada' ? 'Entrada' : 'Saída'}</span></div>
+                               <div><span className="font-semibold">Quantidade:</span> {selectedTransaction.quantity}</div>
+                               <div><span className="font-semibold">Data:</span> {isClient ? format(new Date(selectedTransaction.date), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR }) : ''}</div>
+                               <div><span className="font-semibold">Responsável:</span> {selectedTransaction.responsible}</div>
+                               {selectedTransaction.costCenter && <div><span className="font-semibold">Centro de Custo:</span> {costCenters.find(c => c.name === selectedTransaction.costCenter)?.name || selectedTransaction.costCenter}</div>}
+                               {selectedTransaction.type === 'entrada' && selectedTransaction.supplier && <div><span className="font-semibold">Fornecedor:</span> {selectedTransaction.supplier}</div>}
+                               {selectedTransaction.invoice && <div><span className="font-semibold">Nota Fiscal:</span> {selectedTransaction.invoice}</div>}
+                               {selectedTransaction.type === 'saida' && selectedTransaction.osNumber && <div><span className="font-semibold">Nº da OS:</span> {selectedTransaction.osNumber}</div>}
+                               {selectedTransaction.stockLocation && <div><span className="font-semibold">Local do Estoque:</span> {selectedTransaction.stockLocation}</div>}
+                             </div>
+                           )}
+                         </div>
+                       )}
                     </DialogContent>
                    </Dialog>
                 ))}
