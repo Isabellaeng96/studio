@@ -22,9 +22,10 @@ interface MaterialDetailsDialogProps {
   onOpenChange: (open: boolean) => void;
   material: Material;
   stockByLocation: Record<string, number>;
+  averagePrice?: number | null;
 }
 
-export function MaterialDetailsDialog({ open, onOpenChange, material, stockByLocation }: MaterialDetailsDialogProps) {
+export function MaterialDetailsDialog({ open, onOpenChange, material, stockByLocation, averagePrice }: MaterialDetailsDialogProps) {
   const hasLocations = Object.keys(stockByLocation).length > 0;
   const qrCodeRef = useRef<HTMLDivElement>(null);
 
@@ -70,7 +71,7 @@ export function MaterialDetailsDialog({ open, onOpenChange, material, stockByLoc
     }
   };
 
-  const formatCurrency = (value?: number) => {
+  const formatCurrency = (value?: number | null) => {
     if (typeof value !== 'number') {
       return 'N/A';
     }
@@ -100,6 +101,7 @@ export function MaterialDetailsDialog({ open, onOpenChange, material, stockByLoc
                 <div><span className="font-semibold">Estoque Mínimo:</span> <span className="font-mono">{material.minStock}</span></div>
                 <div><span className="font-semibold">Estoque Total:</span> <span className="font-mono">{material.currentStock}</span></div>
                 <div><span className="font-semibold">Último Valor Pago:</span> <span className="font-mono">{formatCurrency(material.lastPaidPrice)}</span></div>
+                <div><span className="font-semibold">Custo Médio (6 meses):</span> <span className="font-mono">{formatCurrency(averagePrice)}</span></div>
               </div>
             </div>
             <div>

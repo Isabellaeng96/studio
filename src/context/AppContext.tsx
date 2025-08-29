@@ -67,6 +67,7 @@ interface AppContextType {
   updateCostCenter: (costCenter: CostCenter) => void;
   deleteCostCenter: (costCenterId: string) => void;
   getStockByLocation: (materialId: string) => Record<string, number>;
+  getAveragePriceInLast6Months: (materialId: string) => number | null;
   addSupplier: (supplier: Omit<Supplier, 'id'>) => void;
   updateSupplier: (supplier: Supplier) => void;
   deleteSupplier: (supplierId: string) => void;
@@ -785,6 +786,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return stockMap;
   }, [transactions]);
 
+  const getAveragePriceInLast6Months = useCallback((materialId: string): number | null => {
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    const sixMonthsAgoTimestamp = sixMonthsAgo.getTime();
+
+    const relevantTransactions = transactions.filter(t => 
+        t.materialId === materialId &&
+        t.type === 'entrada' &&
+        t.date >= sixMonthsAgoTimestamp &&
+        typeof t.unitPrice === 'number' &&
+        t.unitPrice > 0
+    );
+
+    if (relevantTransactions.length === 0) {
+      return null;
+    }
+
+    const totalCost = relevantTransactions.reduce((sum, t) => sum + ((t.unitPrice || 0) * t.quantity), 0);
+    const totalQuantity = relevantTransactions.reduce((sum, t) => sum + t.quantity, 0);
+
+    return totalQuantity > 0 ? totalCost / totalQuantity : null;
+  }, [transactions]);
+
   const addSupplier = useCallback((supplier: Omit<Supplier, 'id'>) => {
     const newSupplier: Supplier = {
       ...supplier,
@@ -945,6 +969,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     updateCostCenter,
     deleteCostCenter,
     getStockByLocation,
+    getAveragePriceInLast6Months,
     addSupplier,
     addMultipleSuppliers,
     updateSupplier,

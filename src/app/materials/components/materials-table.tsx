@@ -1,3 +1,4 @@
+
 "use client";
 
 import { MoreHorizontal, Pencil, Trash2, PackageOpen } from 'lucide-react';
@@ -50,7 +51,8 @@ export function MaterialsTable({ data, onSave, onDelete, onDeleteMultiple, categ
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
-  const { getStockByLocation } = useAppContext();
+  const [averagePrice, setAveragePrice] = useState<number | null>(null);
+  const { getStockByLocation, getAveragePriceInLast6Months } = useAppContext();
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
 
@@ -75,6 +77,7 @@ export function MaterialsTable({ data, onSave, onDelete, onDeleteMultiple, categ
   
   const handleRowClick = (material: Material) => {
     setSelectedMaterial(material);
+    setAveragePrice(getAveragePriceInLast6Months(material.id));
     setDetailsOpen(true);
   };
   
@@ -234,6 +237,7 @@ export function MaterialsTable({ data, onSave, onDelete, onDeleteMultiple, categ
             onOpenChange={setDetailsOpen}
             material={selectedMaterial}
             stockByLocation={getStockByLocation(selectedMaterial.id)}
+            averagePrice={averagePrice}
         />
       )}
     </>

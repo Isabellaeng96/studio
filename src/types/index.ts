@@ -5,6 +5,7 @@
 
 
 
+
 export type Material = {
   id: string;
   name: string;
@@ -15,9 +16,10 @@ export type Material = {
   supplier?: string;
   deleted?: boolean;
   lastPaidPrice?: number;
+  averagePrice?: number;
 };
 
-export type MaterialSave = Omit<Material, 'id' | 'currentStock' | 'deleted' | 'lastPaidPrice'>;
+export type MaterialSave = Omit<Material, 'id' | 'currentStock' | 'deleted' | 'lastPaidPrice' | 'averagePrice'>;
 
 export type Transaction = {
   id: string;
