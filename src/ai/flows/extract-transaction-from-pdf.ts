@@ -37,6 +37,7 @@ const SupplierDetailSchema = z.object({
 const TransactionExtractionOutputSchema = z.object({
   supplier: SupplierDetailSchema.optional(),
   invoice: z.string().optional().describe('O número da nota fiscal ou fatura, se encontrado.'),
+  freightCost: z.number().optional().describe('O valor do frete, se encontrado.'),
   materials: z.array(MaterialDetailSchema).describe('Uma lista de todos os materiais encontrados no documento.'),
 });
 export type TransactionExtractionOutput = z.infer<typeof TransactionExtractionOutputSchema>;
@@ -62,9 +63,10 @@ Sua tarefa é analisar o texto extraído de um PDF e extrair **apenas** as segui
     *   state: O estado (sigla com 2 letras, ex: SP, RJ).
 2.  **Dados da Nota**:
     *   invoice: O número da nota fiscal ou fatura.
+    *   freightCost: O valor do frete, se houver.
 3.  **Lista de Materiais**:
     *   Para **cada item** listado, extraia: materialName, quantity, unitPrice, unit e category.
-    *   Para quantity e unitPrice, extraia **apenas o valor numérico**.
+    *   Para quantity, unitPrice e freightCost, extraia **apenas o valor numérico**.
     *   Para category, sugira uma com base no nome do produto (ex: 'Hidráulica', 'Elétrica', 'Ferramenta').
 
 Se um campo específico não for encontrado no texto, deixe-o em branco. **Não inclua nenhuma informação adicional ou desnecessária.** Foque em extrair os valores exatos.
@@ -72,7 +74,7 @@ Se um campo específico não for encontrado no texto, deixe-o em branco. **Não 
 Texto do PDF:
 {{{pdfTextContent}}}
 
-Retorne os dados extraídos no formato JSON, com um objeto de fornecedor e uma lista de materiais.
+Retorne os dados extraídos no formato JSON.
 `,
 });
 

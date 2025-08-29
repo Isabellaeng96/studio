@@ -61,7 +61,7 @@ interface AppContextType {
   deleteMultipleMaterials: (materialIds: string[]) => void;
   addCategory: (category: string) => void;
   addTransaction: (transaction: TransactionSave, type: 'entrada' | 'saida') => boolean;
-  addMultipleEntries: (items: EntryItem[], commonData: Omit<TransactionSave, 'materialId' | 'quantity' | 'materialName' | 'unit' | 'category' | 'supplier'> & { supplier?: Omit<Supplier, 'id'> }) => boolean;
+  addMultipleEntries: (items: EntryItem[], commonData: Omit<TransactionSave, 'materialId' | 'quantity' | 'materialName' | 'unit' | 'category' | 'supplier' | 'freightCost'> & { supplier?: Omit<Supplier, 'id'>, freightCost?: number }) => boolean;
   addMultipleTransactions: (items: MultiTransactionItemSave[], commonData: Omit<TransactionSave, 'materialId' | 'quantity'>) => boolean;
   addCostCenter: (costCenter: Omit<CostCenter, 'id'>) => void;
   updateCostCenter: (costCenter: CostCenter) => void;
@@ -556,7 +556,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return allSucceeded;
   }, [materials, toast, checkAndSendAlert]);
   
- const addMultipleEntries = useCallback((items: EntryItem[], commonData: Omit<TransactionSave, 'materialId' | 'quantity' | 'materialName' | 'unit' | 'category' | 'supplier'> & { supplier?: Omit<Supplier, 'id'> }) => {
+ const addMultipleEntries = useCallback((items: EntryItem[], commonData: Omit<TransactionSave, 'materialId' | 'quantity' | 'materialName' | 'unit' | 'category' | 'supplier' | 'freightCost'> & { supplier?: Omit<Supplier, 'id'>, freightCost?: number }) => {
     // Check for duplicate invoice before processing anything
     if (commonData.invoice) {
         const invoiceExists = transactions.some(
@@ -571,6 +571,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
             return false;
         }
     }
+
+    // --- Freight Cost Distribution Logic ---
+    const freightCost = commonData.freightCost || 0;
+    let distributedItems = [...items];
+
+    if (freightCost > 0 && items.length > 0) {
+        const totalValue = items.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
+        
+        if (totalValue > 0) {
+            distributedItems = items.map(item => {
+                const itemTotalValue = item.unitPrice * item.quantity;
+                const proportion = itemTotalValue / totalValue;
+                const freightShare = freightCost * proportion;
+                const newUnitPrice = item.unitPrice + (freightShare / item.quantity);
+                
+                return { ...item, unitPrice: parseFloat(newUnitPrice.toFixed(4)) }; // Store with more precision
+            });
+        } else {
+             toast({
+                variant: "destructive",
+                title: "Rateio de Frete Inválido",
+                description: `O valor total dos itens é zero, não é possível ratear o frete de R$ ${freightCost.toFixed(2)}. O frete não será aplicado.`,
+            });
+        }
+    }
+    // --- End of Freight Logic ---
 
     let allSucceeded = true;
     let successfulCount = 0;
@@ -609,8 +635,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
 
-    // First pass: validate and collect new materials
-    for (const item of items) {
+    // First pass: validate and collect new materials from the distributed items
+    for (const item of distributedItems) {
         if (item.isNew) {
             const materialNameUpper = item.materialName.toUpperCase();
             if (updatedMaterialsList.some(m => !m.deleted && m.name.toUpperCase() === materialNameUpper) || materialsToAdd.some(m => m.newMaterial.name === materialNameUpper)) {
@@ -648,7 +674,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const newTransactions: Transaction[] = [];
 
     // Second pass: process all items (new and existing) against the updated list
-    for (const item of items) {
+    for (const item of distributedItems) {
         let materialToUpdate: Material | undefined;
         let currentMaterialId: string | undefined;
 
@@ -883,7 +909,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
             return prevUsers;
         }
         const newUser: AppUser = { ...user, id: generateId('USR') };
-        return [newUser, ...prevUsers];
+        const newUsers = [newUser, ...prevUsers];
+        setInStorage('users', newUsers); // Persist immediately
+        return newUsers;
     });
   }, [toast]);
   

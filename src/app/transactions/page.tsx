@@ -51,12 +51,14 @@ function TransactionsPageContent() {
   const [initialWithdrawalItems, setInitialWithdrawalItems] = useState<MultiTransactionItemSave[]>([]);
   const [initialInvoice, setInitialInvoice] = useState<string | undefined>();
   const [initialSupplier, setInitialSupplier] = useState<Omit<Supplier, 'id'>>();
+  const [initialFreightCost, setInitialFreightCost] = useState<number | undefined>();
   
   const resetInitialState = useCallback(() => {
     setInitialEntryItems([]);
     setInitialWithdrawalItems([]);
     setInitialInvoice(undefined);
     setInitialSupplier(undefined);
+    setInitialFreightCost(undefined);
     const params = new URLSearchParams(searchParams.toString());
     params.delete('showForm');
     if(params.has('materialId')) params.delete('materialId');
@@ -111,6 +113,7 @@ function TransactionsPageContent() {
     
     setInitialEntryItems(extractedItems);
     setInitialInvoice(data.invoice);
+    setInitialFreightCost(data.freightCost);
     if (data.supplier) {
         setInitialSupplier(data.supplier);
     }
@@ -134,7 +137,7 @@ function TransactionsPageContent() {
     return addMultipleTransactions(data.items, data);
   };
 
-  const handleSaveMultiEntry = (data: { items: EntryItem[] } & Omit<TransactionSave, 'materialId' | 'quantity' | 'materialName' | 'unit' | 'category' | 'supplier'> & { supplier?: Omit<Supplier, 'id'> }) => {
+  const handleSaveMultiEntry = (data: { items: EntryItem[] } & Omit<TransactionSave, 'materialId' | 'quantity' | 'materialName' | 'unit' | 'category' | 'supplier' | 'freightCost'> & { supplier?: Omit<Supplier, 'id'>, freightCost?: number }) => {
      return addMultipleEntries(data.items, data);
   };
 
@@ -143,6 +146,7 @@ function TransactionsPageContent() {
     setInitialWithdrawalItems([]);
     setInitialInvoice(undefined);
     setInitialSupplier(undefined);
+    setInitialFreightCost(undefined);
   };
   
   const handleFilterChange = (key: string, value: string) => {
@@ -232,6 +236,7 @@ function TransactionsPageContent() {
                     initialItems={initialEntryItems}
                     initialInvoice={initialInvoice}
                     initialSupplier={initialSupplier}
+                    initialFreightCost={initialFreightCost}
                 />
              ) : (
                 <MultiItemTransactionForm

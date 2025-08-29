@@ -4,6 +4,7 @@
 
 
 
+
 export type Material = {
   id: string;
   name: string;
@@ -33,6 +34,7 @@ export type Transaction = {
   responsible: string;
   costCenter?: string;
   stockLocation?: string;
+  freightCost?: number;
 };
 
 export type TransactionSave = Omit<Transaction, 'id' | 'type' | 'date' | 'materialName' | 'invoiceName'> & {

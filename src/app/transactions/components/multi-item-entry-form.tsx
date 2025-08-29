@@ -39,7 +39,7 @@ const multiItemEntrySchema = z.object({
     invoiceName: z.string().optional(),
     isNew: z.boolean(),
     quantity: z.coerce.number().positive('A quantidade deve ser positiva.'),
-    unitPrice: z.coerce.number().positive('O valor unitário deve ser positivo.'),
+    unitPrice: z.coerce.number().nonnegative('O valor unitário não pode ser negativo.'),
     unit: z.string().min(1, "A unidade é obrigatória."),
     category: z.string().min(1, "A categoria é obrigatória."),
   })).min(1, 'Adicione pelo menos um material à lista.'),
@@ -47,6 +47,7 @@ const multiItemEntrySchema = z.object({
   responsible: z.string().min(2, 'O responsável é obrigatório.'),
   supplier: supplierSchema,
   invoice: z.string().optional(),
+  freightCost: z.coerce.number().optional(),
   costCenter: z.string().optional(),
   stockLocation: z.string().optional().transform(val => val ? val.toUpperCase() : val),
 });
@@ -61,9 +62,10 @@ interface MultiItemEntryFormProps {
   initialItems?: EntryItem[];
   initialInvoice?: string;
   initialSupplier?: Omit<Supplier, 'id'>;
+  initialFreightCost?: number;
 }
 
-export function MultiItemEntryForm({ materials, categories, onSave, onCancel, initialItems, initialInvoice, initialSupplier }: MultiItemEntryFormProps) {
+export function MultiItemEntryForm({ materials, categories, onSave, onCancel, initialItems, initialInvoice, initialSupplier, initialFreightCost }: MultiItemEntryFormProps) {
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -75,6 +77,7 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
       responsible: user?.displayName ?? '',
       supplier: initialSupplier ?? { name: '' },
       invoice: initialInvoice ?? '',
+      freightCost: initialFreightCost ?? 0,
       costCenter: '',
       stockLocation: ''
     },
@@ -308,7 +311,7 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
               </div>
             </div>
             
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="supplier.name"
@@ -330,6 +333,19 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
                       <FormLabel>Nota Fiscal (Opcional)</FormLabel>
                       <FormControl>
                         <Input placeholder="NF-12345" {...field} value={field.value ?? ''} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="freightCost"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Valor do Frete (R$)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" placeholder="0.00" {...field} value={field.value ?? ''}/>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -361,6 +377,8 @@ export function MultiItemEntryForm({ materials, categories, onSave, onCancel, in
                     </FormItem>
                   )}
                 />
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
                  <FormField
                   control={form.control}
                   name="date"
